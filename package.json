@@ -1,0 +1,45 @@
+{
+  "name": "ecics-portal-website",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.0.0",
+    "@next/font": "^14.2.15",
+    "@prisma/client": "^6.5.0",
+    "@reduxjs/toolkit": "^2.6.1",
+    "@tanstack/react-query": "^5.71.5",
+    "@tanstack/react-query-devtools": "^5.71.5",
+    "antd": "^5.24.5",
+    "axios": "^1.8.4",
+    "dayjs": "^1.11.13",
+    "next": "13.5.11",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.0",
+    "prisma": "^6.5.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-redux": "^9.2.0",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/winston": "^2.4.4",
+    "autoprefixer": "^10",
+    "eslint": "^8",
+    "eslint-config-next": "13.5.11",
+    "postcss": "^8",
+    "tailwindcss": "^3",
+    "typescript": "^5"
+  }
+}
