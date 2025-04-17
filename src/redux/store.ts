@@ -5,9 +5,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux'
 // Example slice reducer (replace with your actual reducers)
 
 const store = configureStore({
-  reducer: {
-    example: appReducer, // Add your reducers here
-  },
+  reducer: appReducer
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

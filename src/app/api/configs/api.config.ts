@@ -1,13 +1,13 @@
 import axios from 'axios';
-import logger from '../_libs/logger';
+import logger from '../libs/logger';
 
 const TOKEN_EXPIRED_STATUS = -114;
 const TOKEN_NOT_FOUND_STATUS = -106;
 let token = '';
- 
+
 // Create axios instance with base URL and headers
 const apiServer = axios.create({
-  baseURL: process.env.API_BASE_URL || '',
+  baseURL: process.env.ISP_API_URL || '',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -18,11 +18,12 @@ const apiServer = axios.create({
 // Refresh token function
 async function refreshToken() {
   try {
-    const email = process.env.INSILLION_EMAIL;
-    const mpwd = process.env.INSILLION_MPWD;
+    const email = process.env.ISP_EMAIL;
+    const mpwd = process.env.ISP_MPWD;
     const response = await axios.post(`${process.env.API_BASE_URL}/auth`, { email, mpwd });
     token = response.data.data.token;
-    logger.info('Token refreshed successfully');
+    
+    logger.info('Token refreshed successfully: ', token);
     return token;
   } catch (error) {
     logger.error('Error refreshing token:', error);
