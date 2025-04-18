@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "mgdb": "npm i && npx prisma generate",
+    "mgdb": "npm i && npx prisma db push",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
