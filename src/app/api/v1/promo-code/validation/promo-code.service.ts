@@ -48,7 +48,8 @@ export async function getInfoPromocode(data: geInfoPromocodeDTO) {
   return createResponse(PROMO_CODE_MESSAGES.VALID, promoCode, true);
 }
 
-function createResponse(message: string, promoCode: PromoCode, isValid: boolean) {
+
+function createResponse(message: string, promoCode: any, isValid: boolean) {
   return {
     message,
     data: {
