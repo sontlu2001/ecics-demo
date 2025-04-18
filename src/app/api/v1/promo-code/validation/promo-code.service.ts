@@ -24,7 +24,10 @@ export async function getInfoPromocode(data: geInfoPromocodeDTO) {
   });
 
   if (!promoCode) {
-    return createResponse(PROMO_CODE_MESSAGES.NOT_FOUND, promoCode, false);
+    return {
+      message: PROMO_CODE_MESSAGES.NOT_FOUND,
+      data: null,
+    }
   }
   const currentTime = new Date();
 
