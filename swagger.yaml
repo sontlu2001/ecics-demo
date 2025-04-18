@@ -1,0 +1,1431 @@
+openapi: '3.0.4'
+info:
+  title: ECICS transform API
+  version: '1.0.0'
+  description: |
+    An API to transform and format customer data into a structure compatible with the frontend.
+tags:
+  - name: Common
+    description: Common APIs
+  - name: Car Insurance
+    description: Car Insurance APIs
+  - name: Car Renewal
+servers:
+  - url: https://server.dev/api/v1
+    description: Server DEV
+  - url: https://server.stg/api/v1
+    description: Server STG
+paths:
+  /companies/{product_type_name}:
+    get:
+      tags:
+        - Common
+      summary: Get all companies by product type
+      parameters:
+        - name: product_type_name
+          in: path
+          required: true
+          description: Product type (e.g., Car, Maid)
+          schema:
+            type: string
+            example: Car
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Get all companies successfully'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/company_provider'
+                    example:
+                      - id: 1
+                        name: 'AIA SINGAPORE PRIVATE LIMITED'
+                      - id: 2
+                        name: 'AIG ASIA PACIFIC INSURANCE PTE. LTD.'
+                      - id: 3
+                        name: 'ALLIANZ GLOBAL CORPORATE & SPECIALTY SE SINGAPORE BRANCH'
+        '404':
+          description: Product type not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Product type not found'
+                  data:
+                    type: array
+                    example: []
+  /makes/{product_type_name}:
+    get:
+      tags:
+        - Common
+      summary: Get all vehicle makes by product type
+      parameters:
+        - name: product_type_name
+          in: path
+          required: true
+          description: Product type (e.g., Car, Maid)
+          schema:
+            type: string
+            example: Car
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Get all vehicle makes successfully'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/vehicle_make'
+                    example:
+                      - id: 1
+                        name: 'BMW'
+                      - id: 2
+                        name: 'MERCEDES-BENZ'
+                      - id: 3
+                        name: 'TOYOTA'
+        '404':
+          description: Product type not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Product type not found'
+                  data:
+                    type: array
+                    example: []
+  /models/{product_type_name}/{make_id}:
+    get:
+      tags:
+        - Common
+      summary: Get all vehicle models by product type and make ID
+      parameters:
+        - name: product_type_name
+          in: path
+          required: true
+          description: Product type (e.g., Car, Maid)
+          schema:
+            type: string
+            example: Car
+        - name: make_id
+          in: path
+          required: true
+          description: Vehicle make ID
+          schema:
+            type: number
+            example: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Get all vehicle models successfully'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/vehicle_model'
+                    example:
+                      - id: 1
+                        name: 'X4 x35i 3.0'
+                      - id: 2
+                        name: 'X5 x40i 3.0'
+                      - id: 3
+                        name: 'X6 x50i 3.0'
+        '404':
+          description: Product type or make ID not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Product type or make ID not found'
+                  data:
+                    type: array
+                    example: []
+  /promo-code/validation:
+    post:
+      tags:
+        - Common
+      summary: Validate promo code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                promo_code:
+                  type: string
+                  example: ECICS10
+                product_type:
+                  type: string
+                  example: Car
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Promo Code is valid
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      code:
+                        type: string
+                        example: ECICS10
+                      start_time:
+                        type: string
+                        format: date-time
+                        example: 2024-03-20T17:00:00.000Z
+                      end_time:
+                        type: string
+                        format: date-time
+                        example: 2025-12-29T17:00:00.000Z
+                      description:
+                        type: string
+                        example: Get 10% off for new purchases
+                      discount:
+                        type: number
+                        example: 10
+                      products:
+                        type: array
+                        items:
+                          type: string
+                        example:
+                          - Car
+                          - Maid
+                      is_public:
+                        type: boolean
+                        example: true
+                      is_show_countdown:
+                        type: boolean
+                        example: true
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Validation Error
+  /partner/info/{partner_code}:
+    get:
+      tags:
+        - Common
+      summary: Get partner information
+      parameters:
+        - name: partner_code
+          in: path
+          required: true
+          description: Partner code
+          schema:
+            type: string
+            example: A0000165
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  partner_code:
+                    type: string
+                    example: A0000165
+                  partner_name:
+                    type: string
+                    example: ECICS Pte Ltd
+        '404':
+          description: Partner not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Partner not found
+  /quote/save:
+    post:
+      tags:
+        - Common
+      summary: Save quote information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: '#/components/schemas/quote_detail_info'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Save quote successfully'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid data
+  /quote/retrieve:
+    post:
+      tags:
+        - Common
+      summary: Retrieve quote information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quote_id:
+                  type: string
+                  example: Q000000015581
+                phone:
+                  type: string
+                  example: 88888888
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Save quote successfully'
+                  data:
+                    type: object
+                    $ref: '#/components/schemas/quote_detail_info'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid data
+  /personal-info/save:
+    post:
+      tags:
+        - Common
+      summary: Save personal information from Singpass
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: abc@gmail.com
+                phone:
+                  type: string
+                  example: 88888888
+                name:
+                  type: string
+                  example: Sayan Chakraborty
+                nric:
+                  type: string
+                  example: ABC1234
+                gender:
+                  type: string
+                  example: Male
+                marital_status:
+                  type: string
+                  example: Married
+                date_of_birth:
+                  type: string
+                  format: date
+                  example: 10/12/1980
+                address:
+                  type: string
+                  example: 10 Eunos Road Singapore 400087
+                vehicle_make:
+                  type: string
+                  example: BMW
+                vehicle_model:
+                  type: string
+                  example: X4 x35i 3.0
+                year_of_registration:
+                  type: string
+                  example: 2024
+                vehicles:
+                  type: array
+                  items:
+                    type: object
+                  example:
+                      - vehicleno:
+                          value: SGT955G
+                        lastupdated: 2025-04-04
+                        source: 1
+                        classification: C
+                        chassisno:
+                          value: KTGBU2790TG201211
+                        engineno:
+                          value: E201611151953  
+                      - vehicleno:
+                          value: SJB5234a
+                        lastupdated: 2025-04-04
+                        source: 1
+                        classification: C
+                        chassisno:
+                          value: JHMEK3670WS013541
+                        engineno:
+                          value: 4G92AG9903
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Save personal information successfully'
+                  data:
+                    type: string
+                    example: ""
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid data
+  /personal-info/retrieve:
+    post:
+      tags:
+        - Common
+      summary: Retrieve personal information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nric:
+                  type: string
+                  example: ABC1234
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Retrieve personal information successfully'
+                  data:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                        example: abc@gmail.com
+                      phone:
+                        type: string
+                        example: 88888888
+                      name:
+                        type: string
+                        example: Sayan Chakraborty
+                      nric:
+                        type: string
+                        example: ABC1234
+                      gender:
+                        type: string
+                        example: Male
+                      marital_status:
+                        type: string
+                        example: Married
+                      date_of_birth:
+                        type: string
+                        format: date
+                        example: 10/12/1980
+                      address:
+                        type: string
+                        example: 10 Eunos Road Singapore 400087
+                      vehicle_make:
+                        type: string
+                        example: BMW
+                      vehicle_model:
+                        type: string
+                        example: X4 x35i 3.0
+                      year_of_registration:
+                        type: string
+                        example: 2024
+                      vehicles:
+                        type: array
+                        items:
+                          type: object
+                        example:
+                            - vehicleno:
+                                value: SGT955G
+                              lastupdated: 2025-04-04
+                              source: 1
+                              classification: C
+                              chassisno:
+                                value: KTGBU2790TG201211
+                              engineno:
+                                value: E201611151953  
+                            - vehicleno:
+                                value: SJB5234a
+                              lastupdated: 2025-04-04
+                              source: 1
+                              classification: C
+                              chassisno:
+                                value: JHMEK3670WS013541
+                              engineno:
+                                value: 4G92AG9903
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid data
+  /getPersonData:
+    post:
+      tags:
+        - Common
+      summary: Get personal data from Singpass
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                authCode:
+                  type: string
+                  example: myinfo-com-3idXgP0GJzM0UeeIbAs4gREhYHGrUFMHZEkWpfjT
+                product_type:
+                  type: string
+                  example: motor
+                scope:
+                  type: string
+                  example: uinfin vehicles.vehicleno vehicles.chassisno vehicles.engineno name sex marital
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  marital:
+                    type: object
+                    properties:
+                      marital:
+                        type: object
+                        properties:
+                          classification:
+                            type: string
+                            example: C    
+                          code:
+                            type: string
+                            example: 1
+                          desc:
+                            type: string
+                            example: SINGLE 
+                          lastupdated:
+                            type: string
+                            example: 2025-04-04
+                          source:
+                            type: string
+                            example: 1 
+                  name:
+                    type: object
+                    properties:
+                      classification:
+                        type: string
+                        example: C
+                      value:
+                        type: string
+                        example: TAN CHONG HO
+                      lastupdated:
+                        type: string
+                        example: 2025-04-04
+                      source:
+                        type: string
+                        example: 1
+                  sex:
+                    type: object
+                    properties:
+                      classification:
+                        type: string
+                        example: C    
+                      code:
+                        type: string
+                        example: M
+                      desc:
+                        type: string
+                        example: MALE 
+                      lastupdated:
+                        type: string
+                        example: 2025-04-04
+                      source:
+                        type: string
+                        example: 1         
+                  uinfin:
+                    type: object
+                    properties:
+                      classification:
+                        type: string
+                        example: C    
+                      value:
+                        type: string
+                        example: S9812351B
+                      lastupdated:
+                        type: string
+                        example: 2025-04-04
+                      source:
+                        type: string
+                        example: 1
+                  vehicles:
+                    type: array
+                    items:
+                      type: object
+                    example:
+                        - vehicleno:
+                            value: SGT955G
+                          lastupdated: 2025-04-04
+                          source: 1
+                          classification: C
+                          chassisno:
+                            value: KTGBU2790TG201211
+                          engineno:
+                            value: E201611151953  
+                        - vehicleno:
+                            value: SJB5234a
+                          lastupdated: 2025-04-04
+                          source: 1
+                          classification: C
+                          chassisno:
+                            value: JHMEK3670WS013541
+                          engineno:
+                            value: 4G92AG9903 
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'Internal server error'
+  /payment:
+    post:
+      tags:
+        - Common
+      summary: Payment API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_id:
+                  type: string
+                  example: PY000000009498
+                email:
+                  type: string
+                  example: test@gmail.com
+                redirect_url:
+                  type: string
+                  example: https://www.triceratopdev.com/car/payment-finish/bd6e8c8259ee4196
+                return_baseurl:
+                  type: string
+                  example: https://cms.triceratopdev.com/api/payment-results
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payment_url:
+                    type: string
+                    example: https://paymentgateway.com/pay?order_id=O000000123456
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid payment data
+  /car/quote:
+    post:
+      tags:
+        - Car Insurance
+      summary: Gennerate new quote for car insurance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: '#/components/schemas/car_quote_req_body'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/car_quote_response'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid request data
+  /car/proposal:
+    post:
+      tags:
+        - Car Insurance
+      summary: Save quote proposal for car.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quote_info:
+                  type: object
+                  properties:
+                    quote_id:
+                      type: string
+                      example: Q000000032336
+                    proposal_id:
+                      type: string
+                      example: 'PR000000028394'
+                selected_data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      plan_id:
+                        type: string
+                        example: COMP
+                      addons:
+                        type: object
+                        properties:
+                          with_options:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: LOU
+                                selected_options_id:
+                                  type: string
+                                  example: "TA"
+                          without_options:
+                            type: array
+                            items:
+                              type: string
+                            example:
+                              - YIED
+                              - EWD
+                vehicle_basic_details:
+                  type: object
+                  $ref: '#/components/schemas/vehicle_basic_details'
+                proposer_full_info:
+                  type: object
+                  $ref: '#/components/schemas/proposer_full_info'
+                add_named_driver_info:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/driver_info'
+                  example:
+                    - name: test 1
+                      nric_or_fin: S7682949G
+                      date_of_birth: 10/12/1980
+                      driving_experience: 5
+                      gender: MALE
+                      marital_status: MARRIED
+                    - name: test 2
+                      nric_or_fin: S4243033A
+                      date_of_birth: 04/05/1999
+                      driving_experience: 3
+                      gender: MALE
+                      marital_status: MARRIED
+                    - name: test 3
+                      nric_or_fin: S3866945A
+                      date_of_birth: 20/07/2000
+                      driving_experience: 2
+                      gender: MALE
+                      marital_status: SINGLE
+                __finalize:
+                  type: number
+                  example: 0
+                redirect_url:
+                  type: string
+                  example: https://www.triceratopdev.com/car/payment-finish/7a74e5dd6dd2f685
+                return_baseurl:
+                  type: string
+                  example: https://cms.triceratopdev.com/api/payment-results
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Save quote proposal successfully"
+                  data:
+                    type: object
+                    properties:
+                      quote_key:
+                        type: string
+                        example: bd6e8c8259ee4196
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid request data
+  /car/proposal/finalize:
+    post:
+      tags:
+        - Car Insurance
+      summary: Save quote proposal finalize for car.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quote_info:
+                  type: object
+                  properties:
+                    quote_id:
+                      type: string
+                      example: Q000000032339
+                    proposal_id:
+                      type: string
+                      example: 'PR000000028397'
+                    __finalize:
+                      type: number
+                      example: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Save quote proposal finalize successfully"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid request data
+
+components:
+  schemas:
+    personal_info:
+      type: object
+      properties:
+        date_of_birth:
+          type: string
+          description: format dd/MM/YYYY
+          example: 03/12/1998
+        driving_experience:
+          type: number
+          example: 4
+        phone_number:
+          type: string
+          example: 98989898
+        email:
+          type: string
+          example: test@gmail.com
+    vehicle_basic_details:
+      type: object
+      properties:
+        make:
+          type: string
+          example: 'Audi'
+        model:
+          type: string
+          example: 'A8 3.0'
+        first_registered_year:
+          type: string
+          example: '2024'
+        chasis_number:
+          type: string
+          example: 'SBA123A'
+        
+    insurance_additional_info:
+      type: object
+      properties:
+        no_claim_discount:
+          type: number
+          example: 20
+        no_of_claim:
+          type: number
+          example: 0
+        start_date:
+          type: string
+          description: format dd/MM/YYYY
+          example: 19/07/2024
+        end_date:
+          type: string
+          description: format dd/MM/YYYY
+          example: 18/07/2025
+        last_claim_amount:
+          type: number
+          example: 0
+          enum:
+            - less than SGD 20K
+            - more than SGD 20K
+        vehicle_finance_by:
+          type: number
+          example: 12
+    car_quote_req_body:
+      type: object
+      properties:
+        product_id:
+          type: string
+          example: 'M000000000094'
+        partner_code:
+          type: string
+          example: 'A0000165'
+        promo_code:
+          type: string
+          example: 'SPECIAL15'
+        personal_info:
+          $ref: '#/components/schemas/personal_info'
+        vehicle_basic_details:
+          $ref: '#/components/schemas/vehicle_basic_details'
+        insurance_additional_info:
+          $ref: '#/components/schemas/insurance_additional_info'
+    quote_info:
+      type: object
+      properties:
+        product_id:
+          type: string
+          example: 'Q000000000094'
+        policy_id:
+          type: string
+          example: 'P000000021753'
+        quote_id:
+          type: string
+          example: 'Q000000021721'
+        quote_no:
+          type: string
+          example: 'QMMC24000210'
+        proposal_id:
+          type: string
+          example: 'PR000000018730'
+        quote_expiry_date:
+          type: string
+          format: date-time
+          example: '2025-05-12 09:51:43'
+        is_electric_vehicle_model:
+          type: boolean
+          example: false
+        is_performance_model:
+          type: boolean
+          example: false
+    addon:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'YIED'
+        title:
+          type: string
+          example: 'Any Workshops'
+        eligibility:
+          type: boolean
+          example: true
+        description:
+          type: string
+          items:
+            type: string
+            example: 'Enjoy the flexibility to repair your car at any specific workshop or workshop of your choice.'
+        premium_with_gst:
+          type: number
+          example: 2787.06
+        premium_bef_gst:
+          type: number
+          example: 0
+    plan:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'TPO'
+        title:
+          type: string
+          example: 'Third Party Only'
+        premium_with_gst:
+          type: number
+          example: 476.64
+        premium_bef_gst:
+          type: number
+          example: 39.36
+        benefits:
+          type: array
+          items:
+            type: string
+            example: 'Up to S$10,000 Personal Accident Coverage'
+        addons:
+          type: array
+          items:
+            $ref: '#/components/schemas/addon'
+            example:
+              - id: YIED
+                title: Any Workshops
+                eligibility: true
+                description:
+                  - Enjoy the flexibility to repair your car at any specific dealer's workshop or workshop of your choice.
+                premium_with_gst: 4357.48
+                premium_bef_gst: 327.96
+              - id: EWD
+                title: Any Workshops2
+                eligibility: true
+                description:
+                  - Enjoy the flexibility to repair your car at any specific dealer's workshop or workshop of your choice.
+                premium_with_gst: 4357.48
+                premium_bef_gst: 327.96
+    car_quote_response:
+      type: object
+      properties:
+        quote_info:
+          $ref: '#/components/schemas/quote_info'
+        plans:
+          type: array
+          items:
+            $ref: '#/components/schemas/plan'
+          example:
+            - id: COM
+              title: Comprehensive
+              premium_with_gst: 6629.77
+              premium_bef_gst: 0
+              benefits:
+                - Complete vehicle coverage.
+                - Third-Party liability coverage relating to vehicle charging.
+                - Free NCD Protector (from 10%) & Waiver of Excess.
+                - Up to $50,000 complimentary Personal Accident coverage.
+              addons:
+                - id: ANY
+                  title: Any Workshops
+                  eligibility: true
+                  description: "Enjoy the flexibility to repair your car at any specific dealer's workshop or workshop of your choice.
+                      * a minimum of $1,500 excess apply."
+                  default_option: null
+                  options: []
+                  premium_with_gst: 2134.96
+                  premium_bef_gst: 0
+                - id: LOU
+                  title: Loss Of Use
+                  eligibility: true
+                  description:
+                    - Compensates you with Transport Allowance or Courtesy Car when your car is being repaired due to an accident.
+                  default_option: "TA"
+                  options:
+                    - id: "TA"
+                      title: Transport Allowance
+                      amount: 0
+                      premium_with_gst: 0
+                      premium_bef_gst: 0
+                    - id: "1,600cc"
+                      title: Courtesy Car 1,600cc
+                      amount: 300
+                      premium_with_gst: 22.7
+                      premium_bef_gst: 20.82
+                    - id: "2,000cc"
+                      title: Courtesy Car 2,000cc
+                      amount: 500
+                      premium_with_gst: 22.7
+                      premium_bef_gst: 20.82
+                  premium_with_gst: null
+                  premium_bef_gst: null
+                - id: MDE
+                  title: Medical Expenses
+                  eligibility: true
+                  description:
+                    - Enjoy additional coverage to your basic policy coverage for the policy owner and/or Named Driver who is driving the motor car at the point of accident. You may enjoy additional coverage by selecting one of the options.
+                  default_option: "200"
+                  options:
+                    - id: "200"
+                      title: "+$200"
+                      amount: 0
+                      premium_with_gst: 27.25
+                      premium_bef_gst: 27.25
+                    - id: "700"
+                      title: "+$700"
+                      amount: 300
+                      premium_with_gst: 54.50
+                      premium_bef_gst: 54.52
+                    - id: "2,000cc"
+                      title: Courtesy Car 2,000cc
+                      amount: 500
+                      premium_with_gst: 22.7
+                      premium_bef_gst: 20.82
+                  premium_with_gst: null
+                  premium_bef_gst: null
+            - id: TPFT
+              title: Third Party, Fire & Theft
+              premium_with_gst: 4570.73
+              premium_bef_gst: 4520.34
+              benefits:
+                - Up to S$10,000 Personal Accident Coverage
+              addons:
+                - id: AAID
+                  title: Add Additional Named Driver(s)
+                  eligibility: true
+                  description:
+                    - Extend the coverage to any driver you choose to name under your policy.
+                  default_option: "EDAB"
+                  options:
+                    - id: "EDAB"
+                      title: Experienced & Inexperienced drivers of all age
+                      amount: 0
+                      premium_with_gst: 87.20
+                      premium_bef_gst: 88.92
+                    - id: "EDOAG"
+                      title: Experienced & Inexperienced drivers of all age
+                      amount: 300
+                      premium_with_gst: 1746.61
+                      premium_bef_gst: 1846.61
+                  premium_with_gst: null
+                  premium_bef_gst: null
+                - id: BUNCD
+                  title: 50% Buy Up NCD
+                  eligibility: true
+                  description:
+                    - Boost your NCD to 50%.
+                  default_option: null
+                  options: []
+                  premium_with_gst: 2095.93
+                  premium_bef_gst: 2095.67
+            - id: TPO
+              title: Third Party Only
+              premium_with_gst: 4657.61
+              premium_bef_gst: 4657.61
+              benefits:
+                - Protection against loss/damage to third party only.
+                - Third-Party liability coverage relating to vehicle charging.
+              addons:
+                - id: AAID
+                  title: Add Additional Named Driver(s)
+                  eligibility: true
+                  description:
+                    - Extend the coverage to any driver you choose to name under your policy.
+                  default_option: "EDAB"
+                  options:
+                    - id: "EDAB"
+                      title: Experienced & Inexperienced drivers of all age
+                      amount: 0
+                      premium_with_gst: 87.20
+                      premium_bef_gst: 88.92
+                    - id: "EDOAG"
+                      title: Experienced & Inexperienced drivers of all age
+                      amount: 300
+                      premium_with_gst: 1746.61
+                      premium_bef_gst: 1846.61
+                  premium_with_gst: null
+                  premium_bef_gst: null
+                - id: BUNCD
+                  title: 50% Buy Up NCD
+                  eligibility: true
+                  description:
+                    - Boost your NCD to 50%.
+                  default_option: null
+                  options: []
+                  premium_with_gst: 2095.93
+                  premium_bef_gst: 2095.67
+    address:
+      type: object
+      properties:
+        address_line1:
+          type: string
+          example: TEST ADDRESS LINE 1
+        address_line2:
+          type: string
+          example: ''
+        address_line3:
+          type: string
+          example: ''
+        post_code:
+          type: string
+          example: '832233'
+    vehicle_full_detail:
+      type: object
+      properties:
+        full_name:
+          type: string
+          example: TEST INSURED NAME
+        nric_or_fin:
+          type: string
+          example: S1234567D
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          example: MALE
+        marital_status:
+          type: string
+          enum: [SINGLE, MARRIED, DIVORCED, WIDOWED]
+          example: MARRIED
+        address:
+          type: object
+          $ref: '#/components/schemas/address'
+    driver_info:
+      type: object
+      properties:
+        name:
+          type: string
+          example: test nd 1 name
+        nric_or_fin:
+          type: string
+          example: S7682949G
+        date_of_birth:
+          type: string
+          format: date
+          description: Format dd/MM/yyyy
+          example: 10/12/1980
+        driving_experience:
+          type: number
+          example: 5
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          example: MALE
+        marital_status:
+          type: string
+          enum: [SINGLE, MARRIED, DIVORCED, WIDOWED]
+          example: MARRIED
+    proposer_full_info:
+      type: object
+      properties:
+        full_name:
+          type: string
+          example: TEST INSURED NAME
+        nric_or_fin:
+          type: string
+          example: S1234567D
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          example: MALE
+        marital_status:
+          type: string
+          enum: [SINGLE, MARRIED, DIVORCED, WIDOWED]
+          example: MARRIED
+        address:
+          type: object
+          $ref: '#/components/schemas/address'
+    quote_detail_info:
+      type: object
+      properties:
+        quote_id:
+          type: string
+          example: Q000000015581
+        quote_info:
+          type: string
+          example: QQMA24001299
+        policy_id:
+          type: string
+          example: P000000015561
+        phone:
+          type: string
+          example: 88888888
+        email:
+          type: string
+          example: test@gmail.com
+        full_name:
+            type: string
+            example: Kric
+        product_type:
+            type: string
+            example: Car
+        data:
+          type: object
+          properties:
+            selected_data:
+              type: array
+              items:
+                type: object
+                properties:
+                  plan_id:
+                    type: string
+                    example: COMP
+                  addons:
+                    type: object
+                    properties:
+                      with_options:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: LOU
+                            selected_options_id:
+                              type: string
+                              example: "TA"
+                      without_options:
+                        type: array
+                        items:
+                          type: string
+                        example:
+                          - YIED
+                          - EWD
+            vehicle_basic_details:
+              type: object
+              $ref: '#/components/schemas/vehicle_basic_details'
+            proposer_full_info:
+              type: object
+              $ref: '#/components/schemas/proposer_full_info'
+            add_named_driver_info:
+              type: array
+              items:
+                $ref: '#/components/schemas/driver_info'
+              example:
+              - name: test 1
+                nric_or_fin: S7682949G
+                date_of_birth: 10/12/1980
+                driving_experience: 5
+                gender: MALE
+                marital_status: MARRIED
+              - name: test 2
+                nric_or_fin: S4243033A
+                date_of_birth: 04/05/1999
+                driving_experience: 3
+                gender: MALE
+                marital_status: MARRIED
+              - name: test 3
+                nric_or_fin: S3866945A
+                date_of_birth: 20/07/2000
+                driving_experience: 2
+                gender: MALE
+                marital_status: SINGLE
+        promo_code:
+          type: string
+          example: ""
+        partner_code:
+          type: string
+          example: ""
+        is_finalized:
+          type: boolean
+          example: false
+        expiration_date:
+          type: string
+          example: "10/10/2025"
+    company_provider:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+        name:
+          type: string
+          example: 'AETNA INSURANCE COMPANY LIMITED (SINGAPORE BRANCH'
+    vehicle_make:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+        name:
+          type: string
+          example: 'BMW'
+    vehicle_model:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+        name:
+          type: string
+          example: 'X4 x35i 3.0'
