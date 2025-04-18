@@ -26,7 +26,6 @@ export async function getInfoPromocode(data: geInfoPromocodeDTO) {
   if (!promoCode) {
     throw new NotFoundError(PROMO_CODE_MESSAGES.NOT_FOUND);
   }
-
   const currentTime = new Date();
 
   if (!promoCode.products.includes(product_type)) {
