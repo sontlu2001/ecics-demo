@@ -2,6 +2,7 @@ import { geInfoPromocodeDTO } from "./promo-code.dto";
 import { prisma } from "@/app/api/libs/prisma";
 import { PROMO_CODE_MESSAGES } from "./promo-code.constants";
 import logger from "@/app/api/libs/logger";
+import { NotFoundError } from "@/app/api/core/error.response";
 
 export async function getInfoPromocode(data: geInfoPromocodeDTO) {
   const { promo_code, product_type } = data;
@@ -25,10 +26,7 @@ export async function getInfoPromocode(data: geInfoPromocodeDTO) {
 
   if (!promoCode) {
     logger.info(`Promo code ${promo_code} not found`);
-    return {
-      message: PROMO_CODE_MESSAGES.NOT_FOUND,
-      data: null,
-    }
+    throw new NotFoundError(`Promo code ${promo_code} not found`);
   }
   const currentTime = new Date();
 
