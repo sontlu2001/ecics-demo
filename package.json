@@ -3,13 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "mgdb": "npm install && npx prisma db push",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
@@ -28,11 +26,13 @@
     "react": "^18",
     "react-dom": "^18",
     "react-redux": "^9.2.0",
+    "sass": "^1.86.3",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@svgr/webpack": "^8.1.0",
     "@types/node": "^20",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.17",
@@ -44,7 +44,6 @@
     "eslint-config-next": "13.5.11",
     "postcss": "^8",
     "tailwindcss": "^3",
-    "tsx": "^4.19.3",
     "typescript": "^5"
   }
 }

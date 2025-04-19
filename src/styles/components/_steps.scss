@@ -1,0 +1,54 @@
+.ant-steps-item-tail {
+  padding: 0 16px !important;
+}
+
+.ant-steps-item-title {
+  font-weight: 500;
+}
+
+.new-line {
+  display: block;
+}
+
+.ant-steps-item-finish .ant-steps-item-title,
+.ant-steps-item-process .ant-steps-item-title {
+  white-space: normal;
+}
+
+.ant-steps-item-finish .ant-steps-icon {
+  color: white !important;
+}
+
+.ant-steps-item-finish .ant-steps-item-icon {
+  background-color: #00ADEF !important;
+  border-color: #00ADEF !important;
+}
+
+.ant-steps-item-finish .ant-steps-item-title {
+  color: #00ADEF !important;
+}
+
+/* Current step */
+.ant-steps-item-process .ant-steps-item-icon {
+  background-color: #00ADEF !important;
+  border-color: #00ADEF !important;
+}
+
+.custom-step-wait {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #d9d9d9;
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-step-wait::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background-color: #d9d9d9;
+  border-radius: 50%;
+}
