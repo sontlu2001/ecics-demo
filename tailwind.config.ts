@@ -8,14 +8,23 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        primary: ['Inter', 'sans-serif'],
+      },
     },
     screens: {
-      // default Mobile First
-      tablet: "640px",  
-      laptop: "1024px", 
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+      tablet: "640px",
+      laptop: "1024px",
       desktop: "1280px",
     }
+
   },
   plugins: [],
 }
+
 export default config

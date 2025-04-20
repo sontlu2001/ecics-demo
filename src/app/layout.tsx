@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Open_Sans } from 'next/font/google';
-import './globals.css';
+import '@/styles/app.scss';
 import { ReduxProvider } from '@/providers/redux';
 import { ReactQueryProvider } from '@/providers/react-query';
 
