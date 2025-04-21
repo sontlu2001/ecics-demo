@@ -4,6 +4,19 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,35 +26,144 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Promocode {
-  id               Int      @id @default(autoincrement())
-  code             String   @unique
-  start_time       DateTime
-  end_time         DateTime
-  description      String
-  discount         Float
-  products         String[]
-  is_public        Boolean
+model PromoCode {
+  id                Int      @id @default(autoincrement())
+  code              String   @unique
+  start_time        DateTime
+  end_time          DateTime
+  description       String
+  discount          Float
+  products          String[]
+  is_public         Boolean
   is_show_countdown Boolean
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  Quote     Quote[]
 
   @@map("promo_code")
 }
 
 model CusstomerInfo {
-  id        Int      @id @default(autoincrement())
-  name      String? 
-  vehicle_registration_number     String   @unique
-  sex       String?
-  country   String?
-  source    String?
-  is_allowed_renewal Boolean @default(false)
-  is_allowed_new_biz Boolean @default(false)
-  national_identity_no String?
+  id                          Int     @id @default(autoincrement())
+  name                        String?
+  vehicle_registration_number String  @unique
+  sex                         String?
+  country                     String?
+  source                      String?
+  is_allowed_renewal          Boolean @default(false)
+  is_allowed_new_biz          Boolean @default(false)
+  national_identity_no        String?
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
-  @@map("customer-info")
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("customer_info")
+}
+
+model Quote {
+  id       Int    @id @default(autoincrement())
+  quoteId  String? @map("quote_id")
+  quoteNo  String? @map("quote_no")
+  policyId String? @map("policy_id")
+  phone    String?
+  email    String?
+  name     String?
+  data     Json?
+
+  partnerCode    String?  @map("partner_code")
+  isFinalized    Boolean  @default(false) @map("is_finalized")
+  isPaid         Boolean  @default(false) @map("is_paid")
+  expirationDate DateTime? @map("expiration_date")
+  key            String
+  ipAddress      String?   @map("ip_address")
+  country        String?
+  city           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  // Foreign Keys
+  personalInfoId Int?         @map("personal_info_id")
+  personalInfo   PersonalInfo? @relation(fields: [personalInfoId], references: [id])
+
+  companyId Int?     @map("company_id")
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  paymentResultId Int?           @map("payment_result_id")
+  paymentResult   PaymentResult? @relation(fields: [paymentResultId], references: [id])
+
+  countryNationalityId Int?                @map("country_nationality_id")
+  countryNationality   CountryNationality? @relation(fields: [countryNationalityId], references: [id])
+
+  productTypeId Int?         @map("product_type_id")
+  productType   ProductType? @relation(fields: [productTypeId], references: [id])
+
+  promoCodeId Int?       @map("promo_code_id")
+  promoCode   PromoCode? @relation(fields: [promoCodeId], references: [id])
+
+   @@map("quote")
+}
+
+model ProductType {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  Quote     Quote[]
+
+  @@map("product_type")
+}
+
+model PersonalInfo {
+  id                 Int           @id @default(autoincrement())
+  phone              String
+  email              String
+  name               String
+  gender             Gender
+  nric               String
+  maritalStatus      MaritalStatus
+  dateOfBirth        DateTime      @map("date_of_birth")
+  address            String
+  vehicleMake        String        @map("vehicle_make")
+  vehicleModel       String        @map("vehicle_model")
+  yearOfRegistration String        @map("year_of_registration")
+  chassisNumber      String        @map("chassis_number")
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @default(now()) @updatedAt
+  quotes             Quote[]
+
+  @@map("personal_info")
+}
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  name      String
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  quotes    Quote[]
+
+  @@map("company")
+}
+
+model PaymentResult {
+  id        Int      @id @default(autoincrement())
+  policyId  String   @map("policy_id")
+  policyNo  String   @map("policy_no")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  quotes    Quote[]
+
+  @@map("payment_result")
+}
+
+model CountryNationality {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  quotes Quote[]
+
+  @@map("country_nationality")
 }

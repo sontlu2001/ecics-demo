@@ -6,7 +6,7 @@ import logger from "@/app/api/libs/logger";
 export async function getInfoPromocode(data: geInfoPromocodeDTO) {
   const { promo_code, product_type } = data;
 
-  const promoCode = await prisma.promocode.findUnique({
+  const promoCode = await prisma.promoCode.findUnique({
     select: {
       code: true,
       discount: true,
