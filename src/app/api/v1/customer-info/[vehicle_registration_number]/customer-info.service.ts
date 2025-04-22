@@ -8,16 +8,16 @@ export async function getCustomerInfo(data: getCustomerInfoDTO){
     const cusstomerInfo = await prisma.cusstomerInfo.findUnique({
       select: {
        name: true,
-       vehicle_registration_number: true,
+       vehicleRegistrationNumber: true,
        sex: true,
        country: true,
        source: true,
-       is_allowed_new_biz: true,
-       is_allowed_renewal: true,
-       national_identity_no: true,
+       isAllowedNewBiz: true,
+       isAllowedRenewal: true,
+       nationalIdentityNo: true,
       },
       where: {
-        vehicle_registration_number
+        vehicleRegistrationNumber: vehicle_registration_number,
       }
     });
 

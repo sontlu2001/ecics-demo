@@ -10,12 +10,12 @@ export async function getInfoPromocode(data: geInfoPromocodeDTO) {
     select: {
       code: true,
       discount: true,
-      start_time: true,
-      end_time: true,
+      startTime: true,
+      endTime: true,
       description: true,
       products: true,
-      is_public: true,
-      is_show_countdown: true,
+      isPublic: true,
+      isShowCountdown: true,
     },
     where: {
       code: promo_code,
@@ -37,18 +37,18 @@ export async function getInfoPromocode(data: geInfoPromocodeDTO) {
     return createResponse(PROMO_CODE_MESSAGES.NOT_VALID_FOR_PRODUCT, promoCode, false);
   }
 
-  if (!promoCode.is_public) {
+  if (!promoCode.isPublic) {
     logger.info(`Promo code ${promo_code} is not public`);
     return createResponse(PROMO_CODE_MESSAGES.NOT_VALID, promoCode, false);
   }
 
-  if (promoCode.start_time > currentTime) {
+  if (promoCode.startTime > currentTime) {
     logger.info(`Promo code ${promo_code} not valid`);
     return createResponse(PROMO_CODE_MESSAGES.NOT_VALID, promoCode, false);
   }
 
-  if (promoCode.end_time < currentTime) {
-    logger.info(`Promo code ${promo_code} expired with end time ${promoCode.end_time} and current time ${currentTime}`);
+  if (promoCode.endTime < currentTime) {
+    logger.info(`Promo code ${promo_code} expired with end time ${promoCode.endTime} and current time ${currentTime}`);
     return createResponse(PROMO_CODE_MESSAGES.EXPIRED, promoCode, false);
   }
 
