@@ -13,13 +13,13 @@ export async function savePersonalInfo(data: savePersonalInfoDTO) {
     });
 
     if (existingQuoteInfo) {
-      logger.info(`Quote info with key ${data.key} already exists`);
+      console.log(`Quote info with key ${data.key} already exists`);
       return {
         message: "Quote info already exists.",
         data: null,
       };
     }
-    
+
     const newPersonalInfo = await prisma.personalInfo.create({
       data: {
         email: data.email,
@@ -36,7 +36,7 @@ export async function savePersonalInfo(data: savePersonalInfoDTO) {
         vehicles: data.vehicles ?? [],
       },
     });
-    logger.info(`Creating a new personal info: ${JSON.stringify(newPersonalInfo)}`);
+    console.log(`Creating a new personal info: ${JSON.stringify(newPersonalInfo)}`);
 
     const newQuote = await prisma.quote.create({
       data: {
@@ -44,19 +44,19 @@ export async function savePersonalInfo(data: savePersonalInfoDTO) {
         personalInfoId: newPersonalInfo.id,
       }
      });
-     logger.info(`Creating a new quote info: ${JSON.stringify(newQuote)}`);
-   
+     console.log(`Creating a new quote info: ${JSON.stringify(newQuote)}`);
+
     const retrieveQuoteHTML = generateQuoteEmail({
       name: newPersonalInfo.name ?? "",
       quote_key: newQuote.key ?? "",
     });
-  
+
     sendMail({
       to: newPersonalInfo.email ?? "",
       subject: `ECICS Limited |`,
       html: retrieveQuoteHTML
     });
-  
+
     return {
       message: "Personal info created successfully.",
       data: {
