@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Open_Sans } from 'next/font/google';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
 import '@/styles/app.scss';
 import { ReduxProvider } from '@/providers/redux';
 import { ReactQueryProvider } from '@/providers/react-query';
@@ -23,11 +24,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang='en'>
       <body className={openSans.className}>
         <ReduxProvider>
           <ReactQueryProvider>
-            {children}
+            <AntdRegistry>{children}</AntdRegistry>
           </ReactQueryProvider>
         </ReduxProvider>
       </body>

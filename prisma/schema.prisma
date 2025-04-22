@@ -5,16 +5,16 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 enum Gender {
-  MALE
-  FEMALE
-  OTHER
+  Male
+  Female
+  Other
 }
 
 enum MaritalStatus {
-  SINGLE
-  MARRIED
-  DIVORCED
-  WIDOWED
+  Single
+  Married
+  Divorced
+  Widowed
 }
 
 generator client {
@@ -26,16 +26,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model PromoCode {
-  id                Int      @id @default(autoincrement())
-  code              String   @unique
-  start_time        DateTime
-  end_time          DateTime
-  description       String
-  discount          Float
-  products          String[]
-  is_public         Boolean
-  is_show_countdown Boolean
+model Promocode {
+  id              Int      @id @default(autoincrement())
+  code            String   @unique
+  startTime       DateTime @map("start_time")
+  endTime         DateTime @map("end_time")
+  description     String
+  discount        Float
+  products        String[]
+  isPublic        Boolean  @map("is_public")
+  isShowCountdown Boolean  @map("is_show_countdown")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -45,15 +45,15 @@ model PromoCode {
 }
 
 model CusstomerInfo {
-  id                          Int     @id @default(autoincrement())
-  name                        String?
-  vehicle_registration_number String  @unique
-  sex                         String?
-  country                     String?
-  source                      String?
-  is_allowed_renewal          Boolean @default(false)
-  is_allowed_new_biz          Boolean @default(false)
-  national_identity_no        String?
+  id                        Int     @id @default(autoincrement())
+  name                      String?
+  vehicleRegistrationNumber String  @unique @map("vehicle_registration_number")
+  sex                       String?
+  country                   String?
+  source                    String?
+  isAllowedRenewal          Boolean @default(false) @map("is_allowed_renewal")
+  isAllowedNewBiz           Boolean @default(false) @map("is_allowed_new_biz")
+  nationalIdentityNo        String? @map("national_identity_no")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -62,7 +62,7 @@ model CusstomerInfo {
 }
 
 model Quote {
-  id       Int    @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   quoteId  String? @map("quote_id")
   quoteNo  String? @map("quote_no")
   policyId String? @map("policy_id")
@@ -71,19 +71,19 @@ model Quote {
   name     String?
   data     Json?
 
-  partnerCode    String?  @map("partner_code")
-  isFinalized    Boolean  @default(false) @map("is_finalized")
-  isPaid         Boolean  @default(false) @map("is_paid")
+  partnerCode    String?   @map("partner_code")
+  isFinalized    Boolean   @default(false) @map("is_finalized")
+  isPaid         Boolean   @default(false) @map("is_paid")
   expirationDate DateTime? @map("expiration_date")
   key            String
   ipAddress      String?   @map("ip_address")
   country        String?
   city           String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now()) @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
 
   // Foreign Keys
-  personalInfoId Int?         @map("personal_info_id")
+  personalInfoId Int?          @map("personal_info_id")
   personalInfo   PersonalInfo? @relation(fields: [personalInfoId], references: [id])
 
   companyId Int?     @map("company_id")
@@ -99,9 +99,9 @@ model Quote {
   productType   ProductType? @relation(fields: [productTypeId], references: [id])
 
   promoCodeId Int?       @map("promo_code_id")
-  promoCode   PromoCode? @relation(fields: [promoCodeId], references: [id])
+  promoCode   Promocode? @relation(fields: [promoCodeId], references: [id])
 
-   @@map("quote")
+  @@map("quote")
 }
 
 model ProductType {
@@ -121,13 +121,13 @@ model PersonalInfo {
   name               String
   gender             Gender
   nric               String
-  maritalStatus      MaritalStatus
-  dateOfBirth        DateTime      @map("date_of_birth")
+  maritalStatus      MaritalStatus @map("marital_status")
+  dateOfBirth        DateTime       @map("date_of_birth") @db.Date
   address            String
   vehicleMake        String        @map("vehicle_make")
   vehicleModel       String        @map("vehicle_model")
   yearOfRegistration String        @map("year_of_registration")
-  chassisNumber      String        @map("chassis_number")
+  vehicles           Json          
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @default(now()) @updatedAt
   quotes             Quote[]

@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import logger from "@/app/api/_libs/logger";
+import logger from "@/app/api/libs/logger";
 
 const prisma = new PrismaClient();
 
@@ -14,12 +14,12 @@ export async function getQuoteByKey(key: string) {
           select: {
             code: true,
             discount: true,
-            start_time: true,
-            end_time: true,
+            startTime: true,
+            endTime: true,
             description: true,
             products: true,
-            is_public: true,
-            is_show_countdown: true,
+            isPublic: true,
+            isShowCountdown: true,
           },
         },
         company: {
@@ -42,7 +42,7 @@ export async function getQuoteByKey(key: string) {
             vehicleMake: true,
             vehicleModel: true,
             yearOfRegistration: true,
-            chassisNumber: true,
+            vehicles: true,
           },
         },
         countryNationality: {

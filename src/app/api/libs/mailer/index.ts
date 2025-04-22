@@ -1,7 +1,6 @@
 // lib/mailer.ts
 import nodemailer from 'nodemailer';
 import logger from '../logger';
-import { log } from 'console';
 
 interface MailOptions {
   to: string;
@@ -32,7 +31,7 @@ export const sendMail = async ({to, subject, html, bcc}: MailOptions) => {
       html: html,
     });
 
-    logger.info('Email sent successfully!');
+    logger.info('Sending email successfully!');
   } catch (error) {
     logger.error('Error sending email:', error);
   }
