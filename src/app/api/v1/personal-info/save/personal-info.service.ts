@@ -1,6 +1,6 @@
 import { prisma } from "@/app/api/libs/prisma";
 import { savePersonalInfoDTO } from "./personal-info.dto";
-import logger from "@/app/api/libs/logger";
+// import logger from "@/app/api/libs/logger";
 import { sendMail } from "@/app/api/libs/mailer";
 import { generateQuoteEmail } from "@/app/api/libs/mailer/templates";
 
@@ -65,7 +65,7 @@ export async function savePersonalInfo(data: savePersonalInfoDTO) {
       },
     };
   } catch (error) {
-    logger.error(`Error saving personal info: ${error}`);
+    console.error(`Error saving personal info: ${error}`);
     throw new Error("Failed to save personal info.");
   }
 }
