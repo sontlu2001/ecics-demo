@@ -28,7 +28,9 @@ export default function RootLayout({
       <body className={openSans.className}>
         <ReduxProvider>
           <ReactQueryProvider>
-            <AntdRegistry>{children}</AntdRegistry>
+            <AntdRegistry>
+              <div className='mx-auto max-w-[1280px]'>{children}</div>
+            </AntdRegistry>
           </ReactQueryProvider>
         </ReduxProvider>
       </body>

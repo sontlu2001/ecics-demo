@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-import logger from "@/app/api/libs/logger";
+import { PrismaClient } from '@prisma/client';
+import logger from '@/app/api/libs/logger';
 
 const prisma = new PrismaClient();
 
@@ -63,20 +63,20 @@ export async function getQuoteByKey(key: string) {
     if (!quote) {
       logger.info(`Quote with key ${key} not found`);
       return {
-        message: "Quote not found",
+        message: 'Quote not found',
         data: null,
       };
     }
 
     logger.info(`Quote with key ${key} found: ${JSON.stringify(quote)}`);
     return {
-      message: "Quote found",
+      message: 'Quote found',
       data: quote,
     };
   } catch (error) {
     logger.error(`Error occurred while getting quote by key: ${error}`);
     return {
-      message: "Internal server error",
+      message: 'Internal server error',
       data: null,
     };
   }

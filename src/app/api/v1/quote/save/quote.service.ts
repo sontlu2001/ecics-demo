@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
-import { saveQuoteDTO } from "./quote.dto";
-import logger from "@/app/api/libs/logger";
-import { generateQuoteEmail } from "@/app/api/libs/mailer/templates";
-import { sendMail } from "@/app/api/libs/mailer";
+import { PrismaClient } from '@prisma/client';
+import { saveQuoteDTO } from './quote.dto';
+import logger from '@/app/api/libs/logger';
+import { generateQuoteEmail } from '@/app/api/libs/mailer/templates';
+import { sendMail } from '@/app/api/libs/mailer';
 
 const prisma = new PrismaClient();
 
@@ -15,7 +15,7 @@ export async function saveQuote(data: saveQuoteDTO) {
 
   if (existingQuote) {
     logger.info(
-      `Quote with ID ${existingQuote.id} found. Updating with new data: ${JSON.stringify(data)}`
+      `Quote with ID ${existingQuote.id} found. Updating with new data: ${JSON.stringify(data)}`,
     );
     const updatedQuote = await prisma.quote.update({
       where: { id: existingQuote.id },
@@ -29,7 +29,9 @@ export async function saveQuote(data: saveQuoteDTO) {
         partnerCode: data.partnerCode,
         isFinalized: data.isFinalized ?? false,
         isPaid: data.isPaid ?? false,
-        expirationDate: data.expirationDate ? new Date(data.expirationDate) : undefined,
+        expirationDate: data.expirationDate
+          ? new Date(data.expirationDate)
+          : undefined,
         key: data.key,
         ipAddress: data.ipAddress,
         country: data.country,
@@ -94,13 +96,15 @@ export async function saveQuote(data: saveQuoteDTO) {
     });
 
     return {
-      message: "Quote updated successfully.",
+      message: 'Quote updated successfully.',
       data: updatedQuote,
     };
   }
 
   // If the quote does not exist, create a new one
-  logger.info(`Quote not found. Creating a new quote with data: ${JSON.stringify(data)}`);
+  logger.info(
+    `Quote not found. Creating a new quote with data: ${JSON.stringify(data)}`,
+  );
   const newQuote = await prisma.quote.create({
     data: {
       quoteId: data.quoteId,
@@ -113,7 +117,9 @@ export async function saveQuote(data: saveQuoteDTO) {
       partnerCode: data.partnerCode,
       isFinalized: data.isFinalized ?? false,
       isPaid: data.isPaid ?? false,
-      expirationDate: data.expirationDate ? new Date(data.expirationDate) : undefined,
+      expirationDate: data.expirationDate
+        ? new Date(data.expirationDate)
+        : undefined,
       key: data.key,
       personalInfoId: data.personalInfoId,
       companyId: data.companyId,
@@ -125,17 +131,17 @@ export async function saveQuote(data: saveQuoteDTO) {
   });
 
   const retrieveQuoteHTML = generateQuoteEmail({
-    quote_key: newQuote.key ?? "",
-    name: newQuote.name ?? "",
+    quote_key: newQuote.key ?? '',
+    name: newQuote.name ?? '',
   });
   sendMail({
-    to: newQuote.email ?? "",
+    to: newQuote.email ?? '',
     subject: `ECICS Limited | Your Car Insurance Quotation <${newQuote.quoteNo}>`,
-    html: retrieveQuoteHTML
+    html: retrieveQuoteHTML,
   });
 
   return {
-    message: "Quote created successfully.",
+    message: 'Quote created successfully.',
     data: newQuote,
   };
 }

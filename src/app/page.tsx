@@ -1,5 +1,9 @@
 'use client';
+import ProcessBar from '@/components/ProcessBar';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
 import Image from 'next/image';
+import 'swiper/css';
+import 'swiper/css/navigation';
 
 export default function Home() {
   return (
@@ -9,9 +13,20 @@ export default function Home() {
         <h1 className='text-3xl font-bold'>Welcome to the ECICS</h1>
         <div className='flex flex-col gap-4'>
           <div className='flex w-96 gap-4'>
+            <SecondaryButton className='w-full'>Secondary</SecondaryButton>
+            <PrimaryButton className='w-full'>Primary</PrimaryButton>
           </div>
-
+          <SecondaryButton
+            size='large'
+            className='font-[400]'
+            icon={<span>+</span>}
+          >
+            Add more drive
+          </SecondaryButton>
         </div>
+      </div>
+      <div className=''>
+        <ProcessBar currentStep={1} />
       </div>
     </main>
   );

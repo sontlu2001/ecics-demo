@@ -1,15 +1,12 @@
-.ant-steps-item-tail {
-  padding: 0 16px !important;
+.ant-steps.ant-steps-horizontal {
+  margin-left: -18px !important;
 }
 
 .ant-steps-item-title {
   font-weight: 500;
 }
 
-.new-line {
-  display: block;
-}
-
+/* Finished step */
 .ant-steps-item-finish .ant-steps-item-title,
 .ant-steps-item-process .ant-steps-item-title {
   white-space: normal;
@@ -17,27 +14,56 @@
 
 .ant-steps-item-finish .ant-steps-icon {
   color: white !important;
+  margin-inline-start: 0 !important;
+  font-size: 16px;
+}
+
+.ant-steps-item-finish .ant-steps-item-tail::after {
+  background-color: #00adef !important;
 }
 
 .ant-steps-item-finish .ant-steps-item-icon {
-  background-color: #00ADEF !important;
-  border-color: #00ADEF !important;
+  background-color: #00adef !important;
+  border-color: #00adef !important;
 }
 
 .ant-steps-item-finish .ant-steps-item-title {
-  color: #00ADEF !important;
+  color: #00adef !important;
 }
 
 /* Current step */
 .ant-steps-item-process .ant-steps-item-icon {
-  background-color: #00ADEF !important;
-  border-color: #00ADEF !important;
+  background-color: #00adef !important;
+  border-color: #00adef !important;
+}
+
+.ant-steps-item-process .ant-steps-icon {
+  color: white !important;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.ant-steps-item-process .ant-steps-item-tail::after {
+  background-color: #d1d5db !important;
+}
+
+/* Wait step */
+.ant-steps-item-wait .ant-steps-item-tail::after {
+  background-color: #d1d5db !important;
+}
+
+.ant-steps-item-wait .ant-steps-item-title {
+  color: #696969 !important;
+}
+
+.ant-steps-item .ant-steps-item-container {
+  width: 80px !important;
 }
 
 .custom-step-wait {
   width: 32px;
   height: 32px;
-  border: 2px solid #d9d9d9;
+  border: 3px solid #9ca3af;
   border-radius: 50%;
   background-color: white;
   display: flex;
@@ -47,8 +73,8 @@
 
 .custom-step-wait::after {
   content: '';
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
   background-color: #d9d9d9;
   border-radius: 50%;
 }

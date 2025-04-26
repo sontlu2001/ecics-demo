@@ -1,12 +1,14 @@
-import logger from "../logger";
+import logger from '../logger';
 
 interface quoteInfo {
   quote_key: string;
   name: string;
 }
 
-export const generateQuoteEmail = ({name, quote_key}: quoteInfo) => {
-  logger.info(`Generating quote email with details: quote_key=${quote_key}, name=${name}`);
+export const generateQuoteEmail = ({ name, quote_key }: quoteInfo) => {
+  logger.info(
+    `Generating quote email with details: quote_key=${quote_key}, name=${name}`,
+  );
 
   return `
   <div style="width: 90% !important;">
@@ -34,5 +36,5 @@ export const generateQuoteEmail = ({name, quote_key}: quoteInfo) => {
     <p><b>Email: </b><a href="mailto:customerservice@ecics.com.sg" style="color: #004FFF; text-decoration: underline;">customerservice@ecics.com.sg</a></p>
     <p><b>Web: </b><a href="https://www.ecics.com/" style="color: #004FFF; text-decoration: underline;">https://www.ecics.com/</a></p>
     <p><b>Address: </b>10 Eunos Road 8, Singapore Post Centre, #09-04A, Singapore 408600.</p>
-  </div>`
+  </div>`;
 };
