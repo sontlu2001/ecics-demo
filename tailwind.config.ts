@@ -16,6 +16,10 @@ const config: Config = {
         primaryBlue: '#002EFF',
         secondaryBlue: '#007AFF',
         'brand-blue': '#00ADEF',
+        'plan-blue': '#b6dbfd',
+        'review-blue': '#F4FBFD',
+        'coupon-blue': '#0095CE',
+        'red-logo': '#F4333D',
       },
       animation: {
         'slide-up': 'slide-up 0.3s ease-out',

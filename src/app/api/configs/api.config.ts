@@ -20,10 +20,13 @@ async function refreshToken() {
   try {
     const email = process.env.ISP_EMAIL;
     const mpwd = process.env.ISP_MPWD;
-    const response = await axios.post(`${process.env.API_BASE_URL}/auth`, { email, mpwd });
+    const response = await axios.post(`${process.env.ISP_API_URL}/auth`, {
+      email,
+      mpwd,
+    });
     token = response.data.data.token;
-    
-    logger.info('Token refreshed successfully: ', token);
+
+    logger.info(`Token refreshed successfully: ${token}`);
     return token;
   } catch (error) {
     logger.error('Error refreshing token:', error);
@@ -35,11 +38,11 @@ async function refreshToken() {
 apiServer.interceptors.request.use(
   async (config) => {
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers['In-Auth-Token'] = token;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Add response interceptor
@@ -60,7 +63,7 @@ apiServer.interceptors.response.use(
   (error) => {
     console.error('API Error:', error);
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiServer;

@@ -1,0 +1,9 @@
+/* For dropdown arrows (e.g., Select component) */
+.ant-select-arrow .anticon > svg {
+  fill: #00adef !important; /* Brand blue */
+}
+
+/* For Dropdown component icons (e.g., DownOutlined) */
+.ant-dropdown-trigger .anticon > svg {
+  fill: #00adef !important;
+}

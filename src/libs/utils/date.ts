@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs from 'dayjs';
 
 export const getAgeFromDOB = (dob: string) => {
   const today = new Date();
@@ -30,34 +30,34 @@ export const getOneYearLater = (date: Date) => {
   return date.toISOString().substring(0, 10);
 };
 
-// take dayjs or YYYY-MM-DD as input 
+// take dayjs or YYYY-MM-DD as input
 // chg format to specified
 export const convertDateFormat = (
   dateString: string,
-  toFormat: "YYYY-MM-DD" | "DD/MM/YYYY"
+  toFormat: 'YYYY-MM-DD' | 'DD/MM/YYYY',
 ) => {
   const dateObj = new Date(dateString);
   let formattedDate = null;
 
   if (isNaN(dateObj.getTime())) {
-    throw new Error("Invalid date format");
+    throw new Error('Invalid date format');
   }
 
   switch (toFormat) {
-    case "YYYY-MM-DD":
+    case 'YYYY-MM-DD':
       formattedDate = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1)
         .toString()
-        .padStart(2, "0")}-${dateObj.getDate().toString().padStart(2, "0")}`;
+        .padStart(2, '0')}-${dateObj.getDate().toString().padStart(2, '0')}`;
       break;
-    case "DD/MM/YYYY":
-      formattedDate = `${dateObj.getDate().toString().padStart(2, "0")}/${(
+    case 'DD/MM/YYYY':
+      formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(
         dateObj.getMonth() + 1
       )
         .toString()
-        .padStart(2, "0")}/${dateObj.getFullYear()}`;
+        .padStart(2, '0')}/${dateObj.getFullYear()}`;
       break;
     default:
-      alert("unhandled date format");
+      alert('unhandled date format');
       break;
   }
 
@@ -70,44 +70,44 @@ export const convertDateFormat = (
  * @param months +ve to add ; -ve to minus
  * @param days +ve to add ; -ve to minus
  * @returns duration from startDate in dayJS
- * @description example : 
+ * @description example :
  * adjustDateInDayjs(dayjs("2025-01-15"), 0, -2, 0)
  * Output: "2024-11-15"
  * @
  */
 export const adjustDateInDayjs = (
-  startDate: dayjs.Dayjs,
+  startDate: dayjs.Dayjs | undefined,
   years?: number,
   months?: number,
-  days?: number
-): dayjs.Dayjs => {
+  days?: number,
+): dayjs.Dayjs | undefined => {
   if (startDate instanceof dayjs) {
     let adjustedDate = startDate;
 
     // Add or subtract years
     if (years) {
       if (years > 0) {
-        adjustedDate = adjustedDate.add(years, "year");
+        adjustedDate = adjustedDate.add(years, 'year');
       } else {
-        adjustedDate = adjustedDate.subtract(-years, "year");
+        adjustedDate = adjustedDate.subtract(-years, 'year');
       }
     }
 
     // Add or subtract months
     if (months) {
       if (months > 0) {
-        adjustedDate = adjustedDate.add(months, "month");
+        adjustedDate = adjustedDate.add(months, 'month');
       } else {
-        adjustedDate = adjustedDate.subtract(-months, "month");
+        adjustedDate = adjustedDate.subtract(-months, 'month');
       }
     }
 
     // Add or subtract days
     if (days) {
       if (days > 0) {
-        adjustedDate = adjustedDate.add(days, "day");
+        adjustedDate = adjustedDate.add(days, 'day');
       } else {
-        adjustedDate = adjustedDate.subtract(-days, "day");
+        adjustedDate = adjustedDate.subtract(-days, 'day');
       }
     }
 
@@ -116,3 +116,41 @@ export const adjustDateInDayjs = (
 
   return startDate;
 };
+
+export const adjustDateInDate = (
+  startDate: Date | undefined,
+  years?: number,
+  months?: number,
+  days?: number,
+): Date | undefined => {
+  if (startDate instanceof Date) {
+    const adjustedDate = new Date(startDate);
+
+    // Add or subtract years
+    if (years) {
+      adjustedDate.setFullYear(adjustedDate.getFullYear() + years);
+    }
+
+    // Add or subtract months
+    if (months) {
+      adjustedDate.setMonth(adjustedDate.getMonth() + months);
+    }
+
+    // Add or subtract days
+    if (days) {
+      adjustedDate.setDate(adjustedDate.getDate() + days);
+    }
+
+    return adjustedDate;
+  }
+
+  return startDate;
+};
+
+// Date -> DayJS
+export const dateToDayjs = (date: string | Date | undefined) =>
+  date ? dayjs(date) : undefined;
+
+// DayJS -> Date
+export const dayjsToDate = (dayjsObj: dayjs.Dayjs | null | undefined) =>
+  dayjsObj?.toDate() || undefined;
