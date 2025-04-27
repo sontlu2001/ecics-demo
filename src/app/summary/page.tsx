@@ -28,7 +28,7 @@ export default function Summary() {
           🎉 Get Rewarded for Referring a Friend!
         </p>
         <p className='text-sm font-normal'>
-          Share your referral code with friends and you'll both get rewarded
+          Share your referral code with friends and you both get rewarded
           when they sign up.
         </p>
       </div>

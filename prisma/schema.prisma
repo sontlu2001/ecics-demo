@@ -105,11 +105,12 @@ model Quote {
 }
 
 model ProductType {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
   Quote     Quote[]
+  Company   Company[]
 
   @@map("product_type")
 }
@@ -122,12 +123,12 @@ model PersonalInfo {
   gender             Gender
   nric               String
   maritalStatus      MaritalStatus @map("marital_status")
-  dateOfBirth        DateTime       @map("date_of_birth") @db.Date
+  dateOfBirth        DateTime      @map("date_of_birth") @db.Date
   address            String
   vehicleMake        String        @map("vehicle_make")
   vehicleModel       String        @map("vehicle_model")
   yearOfRegistration String        @map("year_of_registration")
-  vehicles           Json          
+  vehicles           Json
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @default(now()) @updatedAt
   quotes             Quote[]
@@ -138,10 +139,13 @@ model PersonalInfo {
 model Company {
   id        Int      @id @default(autoincrement())
   name      String
-  type      String
+  type      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   quotes    Quote[]
+
+  productTypeId Int?         @map("product_type_id")
+  productType   ProductType? @relation(fields: [productTypeId], references: [id])
 
   @@map("company")
 }

@@ -12,3 +12,4 @@ export function successRes<T = any>({ data, message = 'Success' }: { data: T; me
   };
   return NextResponse.json(res, { status: 200 });
 }
+

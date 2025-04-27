@@ -32,6 +32,7 @@ export const SecondaryButton = forwardRef<HTMLButtonElement, CustomButtonProps>(
       <Button
         type='default'
         size='large'
+        name=''
         className={`${className} border-blue-400 px-3 text-base font-semibold text-blue-400 hover:bg-blue-50`}
         ref={ref}
         {...rest}
