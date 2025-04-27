@@ -38,6 +38,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
             is_active: true,
           },
         ],
+        sub_title: 'Ultimate Protection & Convenience',
         is_recommended: true,
         premium_with_gst: quoteInfo?.comp_plan?.plan_premium_with_gst,
         premium_bef_gst: 0,
@@ -45,7 +46,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'ANW',
             title: 'Any Workshops',
-            type: 'without_options',
+            type: 'select',
             is_display:
               quoteInfo?.comp_plan?.add_ons?.any_workshop_eligibility === 'Yes'
                 ? true
@@ -72,7 +73,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
             id: 'AJE',
             key: 'adjustable_excess',
             title: 'Adjustable Excess',
-            type: 'with_options',
+            type: 'checkbox',
             is_display: false,
             is_recommended: false,
             description: '',
@@ -304,7 +305,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'AND',
             title: 'Add Additional Named Driver(s)',
-            type: 'with_options',
+            type: 'checkbox',
             is_display:
               quoteInfo.comp_plan.add_ons.addl_named_drivers_eligibility ===
               'Yes'
@@ -409,7 +410,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'BUN',
             title: '50% Buy Up NCD',
-            type: 'without_options',
+            type: 'select',
             is_display:
               quoteInfo?.comp_plan?.add_ons?.buy_up_ncd
                 ?.buy_up_ncd_eligibility === 'Yes'
@@ -460,7 +461,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'LOU',
             title: 'Loss Of Use',
-            type: 'with_options',
+            type: 'checkbox',
             is_display:
               quoteInfo?.comp_plan?.add_ons?.loss_of_use_eligibility === 'Yes'
                 ? true
@@ -511,7 +512,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'PAP',
             title: 'Personal Accident+',
-            type: 'with_options',
+            type: 'checkbox',
             is_display:
               quoteInfo?.comp_plan?.add_ons
                 ?.personal_accident_plus_eligibility === 'Yes'
@@ -566,7 +567,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'MDE',
             title: 'Medical Expenses',
-            type: 'with_options',
+            type: 'checkbox',
             is_display:
               quoteInfo?.comp_plan?.add_ons?.medical_expenses_eligibility ===
               'Yes'
@@ -621,7 +622,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'RSA',
             title: '24x7 Roadside Assistance',
-            type: 'without_options',
+            type: 'select',
             is_display:
               quoteInfo.comp_plan.add_ons.roadside_assistance_eligibility ===
               'Yes'
@@ -647,7 +648,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'KRC',
             title: 'Key Replacement Cover',
-            type: 'with_options',
+            type: 'checkbox',
             is_display:
               quoteInfo?.comp_plan?.add_ons
                 ?.key_replacement_cover_eligibility === 'Yes'
@@ -689,7 +690,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'RSA',
             title: '24x7 Roadside Assistance',
-            type: 'without_options',
+            type: 'select',
             is_display:
               quoteInfo.comp_plan.add_ons.roadside_assistance_eligibility ===
               'Yes'
@@ -715,7 +716,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'NOR',
             title: 'New for Old Replacement',
-            type: 'without_options',
+            type: 'select',
             is_display:
               quoteInfo?.comp_plan?.add_ons?.nfr
                 ?.new_for_old_replacement_eligibility === 'Yes'
@@ -742,6 +743,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
       {
         id: 'TPFT',
         title: 'Third Party & Theft',
+        sub_title: 'Essential Coverage for Everyday Driving',
         benefits: [
           {
             name: '<p>Third-Party liability coverage relating to vehicle charging</p>',
@@ -767,7 +769,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'AND',
             title: 'Add Additional Named Driver(s)',
-            type: 'with_options',
+            type: 'checkbox',
             is_display:
               quoteInfo?.tpo_plan?.add_ons?.addl_named_drivers_eligibility ===
               'Yes'
@@ -808,7 +810,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
             id: 'BUN',
             key: 'buy_up_ncd',
             title: '50% Buy Up NCD',
-            type: 'without_options',
+            type: 'select',
             is_display:
               quoteInfo?.tpo_plan?.add_ons?.buy_up_ncd
                 ?.buy_up_ncd_eligibility === 'Yes'
@@ -837,6 +839,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
       {
         id: 'TPO',
         title: 'Third Party Only',
+        ub_title: 'Baisc Protection for your car',
         benefits: [
           {
             name: '<p>Third-Party liability coverage relating to vehicle charging</p>',
@@ -870,7 +873,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'AND',
             title: 'Add Additional Named Driver(s)',
-            type: 'with_options',
+            type: 'checkbox',
             is_display:
               quoteInfo?.tpo_plan?.add_ons?.addl_named_drivers_eligibility ===
               'Yes'
@@ -910,7 +913,7 @@ export function formatCarQuoteInfo(quoteInfo: any, data: any) {
           {
             id: 'BUN',
             title: '50% Buy Up NCD',
-            type: 'without_options',
+            type: 'select',
             is_display:
               quoteInfo?.tpo_plan?.add_ons?.buy_up_ncd
                 ?.buy_up_ncd_eligibility === 'Yes'

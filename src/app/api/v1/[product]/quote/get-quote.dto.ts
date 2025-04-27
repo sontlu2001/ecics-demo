@@ -6,10 +6,13 @@ export const generateQuoteSchema = z.object({
   partner_code: z.string().optional(),
   promo_code: z.string().optional(),
   company_id: z.number().optional(),
+
   personal_info: z.object({
     name: z.string().optional(),
     gender: z.enum(['Male', 'Female', 'Other']).optional(),
-    maritalStatus: z.enum(['Single', 'Married', 'Divorced', 'Widowed']).optional(),
+    maritalStatus: z
+      .enum(['Single', 'Married', 'Divorced', 'Widowed'])
+      .optional(),
     nric: z.string().optional(),
     address: z.string().optional(),
     date_of_birth: z

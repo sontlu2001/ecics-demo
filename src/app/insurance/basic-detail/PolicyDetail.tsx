@@ -1,16 +1,20 @@
 'use client';
 
-import PolicyDetailForm from './PolicyDetailForm';
-import { PromoCodeModel } from '../components/PromoCode';
-import VehicleBar from '../components/VehicleBar';
+import { useState } from 'react';
+import { SubmitHandler } from 'react-hook-form';
+
+import { adjustDateInDate } from '@/libs/utils/date-utils';
+
 import {
   VehicleSelection,
   VehicleSelectionModal,
 } from '@/components/VehicleSelection';
-import { MOTOR_QUOTE } from '@/libs/constants';
-import { adjustDateInDate } from '@/libs/utils/date';
-import { useState } from 'react';
-import { SubmitHandler } from 'react-hook-form';
+
+import { MOTOR_QUOTE } from '@/constants';
+
+import PolicyDetailForm from './PolicyDetailForm';
+import { PromoCodeModel } from '../components/PromoCode';
+import VehicleBar from '../components/VehicleBar';
 
 export const PolicyDetail = () => {
   const defaultPromoCode = { code: 'string', desc: 'string' };

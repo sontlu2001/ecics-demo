@@ -1,70 +1,57 @@
 'use client';
 
 import { PrimaryButton } from '@/components/ui/buttons';
-import { useLayoutEffect, useState } from 'react';
+import { useCreateQuote, useGetQuote } from '@/hook/insurance/quote';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import SelfDeclarationConfirmModal from './components/SelfDeclarationConfirmModal';
-import PlanCardMobile, { DataPlanCard } from './components/PlanCardMobile';
 import PlanCardDesktop from './components/PlanCardDesktop';
-const plans: DataPlanCard[] = [
-  {
-    title: 'Third Party & Theft',
-    subtitle: 'Essential Coverage for Everyday Driving',
-    activeFeatures: [
-      'Third-Party liability coverage relating to vehicle charging',
-      'Free NCD Protector (from 10%) & Waiver of Excess',
-      'Up to $50,000 complimentary Personal Accident coverage',
-      'Complete Vehicle Coverage',
-      'Policy Excess: $750 for non-EV & BYD models & $ 1,500 for Tesla models',
-    ],
-    inactiveFeatures: [],
-    price: '2700',
-    discountedPrice: '3200',
-    discount: '15',
-    recommended: true,
-  },
-  {
-    title: 'Comprehensive Plan',
-    subtitle: 'Comprehensive Coverage for Peace of Mind',
-    activeFeatures: [
-      'Third-Party liability coverage relating to vehicle charging',
-      'Free NCD Protector (from 10%) & Waiver of Excess',
-      'Up to $50,000 complimentary Personal Accident coverage',
-    ],
-    inactiveFeatures: [
-      'Complete Vehicle Coverage',
-      'Policy Excess: $750 for non-EV & BYD models & $ 1,500 for Tesla models',
-    ],
-    price: '2700',
-    discountedPrice: '3200',
-    discount: '15',
-    recommended: false,
-  },
-  {
-    title: 'Comprehensive Plan 2',
-    subtitle: 'Comprehensive Coverage for Peace of Mind',
-    activeFeatures: [
-      'Third-Party liability coverage relating to vehicle charging',
-      'Free NCD Protector (from 10%) & Waiver of Excess',
-      'Up to $50,000 complimentary Personal Accident coverage',
-    ],
-    inactiveFeatures: [
-      'Complete Vehicle Coverage',
-      'Policy Excess: $750 for non-EV & BYD models & $ 1,500 for Tesla models',
-    ],
-    price: '2700',
-    discountedPrice: '3200',
-    discount: '15',
-    recommended: false,
-  },
-];
+import PlanCardMobile from './components/PlanCardMobile';
+import SelfDeclarationConfirmModal from './components/SelfDeclarationConfirmModal';
 
 function PlanPage() {
   const [screenWidth, setScreenWith] = useState(0);
   const [showConfirmDeclaration, setShowConfirmDeclaration] = useState(false);
+  // using this to really get the quote data from the API
+  // const { data, isLoading } = useGetQuote('9dbb6b4e00432677');
+
+  // using for testing purpose
+  const { mutate: createQuote, data, isSuccess } = useCreateQuote();
+  useEffect(() => {
+    const payload = {
+      key: 'bd6e8c8259ee4196',
+      partner_code: 'A0000165',
+      promo_code: 'ECICS5',
+      company_id: 2,
+      personal_info: {
+        name: 'Sayan',
+        gender: 'Male',
+        maritalStatus: 'Single',
+        date_of_birth: '08/04/2000',
+        nric: 'S6020900F',
+        address: '10 Eunos Road Singapore 4324',
+        driving_experience: 2,
+        phone_number: '98989898',
+        email: 'test321@gmail.com',
+      },
+      vehicle_basic_details: {
+        make: 'Audi',
+        model: 'A1 1.0',
+        first_registered_year: '2024',
+        chasis_number: 'SBA123A',
+      },
+      insurance_additional_info: {
+        no_claim_discount: 10,
+        no_of_claim: 0,
+        start_date: '28/04/2025',
+        end_date: '27/04/2026',
+      },
+    };
+    createQuote(payload);
+  }, []);
+
   useLayoutEffect(() => {
     if (!window?.innerWidth) return;
     setScreenWith(window?.innerWidth - 32);
@@ -88,25 +75,20 @@ function PlanPage() {
           navigation
           modules={[Navigation]}
         >
-          {plans.map((plan, index) => (
+          {data?.plans.map((plan, index) => (
             <SwiperSlide key={index}>
-              <PlanCardMobile
-                isRecommended={plan.recommended}
-                data={plan}
-                active={index === 0}
-              />
+              <PlanCardMobile plan={plan} active={index === 0} />
             </SwiperSlide>
           ))}
         </Swiper>
       </div>
 
       {/* UI for Desktop */}
-      <div className='hidden md:block '>
-        <PlanCardDesktop plans={plans} />
+      <div className='hidden pt-4 md:block'>
+        <PlanCardDesktop plans={data?.plans} />
       </div>
-
-      <div className='fixed bottom-0 z-10 mt-4 w-full md:bottom-14 md:max-w-[600px] md:border-none  md:shadow-none'>
-        <div className='flex w-full justify-between border-t-2 bg-white p-4 py-2 shadow-md shadow-gray-500  md:py-4'>
+      <div className='fixed bottom-0 left-1/2 z-10 mt-4 w-full -translate-x-1/2 transform shadow-sm shadow-gray-300 md:bottom-14  md:max-w-[600px] md:rounded-md md:border-none'>
+        <div className='flex w-full justify-between border-t-2 bg-white p-4 py-2 md:border-none md:py-4'>
           <div className='md:flex md:items-center md:gap-4'>
             <p>
               <span className='text-lg font-semibold md:text-3xl'>S$ 2700</span>{' '}
@@ -114,7 +96,7 @@ function PlanPage() {
                 $3200
               </span>
             </p>
-            <p className='font-semibold'>(inclusive of GST)</p>
+            <p className='font-semibold'>(15 inclusive of GST)</p>
           </div>
           <PrimaryButton
             onClick={() => setShowConfirmDeclaration(true)}

@@ -117,17 +117,17 @@ model ProductType {
 
 model PersonalInfo {
   id                 Int           @id @default(autoincrement())
-  phone              String
-  email              String
-  name               String
-  gender             Gender
-  nric               String
-  maritalStatus      MaritalStatus @map("marital_status")
-  dateOfBirth        DateTime      @map("date_of_birth") @db.Date
-  address            String
-  vehicleMake        String        @map("vehicle_make")
-  vehicleModel       String        @map("vehicle_model")
-  yearOfRegistration String        @map("year_of_registration")
+  phone              String?
+  email              String?
+  name               String?
+  gender             String?
+  nric               String?
+  maritalStatus      String?
+  dateOfBirth        String?        @map("date_of_birth")
+  address            String?
+  vehicleMake        String?        @map("vehicle_make")
+  vehicleModel       String?        @map("vehicle_model")
+  yearOfRegistration String?        @map("year_of_registration")
   vehicles           Json
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @default(now()) @updatedAt
@@ -170,4 +170,13 @@ model CountryNationality {
   quotes Quote[]
 
   @@map("country_nationality")
+}
+
+model RequestLog {
+  id          Int      @id @default(autoincrement())
+  ip          String
+  productType String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  @@map("request_log")
 }

@@ -1,6 +1,12 @@
+import { toast } from 'react-toastify';
+
 import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
 
+import { ECICS_USER_INFO } from '@/constants/general.constant';
+import { usePostPersonalInfo } from '@/hook/auth/login';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
+import { SavePersonalInfoPayload } from '@/libs/types/auth';
+import { useEffect } from 'react';
 
 const ConfirmInfoModal = ({
   onSave,
@@ -10,6 +16,57 @@ const ConfirmInfoModal = ({
   onClose: () => void;
 }) => {
   const { isMobile } = useDeviceDetection();
+  const { mutate: savePersonalInfo, isSuccess } = usePostPersonalInfo();
+
+  useEffect(() => {
+    if (isSuccess) {
+      onSave();
+    }
+  }, [isSuccess]);
+
+  const handleSave = async () => {
+    const stored = sessionStorage.getItem(ECICS_USER_INFO);
+    if (!stored) {
+      toast.error('Missing user info in session.');
+      return;
+    }
+
+    const parsed = JSON.parse(stored);
+
+    const payload: SavePersonalInfoPayload = {
+      email: parsed.email?.value || '',
+      phone: `${parsed.mobileno?.areacode?.value || ''}${parsed.mobileno?.nbr?.value || ''}`,
+      name: parsed.name?.value || '',
+      nric: parsed.uinfin?.value || '',
+      gender: parsed.sex?.desc || '',
+      marital_status: parsed.marital?.desc || '',
+      date_of_birth: parsed.dob?.value || '',
+      address: `${parsed.regadd?.block?.value || ''} ${parsed.regadd?.street?.value || ''} #${parsed.regadd?.floor?.value || ''}-${parsed.regadd?.unit?.value || ''}, ${parsed.regadd?.postal?.value || ''}, ${parsed.regadd?.country?.desc || ''}`,
+      vehicle_make: parsed.vehicle_make || '',
+      vehicle_model: parsed.vehicle_model || '',
+      year_of_registration: parsed.year_of_registration || '',
+      vehicles:
+        parsed.vehicles?.map((v: any) => ({
+          vehicleno: {
+            value: v.vehicleno?.value || '',
+          },
+          chassisno: {
+            value: v.chassisno?.value || '',
+          },
+          make: {
+            value: v.make?.value || '',
+          },
+          model: {
+            value: v.model?.value || '',
+          },
+          engineno: {
+            value: v.engineno?.value || '',
+          },
+        })) || [],
+      key: `key-${Date.now()}`,
+    };
+    savePersonalInfo(payload);
+  };
 
   return (
     <div className='mx-auto flex h-full w-full flex-col justify-between p-6'>
@@ -23,7 +80,7 @@ const ConfirmInfoModal = ({
       </div>
       <div className={`flex flex-col gap-4 ${isMobile ? 'mt-20' : 'mt-4'}`}>
         <PrimaryButton
-          onClick={onSave}
+          onClick={handleSave}
           className='rounded-md px-4 py-2 text-white transition'
         >
           Save my progress

@@ -1,9 +1,11 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from 'antd';
 import Image from 'next/image';
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import WarningIcon from '@/components/icons/WarningIcon';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
@@ -11,10 +13,37 @@ import { InputField } from '@/components/ui/form/inputfield';
 
 import ConfirmInfoModalWrapper from '@/app/(auth)/review-info-detail/modal/ConfirmInfoModalWrapper';
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRegex = /^[89]\d{7}$/;
+
+// Zod schema
+const reviewInfoSchema = z.object({
+  email: z.string().regex(emailRegex, 'Please enter a valid email address.'),
+  phoneNumber: z
+    .string()
+    .length(8, "Please enter an 8-digit number starting with '8' or '9'.")
+    .regex(
+      phoneRegex,
+      "Please enter an 8-digit number starting with '8' or '9'.",
+    ),
+  name: z.string().min(1, 'Required'),
+  nric: z.string().min(1, 'Required'),
+  gender: z.string().min(1, 'Required'),
+  maritalStatus: z.string().min(1, 'Required'),
+  dob: z.string().min(1, 'Required'),
+  address: z.string().min(1, 'Required'),
+  vehicleMake: z.string().min(1, 'Required'),
+  vehicleYear: z.string().min(4, 'Enter a valid year'),
+  chassisNumber: z.string().min(1, 'Required'),
+});
+
+type ReviewInfoForm = z.infer<typeof reviewInfoSchema>;
+
 const ManualReviewInfoDetail = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const methods = useForm({
+  const methods = useForm<ReviewInfoForm>({
+    resolver: zodResolver(reviewInfoSchema),
     defaultValues: {
       email: '',
       phoneNumber: '',
@@ -49,8 +78,6 @@ const ManualReviewInfoDetail = () => {
           <Image src='/singpass.svg' alt='Logo' width={170} height={170} />
         </div>
         <div className='mt-6 text-lg font-bold'>Review your Myinfo details</div>
-
-        {/* Wrap the form with FormProvider */}
         <FormProvider {...methods}>
           <Form
             onFinish={methods.handleSubmit(handleContinue)}
@@ -58,6 +85,7 @@ const ManualReviewInfoDetail = () => {
             scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
           >
             <div className='w-full'>
+              {/* Email & Phone */}
               <div className={`${boxWrapperClass}`}>
                 <div className='flex items-center justify-between'>
                   <div className='text-base font-bold'>
@@ -82,6 +110,7 @@ const ManualReviewInfoDetail = () => {
                 </div>
               </div>
 
+              {/* Personal Info */}
               <div className={`${boxWrapperClass} mt-4`}>
                 <div className='text-base font-bold underline-offset-4'>
                   Personal Info
@@ -117,6 +146,7 @@ const ManualReviewInfoDetail = () => {
                 </div>
               </div>
 
+              {/* Vehicle Details */}
               <div className={`${boxWrapperClass} mt-4`}>
                 <div className='text-base font-bold underline-offset-4'>
                   Vehicle Details
@@ -151,13 +181,13 @@ const ManualReviewInfoDetail = () => {
           Cancel
         </SecondaryButton>
         <PrimaryButton
-          onClick={handleContinue}
-          disabled
+          onClick={methods.handleSubmit(handleContinue)}
           className='w-[10vw] min-w-[150px] rounded-md px-4 py-2 transition sm:w-[50vw] md:w-[10vw]'
         >
           Continue
         </PrimaryButton>
       </div>
+
       {showConfirmModal && (
         <ConfirmInfoModalWrapper
           showConfirmModal={showConfirmModal}

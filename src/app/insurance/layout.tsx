@@ -1,12 +1,12 @@
 'use client';
-import ProcessBar from '@/components/ProcessBar';
-import BusinessPartnerBar from './components/BusinessPartnerBar';
-import { useState } from 'react';
-import { StepProcessBar } from '@/enums/processBarEnums';
-import { usePathname, useRouter } from 'next/navigation';
-import { useDeviceDetection } from '@/hook/useDeviceDetection';
-import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
 import ArrowBackIcon from '@/components/icons/ArrowBackIcon';
+import ProcessBar from '@/components/ProcessBar';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
+import { useDeviceDetection } from '@/hook/useDeviceDetection';
+import { StepProcessBar } from '@/libs/enums/processBarEnums';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import BusinessPartnerBar from './components/BusinessPartnerBar';
 
 const mapStepToPath = {
   [StepProcessBar.POLICY_DETAILS]: 'basic-detail',
@@ -49,7 +49,7 @@ function InsuranceLayout({ children }: { children: React.ReactNode }) {
           </PrimaryButton>
         </div>
       </div>
-      <div className='w-full'>{children}</div>
+      <div className='mx-auto w-full max-w-[1280px]'>{children}</div>
     </>
   );
 }

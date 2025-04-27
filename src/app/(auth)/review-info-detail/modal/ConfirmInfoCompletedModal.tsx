@@ -11,7 +11,7 @@ const ConfirmInfoCompletedModal = () => {
   const router = useRouter();
 
   const handleGoBack = () => {
-    router.push('/');
+    router.push('/login');
   };
 
   return (

@@ -1,8 +1,10 @@
-import { Button, Flex, Form, Input, InputProps } from 'antd';
-import { SecondaryButton } from '@/components/ui/buttons';
 import { CloseOutlined, TagOutlined } from '@ant-design/icons';
-import { MOTOR_QUOTE } from '@/libs/constants';
+import { Button, Flex, Form, Input, InputProps } from 'antd';
 import { Controller, useForm } from 'react-hook-form';
+
+import { SecondaryButton } from '@/components/ui/buttons';
+
+import { MOTOR_QUOTE } from '@/constants';
 
 interface InputFieldProps extends InputProps {
   fieldKey: string;
