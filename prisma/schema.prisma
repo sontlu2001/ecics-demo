@@ -123,7 +123,7 @@ model PersonalInfo {
   gender             Gender
   nric               String
   maritalStatus      MaritalStatus @map("marital_status")
-  dateOfBirth        DateTime      @map("date_of_birth") @db.Date
+  dateOfBirth        String        @map("date_of_birth")
   address            String
   vehicleMake        String        @map("vehicle_make")
   vehicleModel       String        @map("vehicle_model")
@@ -170,4 +170,15 @@ model CountryNationality {
   quotes Quote[]
 
   @@map("country_nationality")
+}
+
+model RequestLog {
+  id          Int      @id @default(autoincrement())
+  ip          String
+  country     String
+  city        String
+  productType String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  @@map("request_log")
 }
