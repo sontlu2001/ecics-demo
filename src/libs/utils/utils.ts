@@ -1,26 +1,46 @@
 import { ECICS_USER_INFO } from '@/constants/general.constant';
 
-export const removeItemsFromStorage = (
-  keys: string[],
-  storageType: 'local' | 'session',
-) => {
-  const storage = storageType === 'local' ? localStorage : sessionStorage;
+export const removeFromLocalStorage = (keys: string[]) => {
   keys.forEach((key) => {
-    storage.removeItem(key);
+    localStorage.removeItem(key);
   });
 };
 
-export const removeAuthenticationInfoFromCache = () => {
-  removeItemsFromStorage([ECICS_USER_INFO], 'session');
-  removeItemsFromStorage([], 'local');
+export const removeFromSessionStorage = (keys: string[]) => {
+  keys.forEach((key) => {
+    sessionStorage.removeItem(key);
+  });
 };
 
-export const saveItemsToStorage = (
-  items: Record<string, string>,
+export const removeAuthenticationInfoFromCache = (
   storageType: 'local' | 'session',
 ) => {
-  const storage = storageType === 'local' ? localStorage : sessionStorage;
+  if (storageType === 'session') {
+    removeFromSessionStorage([ECICS_USER_INFO]);
+  } else if (storageType === 'local') {
+    removeFromLocalStorage([]);
+  }
+};
+
+export const saveToLocalStorage = (items: Record<string, string>) => {
   Object.entries(items).forEach(([key, value]) => {
-    storage.setItem(key, value);
+    localStorage.setItem(key, value);
   });
+};
+
+export const saveToSessionStorage = (items: Record<string, string>) => {
+  Object.entries(items).forEach(([key, value]) => {
+    sessionStorage.setItem(key, value);
+  });
+};
+
+/**
+ * Capitalize first letter of each word
+ */
+export const capitalizeWords = (str: string): string => {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };

@@ -3,7 +3,6 @@ export const MOTOR_QUOTE = {
   partner_code: 'partner_code',
   quick_quote_make: 'quick_quote_make',
   quick_quote_model: 'quick_quote_model',
-  quick_quote_make_and_model: 'quick_quote_make_and_model',
   quick_quote_reg_yyyy: 'quick_quote_reg_yyyy',
   quick_proposal_start_date: 'quick_proposal_start_date',
   quick_proposal_end_date: 'quick_proposal_end_date',

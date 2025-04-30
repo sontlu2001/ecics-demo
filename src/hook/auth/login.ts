@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { SavePersonalInfoPayload, UserInfoPayload } from '@/libs/types/auth';
-import { saveItemsToStorage } from '@/libs/utils/utils';
+import { saveToSessionStorage } from '@/libs/utils/utils';
 
+import insurance from '@/api/base-service/insurance';
 import auth from '@/api/singpass-service/auth';
 import { ECICS_USER_INFO } from '@/constants/general.constant';
-import insurance from '@/api/base-service/insurance';
 
 export const useRequestLogin = () => {
   const requestLogin = async () => {
@@ -18,14 +18,11 @@ export const useRequestLogin = () => {
     mutationKey: ['login'],
     onSuccess: (data) => {
       window.location.href = data.url;
-      saveItemsToStorage(
-        {
-          state: data.state,
-          nonce: data.nonce,
-          code_verifier: data.code_verifier,
-        },
-        'session',
-      );
+      saveToSessionStorage({
+        state: data.state,
+        nonce: data.nonce,
+        code_verifier: data.code_verifier,
+      });
     },
     onError: (error) => {
       console.log(error);
@@ -33,23 +30,20 @@ export const useRequestLogin = () => {
   });
 };
 
-export const useGetUserInfo = ({
+export const usePostUserInfo = ({
   params,
   payload,
 }: {
   params: any;
   payload: UserInfoPayload;
 }) => {
-  const getUserInfo = async () => {
+  const postUserInfo = async () => {
     const res = await auth.postUserInfo({ params, payload });
-    saveItemsToStorage(
-      { [ECICS_USER_INFO]: JSON.stringify(res.data) },
-      'session',
-    );
+    saveToSessionStorage({ [ECICS_USER_INFO]: JSON.stringify(res.data) });
     return res.data;
   };
   return useQuery({
-    queryFn: getUserInfo,
+    queryFn: postUserInfo,
     queryKey: ['user-info', params],
     enabled:
       !!payload.code_verifier &&

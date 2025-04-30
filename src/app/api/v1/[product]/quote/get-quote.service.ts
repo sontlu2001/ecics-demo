@@ -66,7 +66,7 @@ export async function getQuoteForCar(data: generateQuoteDTO) {
       const responseData = formatCarQuoteInfo(quoteResInfo, data);
 
       // Save quote to database
-      prisma.quote.create({
+      await prisma.quote.create({
         data: {
           quoteId: quoteResInfo.product_id,
           quoteNo: quoteResInfo.quote_no,

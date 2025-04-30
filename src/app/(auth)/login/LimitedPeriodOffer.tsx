@@ -3,18 +3,19 @@
 import { Checkbox } from 'antd';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import CouponIcon from '@/components/icons/CouponIcon';
 import { LinkButton } from '@/components/ui/buttons';
 
+import { ROUTES } from '@/constants/routes';
 import { useRequestLogin } from '@/hook/auth/login';
 import { useRequestLogCar } from '@/hook/insurance/quote';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
-import { useState } from 'react';
 
 const LimitedPeriodOffer = () => {
-  const router = useRouter();
   const { isMobile } = useDeviceDetection();
+  const router = useRouter();
 
   const [isDegreedWithDisclaimer, setIsDegreedWithDisclaimer] = useState(false);
   const [isUserActive, setIsUserActive] = useState(false);
@@ -24,16 +25,16 @@ const LimitedPeriodOffer = () => {
 
   const handleLogin = () => {
     setIsUserActive(true);
-    if (!isDegreedWithDisclaimer && isMobile) return;
+    if (!isDegreedWithDisclaimer) return;
     requestLogin();
     requestLogCar();
   };
 
   const handleContinueWithoutMyinfo = () => {
     setIsUserActive(true);
-    if (!isDegreedWithDisclaimer && isMobile) return;
+    if (!isDegreedWithDisclaimer) return;
     requestLogCar();
-    router.push('/review-info-detail');
+    router.push(ROUTES.INSURANCE.BASIC_DETAIL_MANUAL);
   };
 
   return (
@@ -61,26 +62,24 @@ const LimitedPeriodOffer = () => {
           continue without Myinfo login
         </LinkButton>
       </div>
-      {isMobile && (
-        <>
-          <div className='mt-4 flex flex-wrap items-center justify-center gap-1 text-center text-sm'>
-            <Checkbox
-              className='custom-checkbox'
-              checked={isDegreedWithDisclaimer}
-              onChange={(e) => setIsDegreedWithDisclaimer(e.target.checked)}
-            />
-            <span>By using this platform, you agree to our</span>
-            <LinkButton type='link' className='pl-0'>
-              Disclaimer
-            </LinkButton>
-          </div>
-          {!isDegreedWithDisclaimer && isUserActive && (
-            <p className='text-center text-xs text-red-500'>
-              Please read and agree with disclaimer term before continues
-            </p>
-          )}
-        </>
+
+      <div className='mt-4 flex flex-wrap items-center justify-center gap-1 text-center text-sm'>
+        <Checkbox
+          className='custom-checkbox'
+          checked={isDegreedWithDisclaimer}
+          onChange={(e) => setIsDegreedWithDisclaimer(e.target.checked)}
+        />
+        <span>By using this platform, you agree to our</span>
+        <LinkButton type='link' className='pl-0'>
+          Disclaimer
+        </LinkButton>
+      </div>
+      {!isDegreedWithDisclaimer && isUserActive && (
+        <p className='text-center text-xs text-red-500'>
+          Please read and agree with disclaimer term before continues
+        </p>
       )}
+
       <div className='mt-6 rounded-lg border-2 border-secondaryBlue bg-white p-4'>
         <div className='text-2xl font-bold'>Limited period offer</div>
         <div>

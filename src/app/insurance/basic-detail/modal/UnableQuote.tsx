@@ -59,7 +59,7 @@ export const UnableQuote = ({ onClick, visible }: UnableQuoteModalProps) => {
       open={visible}
       onOk={onClick}
       onCancel={onClick}
-      closable={true}
+      closable={false}
       maskClosable={true}
       keyboard={true}
       footer={null}

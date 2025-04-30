@@ -45,8 +45,8 @@ function PlanPage() {
       insurance_additional_info: {
         no_claim_discount: 10,
         no_of_claim: 0,
-        start_date: '28/04/2025',
-        end_date: '27/04/2026',
+        start_date: '10/05/2025',
+        end_date: '10/05/2026',
       },
     };
     createQuote(payload);

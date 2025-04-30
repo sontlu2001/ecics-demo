@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import ManualReviewInfoDetail from '@/app/(auth)/review-info-detail/ManualReviewInfoDetail';
 import ReviewInfoDetail from '@/app/(auth)/review-info-detail/ReviewInfoDetail';
-import { useGetUserInfo } from '@/hook/auth/login';
+import { usePostUserInfo } from '@/hook/auth/login';
 
 export default function ReviewInfoDetailPage() {
   const [params, setParams] = useState({ code: '', state: '' });
@@ -29,7 +29,7 @@ export default function ReviewInfoDetailPage() {
     }
   }, []);
 
-  const { data, isLoading } = useGetUserInfo({
+  const { data, isLoading } = usePostUserInfo({
     params,
     payload,
   });

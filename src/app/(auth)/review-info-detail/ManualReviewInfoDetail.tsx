@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from 'antd';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -12,9 +13,8 @@ import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
 import { InputField } from '@/components/ui/form/inputfield';
 
 import ConfirmInfoModalWrapper from '@/app/(auth)/review-info-detail/modal/ConfirmInfoModalWrapper';
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phoneRegex = /^[89]\d{7}$/;
+import { ROUTES } from '@/constants/routes';
+import { emailRegex, phoneRegex } from '@/constants/validation.constant';
 
 // Zod schema
 const reviewInfoSchema = z.object({
@@ -41,6 +41,7 @@ type ReviewInfoForm = z.infer<typeof reviewInfoSchema>;
 
 const ManualReviewInfoDetail = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const router = useRouter();
 
   const methods = useForm<ReviewInfoForm>({
     resolver: zodResolver(reviewInfoSchema),
@@ -60,7 +61,7 @@ const ManualReviewInfoDetail = () => {
   });
 
   const handleContinue = () => {
-    setShowConfirmModal(false);
+    router.push(ROUTES.INSURANCE.BASIC_DETAIL_SINGPASS);
   };
 
   const handleCancel = () => {

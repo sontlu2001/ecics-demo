@@ -15,7 +15,7 @@ export const useGetQuote = (key: string) => {
 };
 
 export const useCreateQuote = () => {
-  const createQuote = async (data: QuoteCreationPayload) => {
+  const createQuote = async (data: QuoteCreationPayload | any) => {
     const res = await insurance.createQuote(data);
     return res.data.data;
   };
@@ -23,6 +23,17 @@ export const useCreateQuote = () => {
   return useMutation({
     mutationFn: createQuote,
     mutationKey: ['quote'],
+  });
+};
+
+export const useGetHirePurchaseList = (product_type: string) => {
+  const fetchHirePurchaseList = async () => {
+    const res = await insurance.getHirePurchaseList(product_type);
+    return res.data.data;
+  };
+  return useQuery({
+    queryFn: fetchHirePurchaseList,
+    queryKey: ['hire-purchase', product_type],
   });
 };
 

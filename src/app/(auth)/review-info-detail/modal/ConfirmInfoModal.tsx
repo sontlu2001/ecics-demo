@@ -1,12 +1,14 @@
+import { useEffect } from 'react';
 import { toast } from 'react-toastify';
+
+import { SavePersonalInfoPayload } from '@/libs/types/auth';
+import { convertDateToDDMMYYYY } from '@/libs/utils/date-utils';
 
 import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
 
 import { ECICS_USER_INFO } from '@/constants/general.constant';
 import { usePostPersonalInfo } from '@/hook/auth/login';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
-import { SavePersonalInfoPayload } from '@/libs/types/auth';
-import { useEffect } from 'react';
 
 const ConfirmInfoModal = ({
   onSave,
@@ -35,12 +37,14 @@ const ConfirmInfoModal = ({
 
     const payload: SavePersonalInfoPayload = {
       email: parsed.email?.value || '',
-      phone: `${parsed.mobileno?.areacode?.value || ''}${parsed.mobileno?.nbr?.value || ''}`,
+      phone: `${parsed.mobileno?.nbr?.value || ''}`,
       name: parsed.name?.value || '',
       nric: parsed.uinfin?.value || '',
       gender: parsed.sex?.desc || '',
       marital_status: parsed.marital?.desc || '',
-      date_of_birth: parsed.dob?.value || '',
+      date_of_birth: parsed.dob?.value
+        ? convertDateToDDMMYYYY(parsed.dob.value)
+        : '',
       address: `${parsed.regadd?.block?.value || ''} ${parsed.regadd?.street?.value || ''} #${parsed.regadd?.floor?.value || ''}-${parsed.regadd?.unit?.value || ''}, ${parsed.regadd?.postal?.value || ''}, ${parsed.regadd?.country?.desc || ''}`,
       vehicle_make: parsed.vehicle_make || '',
       vehicle_model: parsed.vehicle_model || '',

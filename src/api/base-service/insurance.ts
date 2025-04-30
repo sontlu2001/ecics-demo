@@ -19,4 +19,7 @@ export default {
   requestLogCar() {
     return baseClient.get<any>('/request-log/car');
   },
+  getHirePurchaseList(product_type: string) {
+    return baseClient.get<any>('/companies/' + product_type);
+  },
 };

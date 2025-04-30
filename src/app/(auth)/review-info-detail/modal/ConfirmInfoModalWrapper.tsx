@@ -17,6 +17,7 @@ const ConfirmInfoModalWrapper = (props: ConfirmInfoModalWrapperProps) => {
 
   const handleClose = () => {
     setShowConfirmModal(false);
+    setIsSaved(false);
   };
 
   return (

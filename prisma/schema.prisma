@@ -105,12 +105,14 @@ model Quote {
 }
 
 model ProductType {
-  id        Int       @id @default(autoincrement())
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
-  Quote     Quote[]
-  Company   Company[]
+  id           Int            @id @default(autoincrement())
+  name         String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
+  Quote        Quote[]
+  Company      Company[]
+  VehicleMake  VehicleMake[]
+  VehicleModel VehicleModel[]
 
   @@map("product_type")
 }
@@ -179,4 +181,38 @@ model RequestLog {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
   @@map("request_log")
+}
+
+model VehicleMake {
+  id        Int    @id @default(autoincrement())
+  name      String
+  groupName String? @map("group_name")
+
+  // Foreign Keys
+  productTypeId Int?         @map("product_type_id")
+  productType   ProductType? @relation(fields: [productTypeId], references: [id])
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
+  VehicleModel VehicleModel[]
+
+  @@map("vehicle_make")
+}
+
+model VehicleModel {
+  id        Int    @id @default(autoincrement())
+  name      String
+  groupName String? @map("group_name")
+
+  // Foreign Keys
+  vehicleMakeId Int?         @map("vehicle_make_id")
+  vehicleMake   VehicleMake? @relation(fields: [vehicleMakeId], references: [id])
+
+  productTypeId Int?         @map("product_type_id")
+  productType   ProductType? @relation(fields: [productTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("vehicle_model")
 }
