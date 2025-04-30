@@ -1,4 +1,9 @@
-import { STATUS_CODE } from "./status.code";
+import { STATUS_CODE } from './status.code';
+import { NextResponse } from 'next/server';
+
+type BaseResponse = {
+  message: string;
+};
 
 export class HttpError extends Error {
   public readonly statusCode: number;
@@ -38,4 +43,25 @@ export class ConflictError extends HttpError {
   constructor(message: string) {
     super(message, STATUS_CODE.CONFLICT);
   }
+}
+
+export function ErrFromISPRes(message: string) {
+  const res: BaseResponse = {
+    message,
+  };
+  return NextResponse.json(res, { status: STATUS_CODE.BAD_REQUEST });
+}
+
+export function ErrBadRequest(message: string) {
+  const res: BaseResponse = {
+    message,
+  };
+  return NextResponse.json(res, { status: STATUS_CODE.BAD_REQUEST });
+}
+
+export function ErrNotFound(message: string) {
+  const res: BaseResponse = {
+    message,
+  };
+  return NextResponse.json(res, { status: STATUS_CODE.NOT_FOUND });
 }

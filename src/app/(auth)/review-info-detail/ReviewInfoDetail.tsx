@@ -1,24 +1,33 @@
 'use client';
 
-import Image from 'next/image';
-import { useState } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
+import { InputField } from '@/components/ui/form/inputfield';
+
 import ConfirmInfoModalWrapper from '@/app/(auth)/review-info-detail/modal/ConfirmInfoModalWrapper';
+import { ECICS_USER_INFO } from '@/constants/general.constant';
+import { ROUTES } from '@/constants/routes';
+import { emailRegex, phoneRegex } from '@/constants/validation.constant';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
 
 import InfoSection from './InfoSection';
-import { InputField } from '@/components/ui/form/inputfield';
+import { capitalizeWords } from '@/libs/utils/utils';
 
 const reviewInfoSchema = z.object({
-  email: z.string().email('Invalid email'),
+  email: z.string().regex(emailRegex, 'Please enter a valid email address.'),
   phone: z
     .string()
-    .min(8, 'The phone number must have at least 8 digits')
-    .regex(/^\+?[0-9\s-]+$/, 'Invalid phone number'),
+    .length(8, "Please enter an 8-digit number starting with '8' or '9'.")
+    .regex(
+      phoneRegex,
+      "Please enter an 8-digit number starting with '8' or '9'.",
+    ),
 });
 
 type ReviewInfoForm = z.infer<typeof reviewInfoSchema>;
@@ -26,47 +35,104 @@ type ReviewInfoForm = z.infer<typeof reviewInfoSchema>;
 const ReviewInfoDetail = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const { isMobile } = useDeviceDetection();
+  const [commonInfo, setCommonInfo] = useState<any>(null);
+  const router = useRouter();
 
   const methods = useForm<ReviewInfoForm>({
     resolver: zodResolver(reviewInfoSchema),
     defaultValues: {
-      email: 'abc@gmail.com',
-      phone: '+65 98888888',
+      email: '',
+      phone: '',
     },
   });
 
   const handleContinue = () => {
-    setShowConfirmModal(false);
+    router.push(ROUTES.INSURANCE.BASIC_DETAIL_SINGPASS);
   };
 
   const handleCloseModal = () => {
     setShowConfirmModal(true);
   };
 
-  const commonInfo = {
-    email: 'abc@gmail.com',
-    phone: '+65 98888888',
-    personal: [
-      { label: 'Name as per NRIC', value: 'Sayan Chakraborty' },
-      { label: 'NRIC', value: 'ABC1234' },
-      { label: 'Gender', value: 'Male' },
-      { label: 'Marital Status', value: 'Married' },
-      { label: 'Date of Birth', value: '29/12/1990' },
-      { label: 'Address', value: '10 Eunos Road Singapore 400087' },
-    ],
-    vehicle: [
-      { label: 'Vehicle Make', value: 'BMW i5 2.5' },
-      { label: 'Vehicle First Registered in', value: '2024' },
-      { label: 'Vehicle Registration Number', value: 'SGT1818T' },
-      { label: 'Chassis Number', value: '234GH3' },
-      { label: 'Engine Number', value: '2345HE3' },
-      { label: 'Year of Registration', value: '2024' },
-      {
-        label: 'Driving Licence - Qualified Driving License Validity',
-        value: '2024',
-      },
-    ],
-  };
+  useEffect(() => {
+    const stored = sessionStorage.getItem(ECICS_USER_INFO);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+
+      const transformed = {
+        email: parsed.email?.value || '',
+        phone: `${parsed.mobileno?.prefix?.value || ''}${parsed.mobileno?.areacode?.value || ''} ${parsed.mobileno?.nbr?.value || ''}`,
+        personal: [
+          {
+            label: 'Name as per NRIC',
+            value: capitalizeWords(parsed.name?.value) || '',
+          },
+          {
+            label: 'NRIC',
+            value: parsed.uinfin?.value || '',
+          },
+          {
+            label: 'Gender',
+            value: capitalizeWords(parsed.sex?.desc) || '',
+          },
+          {
+            label: 'Marital Status',
+            value: capitalizeWords(parsed.marital?.desc) || '',
+          },
+          {
+            label: 'Date of Birth',
+            value: parsed.dob?.value
+              ? new Date(parsed.dob.value).toLocaleDateString('en-GB')
+              : '',
+          },
+          {
+            label: 'Address',
+            value: [
+              capitalizeWords(parsed.regadd?.block?.value || ''),
+              capitalizeWords(parsed.regadd?.street?.value || ''),
+              parsed.regadd?.floor?.value || parsed.regadd?.unit?.value
+                ? `#${parsed.regadd?.floor?.value || ''}-${parsed.regadd?.unit?.value || ''}`
+                : '',
+              capitalizeWords(parsed.regadd?.building?.value || ''),
+              capitalizeWords(parsed.regadd?.country?.desc || 'Singapore'),
+              parsed.regadd?.postal?.value,
+            ]
+              .filter(Boolean)
+              .join(' ')
+              .trim(),
+          },
+        ],
+        vehicle:
+          parsed.vehicles
+            ?.map((v: any) => [
+              {
+                label: 'Vehicle Make',
+                value: capitalizeWords(
+                  `${v.make?.value || ''} ${v.model?.value || ''}`,
+                ).trim(),
+              },
+              {
+                label: 'Year of Registration',
+                value: v.firstregistrationdate?.value
+                  ? new Date(v.firstregistrationdate.value)
+                      .getFullYear()
+                      .toString()
+                  : '',
+              },
+              {
+                label: 'Chassis Number',
+                value: v.vehicleno?.value || '',
+              },
+            ])
+            .flat() || [],
+      };
+      setCommonInfo(transformed);
+      methods.reset({
+        email: transformed.email,
+        phone: transformed.phone,
+      });
+    }
+  }, [methods]);
 
   return (
     <FormProvider {...methods}>
@@ -96,8 +162,15 @@ const ReviewInfoDetail = () => {
                 <div className='text-sm font-bold'>Phone Number</div>
                 <InputField name='phone' />
               </div>
-              <InfoSection title='Personal Info' data={commonInfo.personal} />
-              <InfoSection title='Vehicle Details' data={commonInfo.vehicle} />
+              {commonInfo?.personal && (
+                <InfoSection title='Personal Info' data={commonInfo.personal} />
+              )}
+              {commonInfo?.vehicle && commonInfo.vehicle.length > 0 && (
+                <InfoSection
+                  title='Vehicle Details'
+                  data={commonInfo.vehicle}
+                />
+              )}
             </div>
           ) : (
             <div className='w-2/3 justify-self-center'>
@@ -111,16 +184,20 @@ const ReviewInfoDetail = () => {
                   <InputField name='phone' />
                 </div>
               </div>
-              <InfoSection
-                title='Personal Details'
-                data={commonInfo.personal}
-                boxClass='mt-4'
-              />
-              <InfoSection
-                title='Vehicle Details'
-                data={commonInfo.vehicle}
-                boxClass='mt-4'
-              />
+              {commonInfo?.personal && (
+                <InfoSection
+                  title='Personal Details'
+                  data={commonInfo.personal}
+                  boxClass='mt-4'
+                />
+              )}
+              {commonInfo?.vehicle && commonInfo.vehicle.length > 0 && (
+                <InfoSection
+                  title='Vehicle Details'
+                  data={commonInfo.vehicle}
+                  boxClass='mt-4'
+                />
+              )}
             </div>
           )}
         </div>

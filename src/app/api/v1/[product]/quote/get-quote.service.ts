@@ -4,9 +4,37 @@ import { PRODUCT_ID, PRODUCT_NAME } from '@/app/api/constants/product';
 import apiServer from '@/app/api/configs/api.config';
 import { successRes } from '@/app/api/core/success.response';
 import { formatCarQuoteInfo } from './format-car-quote-data';
+import { ErrBadRequest, ErrFromISPRes } from '@/app/api/core/error.response';
+import { prisma } from '@/app/api/libs/prisma';
 
 export async function getQuoteForCar(data: generateQuoteDTO) {
   try {
+    logger.info(`Generating quote for car with data: ${JSON.stringify(data)}`);
+
+    let promoCodeData = null;
+    // Check if promo code is valid
+    if (data.promo_code) {
+      promoCodeData = await prisma.promocode.findUnique({
+        where: {
+          code: data.promo_code,
+        },
+      });
+      if (!promoCodeData) {
+        return ErrBadRequest('Promo code not found');
+      }
+    }
+
+    // Check if quote already exists
+    const quoteFound = await prisma.quote.findFirst({
+      where: {
+        key: data.key,
+      },
+    });
+
+    if (quoteFound) {
+      return ErrBadRequest('Quote already exists');
+    }
+
     const payloadData = {
       product_id: PRODUCT_ID.CAR,
       quick_quote_make: data.vehicle_basic_details.make,
@@ -26,6 +54,8 @@ export async function getQuoteForCar(data: generateQuoteDTO) {
       partner_code: data.partner_code || '',
     };
     logger.info(`Payload for generate quote: ${JSON.stringify(payloadData)}`);
+
+    // Call the API to generate quote
     const response = await apiServer.post('/b2c/quote', payloadData);
     logger.info(
       `Response from generate quote: ${JSON.stringify(response.data)}`,
@@ -34,16 +64,34 @@ export async function getQuoteForCar(data: generateQuoteDTO) {
     if (response.data.status === 0) {
       const quoteResInfo = response.data.data;
       const responseData = formatCarQuoteInfo(quoteResInfo, data);
+
+      // Save quote to database
+      await prisma.quote.create({
+        data: {
+          quoteId: quoteResInfo.product_id,
+          quoteNo: quoteResInfo.quote_no,
+          policyId: quoteResInfo.policy_id,
+          phone: data.personal_info.phone_number,
+          email: data.personal_info.email,
+          name: data.personal_info.name,
+          data: {
+            quoteRes: { ...quoteResInfo },
+          },
+          partnerCode: data?.partner_code || '',
+          expirationDate: new Date(quoteResInfo.quote_expiry_date),
+          key: data.key,
+          promoCodeId: promoCodeData?.id || null,
+          companyId: data?.company_id || null,
+        },
+      });
+
       return successRes({
         data: responseData,
         message: 'Quote generated successfully',
       });
     }
 
-    return successRes({
-      data: null,
-      message: response?.data?.txt || 'Error generating quote',
-    });
+    return ErrFromISPRes(response?.data?.txt || 'Error generating quote');
   } catch (error) {
     logger.error(`Error generate quote: ${error}`);
     throw new Error('Error generate quote');

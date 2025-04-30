@@ -1,31 +1,23 @@
 'use client';
 import CrossMarkIcon from '@/components/icons/CrossMark';
 import TickCircleIcon from '@/components/icons/TickCircleIcon';
+import { Plan } from '@/libs/types/quote';
 import clsx from 'clsx';
-import { useLayoutEffect, useState } from 'react';
-
-export interface DataPlanCard {
-  title: string;
-  subtitle?: string;
-  activeFeatures: string[];
-  inactiveFeatures: string[];
-  price: string;
-  discountedPrice: string;
-  discount: string;
-  recommended: boolean;
-}
 
 function PlanCardMobile({
-  isRecommended = false,
   active = false,
-  data,
+  plan,
   onClick,
 }: {
-  isRecommended?: boolean;
   active?: boolean;
-  data: DataPlanCard;
+  plan: Plan;
   onClick?: () => void;
 }) {
+  const isRecommended = plan.is_recommended;
+  const activeFeatures = plan.benefits.filter((feature) => feature.is_active);
+  const inactiveFeatures = plan.benefits.filter(
+    (feature) => !feature.is_active,
+  );
   return (
     <div
       className={clsx(
@@ -41,16 +33,16 @@ function PlanCardMobile({
         </div>
       )}
       <div className='text-lg font-bold'>Comprehensive Plan</div>
-      {data.activeFeatures.map((feature, index) => (
-        <div className='mt-4 flex items-start' key={index}>
+      {activeFeatures.map((feature, index) => (
+        <div className='mt-4 flex items-start gap-2' key={index}>
           <TickCircleIcon size={12} className='mt-[6px]' />
-          <div className='ml-2 text-start text-sm'>{feature}</div>
+          <div dangerouslySetInnerHTML={{ __html: feature.name }} />
         </div>
       ))}
-      {data.inactiveFeatures.map((feature, index) => (
+      {inactiveFeatures.map((feature, index) => (
         <div className='mt-4 flex items-start' key={index}>
           <CrossMarkIcon size={12} className='mt-[6px]' />
-          <div className='ml-2 text-start text-sm text-gray-400'>{feature}</div>
+          <div dangerouslySetInnerHTML={{ __html: feature.name }} />
         </div>
       ))}
       <div className='relative mt-6'>
@@ -70,16 +62,16 @@ function PlanCardMobile({
           />
           <div className='flex items-center p-4 pb-2'>
             <div className='text-center text-base font-semibold text-black'>
-              {data.price}
+              $S {plan.premium_with_gst}
             </div>
-            <div className='ml-1 text-center text-sm font-medium text-[#FD1212]'>
-              {data.discountedPrice}
+            <div className='ml-1 text-center text-sm font-medium text-[#FD1212] line-through decoration-1'>
+              $S {plan.premium_bef_gst}
             </div>
           </div>
           <div className='mx-4 border-t border-dashed border-secondaryBlue' />
           <div className='p-4 pt-[10px]'>
             <div className='text-sm font-semibold text-black'>
-              {data.discount}
+              CAR (15% off applied)
             </div>
           </div>
         </div>

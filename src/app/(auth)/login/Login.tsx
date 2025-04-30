@@ -39,7 +39,7 @@ const Login = () => {
       <div className='relative z-10 flex w-1/2'>
         <div className='absolute bottom-0 w-full'>
           <img
-            src='/login_bg_bottom.svg'
+            src='/login_bg_desktop.svg'
             alt='Background Bottom'
             className='w-full object-cover'
           />

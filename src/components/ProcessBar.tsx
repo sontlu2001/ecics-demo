@@ -1,5 +1,5 @@
 'use client';
-import { StepProcessBar } from '@/enums/processBarEnums';
+import { StepProcessBar } from '@/libs/enums/processBarEnums';
 import type { StepsProps } from 'antd';
 import { Steps } from 'antd';
 

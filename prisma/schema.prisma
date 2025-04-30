@@ -105,29 +105,32 @@ model Quote {
 }
 
 model ProductType {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  Quote     Quote[]
+  id           Int            @id @default(autoincrement())
+  name         String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
+  Quote        Quote[]
+  Company      Company[]
+  VehicleMake  VehicleMake[]
+  VehicleModel VehicleModel[]
 
   @@map("product_type")
 }
 
 model PersonalInfo {
   id                 Int           @id @default(autoincrement())
-  phone              String
-  email              String
-  name               String
-  gender             Gender
-  nric               String
-  maritalStatus      MaritalStatus @map("marital_status")
-  dateOfBirth        DateTime       @map("date_of_birth") @db.Date
-  address            String
-  vehicleMake        String        @map("vehicle_make")
-  vehicleModel       String        @map("vehicle_model")
-  yearOfRegistration String        @map("year_of_registration")
-  vehicles           Json          
+  phone              String?
+  email              String?
+  name               String?
+  gender             String?
+  nric               String?
+  maritalStatus      String?
+  dateOfBirth        String?        @map("date_of_birth")
+  address            String?
+  vehicleMake        String?        @map("vehicle_make")
+  vehicleModel       String?        @map("vehicle_model")
+  yearOfRegistration String?        @map("year_of_registration")
+  vehicles           Json
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @default(now()) @updatedAt
   quotes             Quote[]
@@ -138,10 +141,13 @@ model PersonalInfo {
 model Company {
   id        Int      @id @default(autoincrement())
   name      String
-  type      String
+  type      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   quotes    Quote[]
+
+  productTypeId Int?         @map("product_type_id")
+  productType   ProductType? @relation(fields: [productTypeId], references: [id])
 
   @@map("company")
 }
@@ -166,4 +172,47 @@ model CountryNationality {
   quotes Quote[]
 
   @@map("country_nationality")
+}
+
+model RequestLog {
+  id          Int      @id @default(autoincrement())
+  ip          String
+  productType String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  @@map("request_log")
+}
+
+model VehicleMake {
+  id        Int    @id @default(autoincrement())
+  name      String
+  groupName String? @map("group_name")
+
+  // Foreign Keys
+  productTypeId Int?         @map("product_type_id")
+  productType   ProductType? @relation(fields: [productTypeId], references: [id])
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
+  VehicleModel VehicleModel[]
+
+  @@map("vehicle_make")
+}
+
+model VehicleModel {
+  id        Int    @id @default(autoincrement())
+  name      String
+  groupName String? @map("group_name")
+
+  // Foreign Keys
+  vehicleMakeId Int?         @map("vehicle_make_id")
+  vehicleMake   VehicleMake? @relation(fields: [vehicleMakeId], references: [id])
+
+  productTypeId Int?         @map("product_type_id")
+  productType   ProductType? @relation(fields: [productTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("vehicle_model")
 }

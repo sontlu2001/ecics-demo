@@ -1,9 +1,10 @@
 'use client';
-import ProcessBar from '@/components/ProcessBar';
-import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
 import Image from 'next/image';
 import 'swiper/css';
 import 'swiper/css/navigation';
+
+import ProcessBar from '@/components/ProcessBar';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
 
 export default function Home() {
   return (

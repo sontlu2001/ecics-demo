@@ -4,6 +4,7 @@ import React from 'react';
 import TickCircleIcon from '@/components/icons/TickCircleIcon';
 import { LinkButton } from '@/components/ui/buttons';
 
+import { ROUTES } from '@/constants/routes';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
 
 const ConfirmInfoCompletedModal = () => {
@@ -11,7 +12,7 @@ const ConfirmInfoCompletedModal = () => {
   const router = useRouter();
 
   const handleGoBack = () => {
-    router.push('/');
+    router.push(ROUTES.AUTH.LOGIN);
   };
 
   return (
