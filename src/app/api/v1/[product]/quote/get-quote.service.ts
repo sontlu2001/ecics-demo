@@ -63,27 +63,27 @@ export async function getQuoteForCar(data: generateQuoteDTO) {
 
     if (response.data.status === 0) {
       const quoteResInfo = response.data.data;
-      const responseData = formatCarQuoteInfo(quoteResInfo, data);
+      const responseData = await formatCarQuoteInfo(quoteResInfo, data);
 
       // Save quote to database
-      await prisma.quote.create({
-        data: {
-          quoteId: quoteResInfo.product_id,
-          quoteNo: quoteResInfo.quote_no,
-          policyId: quoteResInfo.policy_id,
-          phone: data.personal_info.phone_number,
-          email: data.personal_info.email,
-          name: data.personal_info.name,
-          data: {
-            quoteRes: { ...quoteResInfo },
-          },
-          partnerCode: data?.partner_code || '',
-          expirationDate: new Date(quoteResInfo.quote_expiry_date),
-          key: data.key,
-          promoCodeId: promoCodeData?.id || null,
-          companyId: data?.company_id || null,
-        },
-      });
+      // await prisma.quote.create({
+      //   data: {
+      //     quoteId: quoteResInfo.product_id,
+      //     quoteNo: quoteResInfo.quote_no,
+      //     policyId: quoteResInfo.policy_id,
+      //     phone: data.personal_info.phone_number,
+      //     email: data.personal_info.email,
+      //     name: data.personal_info.name,
+      //     data: {
+      //       quoteRes: { ...quoteResInfo },
+      //     },
+      //     partnerCode: data?.partner_code || '',
+      //     expirationDate: new Date(quoteResInfo.quote_expiry_date),
+      //     key: data.key,
+      //     promoCodeId: promoCodeData?.id || null,
+      //     companyId: data?.company_id || null,
+      //   },
+      // });
 
       return successRes({
         data: responseData,

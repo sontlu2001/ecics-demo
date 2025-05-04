@@ -17,6 +17,11 @@ enum MaritalStatus {
   Widowed
 }
 
+enum AddonType {
+  checkbox
+  select
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -113,26 +118,26 @@ model ProductType {
   Company      Company[]
   VehicleMake  VehicleMake[]
   VehicleModel VehicleModel[]
-
+  Plan         Plan[]
   @@map("product_type")
 }
 
 model PersonalInfo {
-  id                 Int           @id @default(autoincrement())
+  id                 Int      @id @default(autoincrement())
   phone              String?
   email              String?
   name               String?
   gender             String?
   nric               String?
   maritalStatus      String?
-  dateOfBirth        String?        @map("date_of_birth")
+  dateOfBirth        String?  @map("date_of_birth")
   address            String?
-  vehicleMake        String?        @map("vehicle_make")
-  vehicleModel       String?        @map("vehicle_model")
-  yearOfRegistration String?        @map("year_of_registration")
+  vehicleMake        String?  @map("vehicle_make")
+  vehicleModel       String?  @map("vehicle_model")
+  yearOfRegistration String?  @map("year_of_registration")
   vehicles           Json
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @default(now()) @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
   quotes             Quote[]
 
   @@map("personal_info")
@@ -180,11 +185,12 @@ model RequestLog {
   productType String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
+
   @@map("request_log")
 }
 
 model VehicleMake {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   name      String
   groupName String? @map("group_name")
 
@@ -200,7 +206,7 @@ model VehicleMake {
 }
 
 model VehicleModel {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   name      String
   groupName String? @map("group_name")
 
@@ -215,4 +221,113 @@ model VehicleModel {
   updatedAt DateTime @default(now()) @updatedAt
 
   @@map("vehicle_model")
+}
+
+model Plan {
+  id               Int       @id @default(autoincrement())
+  code             String?
+  title            String
+  sub_title        String?
+  is_recommended   Boolean   @default(false)
+  key_map          String?
+  premium_with_gst Float?    @default(0.0)
+  premium_bef_gst  Float?    @default(0.0)
+  benefits         Benefit[]
+  addons           Addon[]
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @default(now()) @updatedAt
+
+  // Foreign Keys
+  product_type_id Int?         @map("product_type_id")
+  product_type    ProductType? @relation(fields: [product_type_id], references: [id])
+
+  @@map("plan")
+}
+
+model Benefit {
+  id         Int      @id @default(autoincrement())
+  name       String
+  order      Int
+  is_active  Boolean  @default(true)
+  plan       Plan     @relation(fields: [planId], references: [id])
+  planId     Int
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("benefit")
+}
+
+model Addon {
+  id                Int           @id @default(autoincrement())
+  code              String?
+  title             String
+  sub_title         String?
+  type              AddonType
+  description       String?
+  default_option_id String?
+  key_map           String?
+  is_display        Boolean       @default(true)
+  is_recommended    Boolean       @default(false)
+  premium_with_gst  Float         @default(0.0)
+  premium_bef_gst   Float         @default(0.0)
+  options           AddonOption[]
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @default(now()) @updatedAt
+
+  condition Condition[]
+
+  // Foreign Keys
+  plan_id Int?
+  plans   Plan? @relation(fields: [plan_id], references: [id])
+
+  @@map("addon")
+}
+
+model AddonOption {
+  id               Int      @id @default(autoincrement())
+  label            String
+  value            String
+  key_map          String?
+  premium_with_gst Float    @default(0.0)
+  premium_bef_gst  Float    @default(0.0)
+  description      String?  @default("")
+  addon            Addon?   @relation(fields: [addon_id], references: [id])
+  addon_id         Int?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
+
+  dependencies Dependency[]
+
+  @@map("addon_option")
+}
+
+model Dependency {
+  id               Int         @id @default(autoincrement())
+  key_map          String?
+  premium_with_gst Float       @default(0.0)
+  premium_bef_gst  Float       @default(0.0)
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @default(now()) @updatedAt
+  conditions       Condition[]
+
+  // Foreign Keys
+  option_id Int?
+  options   AddonOption? @relation(fields: [option_id], references: [id])
+
+  @@map("addon_dependency")
+}
+
+model Condition {
+  id       Int    @id @default(autoincrement())
+  addon_id Int
+  addon    Addon  @relation(fields: [addon_id], references: [id])
+  value    String
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @default(now()) @updatedAt
+
+  // Foreign Keys
+  dependency    Dependency? @relation(fields: [dependency_id], references: [id])
+  dependency_id Int?
+
+  @@map("addon_condition")
 }
