@@ -5,4 +5,10 @@ export const CAR_INSURANCE = {
     TPFT: 'TPFT',
     TPO: 'TPO',
   },
+  PLAN_NAME: {
+    COM: 'Comprehensive',
+    TPFT: 'Third Party Fire & Theft',
+    TPO: 'Third Party Only',
+  },
 };
+
