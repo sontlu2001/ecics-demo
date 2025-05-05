@@ -10,16 +10,16 @@ export async function getQuoteByKey(key: string) {
         key,
       },
       include: {
-        promoCode: {
+        promo_code: {
           select: {
             code: true,
             discount: true,
-            startTime: true,
-            endTime: true,
+            start_time: true,
+            end_time: true,
             description: true,
             products: true,
-            isPublic: true,
-            isShowCountdown: true,
+            is_public: true,
+            is_show_count_down: true,
           },
         },
         company: {
@@ -28,7 +28,7 @@ export async function getQuoteByKey(key: string) {
             name: true,
           },
         },
-        personalInfo: {
+        personal_info: {
           select: {
             id: true,
             phone: true,
@@ -36,27 +36,30 @@ export async function getQuoteByKey(key: string) {
             name: true,
             gender: true,
             nric: true,
-            maritalStatus: true,
-            dateOfBirth: true,
+            marital_status: true,
+            date_of_birth: true,
             address: true,
-            vehicleMake: true,
-            vehicleModel: true,
-            yearOfRegistration: true,
+            vehicle_make: true,
+            vehicle_model: true,
+            year_of_registration: true,
             vehicles: true,
           },
         },
-        countryNationality: {
+        country_nationality: {
           select: {
             id: true,
             name: true,
           },
         },
-        productType: {
+        product_type: {
           select: {
             id: true,
             name: true,
           },
         },
+      },
+      omit: {
+        quote_res_from_ISP: true,
       },
     });
 
@@ -69,6 +72,16 @@ export async function getQuoteByKey(key: string) {
     }
 
     logger.info(`Quote with key ${key} found: ${JSON.stringify(quote)}`);
+
+    // Remove quoteResFromISP in response before returning to the client
+    if (
+      quote?.data &&
+      typeof quote.data === 'object' &&
+      'quoteResFromISP' in quote.data
+    ) {
+      delete quote.data.quoteResFromISP;
+    }
+
     return {
       message: 'Quote found',
       data: quote,

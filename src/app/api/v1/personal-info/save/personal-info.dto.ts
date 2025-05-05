@@ -9,7 +9,7 @@ export const savePersonalInfoDTOSchema = z.object({
   nric: z.string().min(1, 'NRIC is required'),
   marital_status: z.string().optional(),
   date_of_birth: z.string(),
-  address: z.string().optional(),
+  address: z.array(z.string()).optional(),
   vehicle_make: z.string().optional(),
   vehicle_model: z.string().optional(),
   year_of_registration: z.string().optional(),

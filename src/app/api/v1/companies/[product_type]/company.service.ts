@@ -10,7 +10,7 @@ export async function getAllCompanies(productTypeName: string) {
         name: true,
       },
       where: {
-        productType: {
+        product_type: {
           name: productTypeName,
         },
       },

@@ -7,16 +7,16 @@ import { prisma } from '../libs/prisma';
 schedule(process.env.QUOTE_REMINDER_CRON || '', async () => {
   const quotes = await prisma.quote.findMany({
     where: {
-      expirationDate: {
+      expiration_date: {
         gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Get the date 7 days ago
         lt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Get the date 7 days from now
       },
-      isPaid: false,
+      is_paid: false,
     },
     select: {
-      quoteId: true,
-      quoteNo: true,
-      productType: {
+      quote_id: true,
+      quote_no: true,
+      product_type: {
         select: {
           name: true,
         },
@@ -34,9 +34,9 @@ schedule(process.env.QUOTE_REMINDER_CRON || '', async () => {
       `Send mail by cron tasks with quote data: ${JSON.stringify(quote)}`,
     );
     await sendingQuoteReminder(
-      quote.quoteId,
-      quote.quoteNo,
-      quote.productType,
+      quote.quote_id,
+      quote.quote_no,
+      quote.product_type,
       quote.name,
       quote.email,
     );

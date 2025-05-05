@@ -1,15 +1,20 @@
-import logger from "@/app/api/libs/logger";
-import { prisma } from "@/app/api/libs/prisma";
-import { mappedAddonPremiums, mappedPlanPremiums } from "@/app/api/utils/quoteHelpers";
+import { prisma } from '@/app/api/libs/prisma';
+import {
+  mappedAddonPremiums,
+  mappedPlanPremiums,
+} from '@/app/api/utils/quote.helpers';
 
-export async function formatCarQuoteInfo(quoteInfo: any, data: any) {
+export async function formatCarQuoteInfo(
+  quoteInfo: any,
+  data: any,
+): Promise<any[]> {
   const mappedPlanValues = mappedPlanPremiums(quoteInfo);
   const mappedAddonValues = mappedAddonPremiums(quoteInfo);
 
   const plans = await prisma.plan.findMany({
     where: {
       product_type: {
-        name: "car",
+        name: 'car',
       },
     },
     include: {
@@ -71,7 +76,7 @@ export async function formatCarQuoteInfo(quoteInfo: any, data: any) {
           },
         },
         orderBy: {
-          id: "asc",
+          id: 'asc',
         },
       },
     },
@@ -79,7 +84,7 @@ export async function formatCarQuoteInfo(quoteInfo: any, data: any) {
       product_type_id: true,
     },
     orderBy: {
-      id: "asc",
+      id: 'asc',
     },
   });
 
@@ -98,7 +103,8 @@ export async function formatCarQuoteInfo(quoteInfo: any, data: any) {
           } else {
             for (const dependency of option.dependencies) {
               if (dependency.key_map) {
-                dependency.premium_with_gst = mappedAddonValues[dependency.key_map];
+                dependency.premium_with_gst =
+                  mappedAddonValues[dependency.key_map];
               }
             }
           }
@@ -107,23 +113,5 @@ export async function formatCarQuoteInfo(quoteInfo: any, data: any) {
     }
   });
 
-  logger.info(`Formatted plans: ${JSON.stringify(plans)}`);
-
-  return {
-    quote_info: {
-      product_id: quoteInfo.product_id,
-      policy_id: quoteInfo.policy_id,
-      quote_no: quoteInfo.quote_no,
-      proposal_id: quoteInfo.proposal_id,
-      quote_expiry_date: quoteInfo.quote_expiry_date,
-      is_electric_vehicle_model: quoteInfo.is_electric_vehicle_model,
-      is_performance_model: quoteInfo.is_performance_model,
-      ncb: quoteInfo.ncb,
-      key: data.key,
-      partner_code: quoteInfo.partner_code || "",
-      partner_name: quoteInfo.partner_name || "",
-      promo_code: quoteInfo.promo_code || "",
-    },
-    plans,
-  };
+  return plans;
 }

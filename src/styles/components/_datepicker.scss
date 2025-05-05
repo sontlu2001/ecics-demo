@@ -15,6 +15,12 @@
 .ant-picker .ant-picker-suffix svg {
   fill: #00adef !important;
 }
+
 .ant-picker.ant-picker-status-error .ant-picker-suffix svg {
   fill: #ef4444 !important;
+}
+
+/* override disabled text color */
+.ant-picker-disabled input {
+  color: rgba(0, 0, 0, 0.85) !important;
 }

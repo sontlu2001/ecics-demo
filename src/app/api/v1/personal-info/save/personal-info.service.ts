@@ -27,12 +27,12 @@ export async function savePersonalInfo(data: savePersonalInfoDTO) {
         name: data.name,
         nric: data.nric,
         gender: data.gender,
-        maritalStatus: data.marital_status,
-        dateOfBirth: data.date_of_birth,
+        marital_status: data.marital_status,
+        date_of_birth: data.date_of_birth,
         address: data.address,
-        vehicleMake: data.vehicle_make,
-        vehicleModel: data.vehicle_model,
-        yearOfRegistration: data.year_of_registration,
+        vehicle_make: data.vehicle_make,
+        vehicle_model: data.vehicle_model,
+        year_of_registration: data.year_of_registration,
         vehicles: data.vehicles ?? [],
       },
     });
@@ -43,7 +43,7 @@ export async function savePersonalInfo(data: savePersonalInfoDTO) {
     const newQuote = await prisma.quote.create({
       data: {
         key: data.key,
-        personalInfoId: newPersonalInfo.id,
+        personal_info_id: newPersonalInfo.id,
       },
     });
     logger.info(`Creating a new quote info: ${JSON.stringify(newQuote)}`);

@@ -12,10 +12,10 @@ export async function getVehicleModelsByProductName(
         name: true,
       },
       where: {
-        vehicleMake: {
+        vehicle_make: {
           id: Number(vehicleMakeId),
         },
-        productType: {
+        product_type: {
           name: productTypeName,
         },
       },

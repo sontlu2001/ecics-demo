@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-import ManualReviewInfoDetail from '@/app/(auth)/review-info-detail/ManualReviewInfoDetail';
 import ReviewInfoDetail from '@/app/(auth)/review-info-detail/ReviewInfoDetail';
 import { usePostUserInfo } from '@/hook/auth/login';
 
@@ -39,6 +38,8 @@ export default function ReviewInfoDetailPage() {
   }
 
   return (
-    <div>{params.code ? <ReviewInfoDetail /> : <ManualReviewInfoDetail />}</div>
+    <div>
+      <ReviewInfoDetail />
+    </div>
   );
 }

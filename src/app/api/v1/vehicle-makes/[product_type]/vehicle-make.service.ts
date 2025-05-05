@@ -7,10 +7,10 @@ export async function getVehicleMakesByProductName(productTypeName: string) {
       select: {
         id: true,
         name: true,
-        groupName: true,
+        group_name: true,
       },
       where: {
-        productType: {
+        product_type: {
           name: productTypeName,
         },
       },

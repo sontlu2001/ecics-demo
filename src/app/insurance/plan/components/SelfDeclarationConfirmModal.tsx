@@ -1,7 +1,13 @@
 'use client';
-import { PrimaryButton } from '@/components/ui/buttons';
-import { useDeviceDetection } from '@/hook/useDeviceDetection';
 import { Checkbox, Drawer, Modal } from 'antd';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { PrimaryButton } from '@/components/ui/buttons';
+
+import { ROUTES } from '@/constants/routes';
+import { useDeviceDetection } from '@/hook/useDeviceDetection';
 
 function SelfDeclarationConfirmModal({
   visible,
@@ -13,6 +19,18 @@ function SelfDeclarationConfirmModal({
   onCancel?: () => void;
 }) {
   const { isMobile } = useDeviceDetection();
+  const [isChecked, setIsChecked] = useState(false);
+  const router = useRouter();
+
+  const handleCheckboxChange = (e: CheckboxChangeEvent) => {
+    setIsChecked(e.target.checked);
+  };
+
+  const handleOkayClick = () => {
+    onOk();
+    router.push(ROUTES.INSURANCE.ADD_ON);
+  };
+
   const content = (
     <div className='flex flex-col justify-between'>
       <div>
@@ -44,7 +62,11 @@ function SelfDeclarationConfirmModal({
         </div>
       </div>
       <div className='mt-4 flex items-start gap-2 text-sm'>
-        <Checkbox className='custom-checkbox' />
+        <Checkbox
+          className='custom-checkbox'
+          checked={isChecked}
+          onChange={handleCheckboxChange}
+        />
         <span className='text-justify font-semibold'>
           I confirm that I have read and meet all the above eligibility
           criteria.
@@ -52,8 +74,9 @@ function SelfDeclarationConfirmModal({
       </div>
       <div className='mt-6 flex justify-center'>
         <PrimaryButton
-          onClick={onOk}
+          onClick={handleOkayClick}
           className='w-full py-3 text-base font-semibold text-white'
+          disabled={!isChecked}
         >
           Okay
         </PrimaryButton>

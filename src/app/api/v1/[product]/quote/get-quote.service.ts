@@ -63,30 +63,40 @@ export async function getQuoteForCar(data: generateQuoteDTO) {
 
     if (response.data.status === 0) {
       const quoteResInfo = response.data.data;
-      const responseData = await formatCarQuoteInfo(quoteResInfo, data);
+      const planData = await formatCarQuoteInfo(quoteResInfo, data);
+
+      logger.info(`Formatted quote data: ${JSON.stringify(planData)}`);
 
       // Save quote to database
-      // await prisma.quote.create({
-      //   data: {
-      //     quoteId: quoteResInfo.product_id,
-      //     quoteNo: quoteResInfo.quote_no,
-      //     policyId: quoteResInfo.policy_id,
-      //     phone: data.personal_info.phone_number,
-      //     email: data.personal_info.email,
-      //     name: data.personal_info.name,
-      //     data: {
-      //       quoteRes: { ...quoteResInfo },
-      //     },
-      //     partnerCode: data?.partner_code || '',
-      //     expirationDate: new Date(quoteResInfo.quote_expiry_date),
-      //     key: data.key,
-      //     promoCodeId: promoCodeData?.id || null,
-      //     companyId: data?.company_id || null,
-      //   },
-      // });
+      const newQuoteInfo = await prisma.quote.create({
+        data: {
+          quote_id: quoteResInfo.quote_id,
+          quote_no: quoteResInfo.quote_no,
+          policy_id: quoteResInfo.policy_id,
+          product_id: quoteResInfo.product_id,
+          proposal_id: quoteResInfo.proposal_id,
+          phone: data.personal_info.phone_number,
+          email: data.personal_info.email,
+          name: data.personal_info.name,
+          quote_res_from_ISP: quoteResInfo,
+          data: {
+            plans: planData,
+          },
+          partner_code: data?.partner_code || '',
+          expiration_date: new Date(quoteResInfo.quote_expiry_date),
+          key: data.key,
+          promo_code_id: promoCodeData?.id || null,
+          company_id: data?.company_id || null,
+        },
+        omit: {
+          quote_res_from_ISP: true,
+          created_at: true,
+          update_at: true,
+        },
+      });
 
       return successRes({
-        data: responseData,
+        data: newQuoteInfo,
         message: 'Quote generated successfully',
       });
     }

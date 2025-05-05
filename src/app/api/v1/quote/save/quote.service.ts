@@ -20,41 +20,37 @@ export async function saveQuote(data: saveQuoteDTO) {
     const updatedQuote = await prisma.quote.update({
       where: { id: existingQuote.id },
       data: {
-        quoteNo: data.quoteNo,
-        policyId: data.policyId,
+        quote_no: data.quote_no,
+        policy_id: data.policy_id,
         phone: data.phone,
         email: data.email,
         name: data.name,
         data: data.data,
-        partnerCode: data.partnerCode,
-        isFinalized: data.isFinalized ?? false,
-        isPaid: data.isPaid ?? false,
-        expirationDate: data.expirationDate
-          ? new Date(data.expirationDate)
+        partner_code: data.partner_code,
+        is_finalized: data.is_finalized ?? false,
+        is_paid: data.is_paid ?? false,
+        expiration_date: data.expiration_date
+          ? new Date(data.expiration_date)
           : undefined,
         key: data.key,
-        ipAddress: data.ipAddress,
-        country: data.country,
-        city: data.city,
-        personalInfoId: data.personalInfoId,
-        companyId: data.companyId,
-        paymentResultId: data.paymentResultId,
-        countryNationalityId: data.countryNationalityId,
-        productTypeId: data.productTypeId,
-        promoCodeId: data.promoCodeId,
-        updatedAt: new Date(),
+        personal_info_id: data.personal_info_id,
+        company_id: data.company_id,
+        payment_result_id: data.payment_result_id,
+        country_nationality_id: data.country_nationality_id,
+        product_type_id: data.product_type_id,
+        promo_code_id: data.promo_code_id,
       },
       include: {
-        promoCode: {
+        promo_code: {
           select: {
             code: true,
             discount: true,
-            startTime: true,
-            endTime: true,
+            start_time: true,
+            end_time: true,
             description: true,
             products: true,
-            isPublic: true,
-            isShowCountdown: true,
+            is_public: true,
+            is_show_count_down: true,
           },
         },
         company: {
@@ -63,7 +59,7 @@ export async function saveQuote(data: saveQuoteDTO) {
             name: true,
           },
         },
-        personalInfo: {
+        personal_info: {
           select: {
             id: true,
             phone: true,
@@ -71,22 +67,22 @@ export async function saveQuote(data: saveQuoteDTO) {
             name: true,
             gender: true,
             nric: true,
-            maritalStatus: true,
-            dateOfBirth: true,
+            marital_status: true,
+            date_of_birth: true,
             address: true,
-            vehicleMake: true,
-            vehicleModel: true,
-            yearOfRegistration: true,
+            vehicle_make: true,
+            vehicle_model: true,
+            year_of_registration: true,
             vehicles: true,
           },
         },
-        countryNationality: {
+        country_nationality: {
           select: {
             id: true,
             name: true,
           },
         },
-        productType: {
+        product_type: {
           select: {
             id: true,
             name: true,
@@ -107,26 +103,28 @@ export async function saveQuote(data: saveQuoteDTO) {
   );
   const newQuote = await prisma.quote.create({
     data: {
-      quoteId: data.quoteId,
-      quoteNo: data.quoteNo,
-      policyId: data.policyId,
+      quote_id: data.quote_id,
+      quote_no: data.quote_no,
+      policy_id: data.policy_id,
+      product_id: data.product_id,
+      proposal_id: data.proposal_id,
       phone: data.phone,
       email: data.email,
       name: data.name,
       data: data.data,
-      partnerCode: data.partnerCode,
-      isFinalized: data.isFinalized ?? false,
-      isPaid: data.isPaid ?? false,
-      expirationDate: data.expirationDate
-        ? new Date(data.expirationDate)
+      partner_code: data.partner_code,
+      is_finalized: data.is_finalized ?? false,
+      is_paid: data.is_paid ?? false,
+      expiration_date: data.expiration_date
+        ? new Date(data.expiration_date)
         : undefined,
       key: data.key,
-      personalInfoId: data.personalInfoId,
-      companyId: data.companyId,
-      paymentResultId: data.paymentResultId,
-      countryNationalityId: data.countryNationalityId,
-      productTypeId: data.productTypeId,
-      promoCodeId: data.promoCodeId,
+      personal_info_id: data.personal_info_id,
+      company_id: data.company_id,
+      payment_result_id: data.payment_result_id,
+      country_nationality_id: data.country_nationality_id,
+      product_type_id: data.product_type_id,
+      promo_code_id: data.promo_code_id,
     },
   });
 
@@ -136,7 +134,7 @@ export async function saveQuote(data: saveQuoteDTO) {
   });
   sendMail({
     to: newQuote.email ?? '',
-    subject: `ECICS Limited | Your Car Insurance Quotation <${newQuote.quoteNo}>`,
+    subject: `ECICS Limited | Your Car Insurance Quotation <${newQuote.quote_no}>`,
     html: retrieveQuoteHTML,
   });
 

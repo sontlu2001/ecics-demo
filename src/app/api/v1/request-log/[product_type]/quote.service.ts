@@ -13,7 +13,7 @@ export async function handleDetectIPAdress(
     const requestLogData = await prisma.requestLog.create({
       data: {
         ip: ipAddress,
-        productType: productType,
+        product_type: productType,
       },
     });
 

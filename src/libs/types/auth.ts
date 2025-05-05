@@ -37,7 +37,7 @@ export interface SavePersonalInfoPayload {
   gender: string;
   marital_status: string;
   date_of_birth: string;
-  address: string;
+  address: string[];
   vehicle_make: string;
   vehicle_model: string;
   year_of_registration: string;

@@ -7,3 +7,12 @@
 .ant-dropdown-trigger .anticon > svg {
   fill: #00adef !important;
 }
+
+/* override disabled text color */
+.ant-select-disabled .ant-select-selector {
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.ant-select-disabled .ant-select-arrow {
+  color: rgba(0, 0, 0, 0.85) !important;
+}
