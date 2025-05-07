@@ -1,3 +1,5 @@
+import { CAR_INSURANCE } from "../constants/car.insurance";
+
 export function mappedPlanPremiums(quoteData: any): Record<string, number> {
   return {
     COM: quoteData?.comp_plan?.plan_premium_with_gst ?? 0,
@@ -139,4 +141,60 @@ export function mappedAddonPremiums(quoteData: any): Record<string, number> {
       quoteData?.tpo_plan?.add_ons?.buy_up_ncd?.addl_prem_for_buy_up_ncd
         ?.buy_up_ncd_if_selected ?? 0,
   };
+}
+
+export const addonToQuickProposalMap: Record<string, string> = {
+  CAR_COM_ANW: 'quick_proposal_any_workshop',
+  CAR_COM_AJE: 'quick_proposal_excess',
+  CAR_COM_BUN: 'quick_proposal_bun',
+  CAR_COM_RSA: 'quick_proposal_ra24',
+  CAR_COM_NOR: 'quick_proposal_new_for_old',
+  CAR_COM_PAC: 'quick_proposal_pa_plus',
+  CAR_COM_MDE: 'quick_proposal_me',
+  CAR_COM_KRC: 'quick_proposal_krc',
+  CAR_TPFT_BUN: 'quick_proposal_bun',
+  CAR_TPO_BUN: 'quick_proposal_bun',
+};
+
+export function applyAddlDriverLogic(selected_value: string){
+  if (selected_value === CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.ALL_DRIVERS) {
+    return {
+      quick_proposal_has_addl_driver: CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.NO,
+      quick_proposal_has_yied_driver: CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.YES,
+    };
+  } else if (selected_value === CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.DRIVERS_AGE_FROM_27_TO_70) {
+    return {
+      quick_proposal_has_addl_driver: CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.YES,
+      quick_proposal_has_yied_driver: CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.NO,
+    };
+  } else {
+    return {
+      quick_proposal_has_addl_driver: CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.NO,
+      quick_proposal_has_yied_driver: CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.NO,
+    };
+  }
+}
+
+export function applyLouAndCcLogic(value: string) {
+  if (value === CAR_INSURANCE.ADD_ONS.LOU.YES) {
+    return {
+      quick_proposal_lou: CAR_INSURANCE.ADD_ONS.LOU.YES,
+      quick_proposal_cc: CAR_INSURANCE.ADD_ONS.CC.NO,
+    };
+  } else if (value === CAR_INSURANCE.ADD_ONS.CC.YES_UP_TO_1600CC) {
+    return {
+      quick_proposal_lou: CAR_INSURANCE.ADD_ONS.LOU.NO,
+      quick_proposal_cc: CAR_INSURANCE.ADD_ONS.CC.YES_UP_TO_1600CC,
+    };
+  } else if (value === CAR_INSURANCE.ADD_ONS.CC.YES_UP_TO_2000CC) {
+    return {
+      quick_proposal_lou: CAR_INSURANCE.ADD_ONS.LOU.NO,
+      quick_proposal_cc: CAR_INSURANCE.ADD_ONS.CC.YES_UP_TO_2000CC,
+    };
+  } else {
+    return {
+      quick_proposal_lou: CAR_INSURANCE.ADD_ONS.LOU.NO,
+      quick_proposal_cc: CAR_INSURANCE.ADD_ONS.CC.NO,
+    };
+  }
 }
