@@ -1,10 +1,17 @@
+import { handleApiCallToISP } from '@/app/api/configs/api.config';
 import { CAR_INSURANCE } from '@/app/api/constants/car.insurance';
-import { ErrNotFound } from '@/app/api/core/error.response';
+import { ErrFromISPRes, ErrNotFound } from '@/app/api/core/error.response';
 import { successRes } from '@/app/api/core/success.response';
+import logger from '@/app/api/libs/logger';
 import { prisma } from '@/app/api/libs/prisma';
-import { addonToQuickProposalMap, applyAddlDriverLogic, applyLouAndCcLogic } from '@/app/api/utils/quote.helpers';
+import {
+  applyAddlDriverLogic,
+  applyLouAndCcLogic,
+  mappingAddonByPlan,
+} from '@/app/api/utils/quote.helpers';
+import { saveQuoteProposalDTO } from './save-proposal.dto';
 
-export async function saveProposalForCar(data: any) {
+export async function saveProposalForCar(data: saveQuoteProposalDTO) {
   const { key, selected_plan, selected_addons, add_named_driver_info } = data;
 
   const quoteInfo = await prisma.quote.findFirst({
@@ -14,6 +21,9 @@ export async function saveProposalForCar(data: any) {
     select: {
       quote_id: true,
       proposal_id: true,
+      data: true,
+      id: true,
+      company: true,
     },
   });
 
@@ -31,22 +41,20 @@ export async function saveProposalForCar(data: any) {
     return_baseurl: process.env.NEXT_PUBLIC_CALLBACK_PAYMENT_URL,
   };
 
-  for (const [addonKey, quickKey] of Object.entries(addonToQuickProposalMap)) {
+  const addonKeysMapping = mappingAddonByPlan(selected_plan)
+
+  for (const [addonKey, quickKey] of Object.entries(addonKeysMapping)) {
     payload[quickKey] = selected_addons[addonKey] || 'NO';
   }
 
-  // update quick_proposal_any_workshop and quick_proposal_excess based on selected_plan
-  if (selected_plan !== CAR_INSURANCE.PLAN_NAME.COM) {
+  //customize other add-ons by plan
+  if (selected_plan === CAR_INSURANCE.PLAN_NAME.TPO) {
     payload.quick_proposal_any_workshop = 'N.A.';
     payload.quick_proposal_excess = 'N.A.';
   }
-
-  // Add-on BUN
-  if(selected_plan === CAR_INSURANCE.PLAN_NAME.TPO) {
-    payload.quick_proposal_bun = selected_addons['CAR_TPO_BUN'] || 'NO';
-  }
-  if(selected_plan === CAR_INSURANCE.PLAN_NAME.TPFT) {
-    payload.quick_proposal_bun = selected_addons['CAR_TPFT_BUN'] || 'NO';
+  if (selected_plan === CAR_INSURANCE.PLAN_NAME.TPFT) {
+    payload.quick_proposal_any_workshop = 'N.A.';
+    payload.quick_proposal_excess = 'N.A.';
   }
 
   // Add-on LOU & CC
@@ -65,8 +73,10 @@ export async function saveProposalForCar(data: any) {
   for (const addlDriverKey of addlDriverKeys) {
     if (selected_addons[addlDriverKey]) {
       const result = applyAddlDriverLogic(selected_addons[addlDriverKey]);
-      payload.quick_proposal_has_addl_driver = result.quick_proposal_has_addl_driver;
-      payload.quick_proposal_has_yied_driver = result.quick_proposal_has_yied_driver;
+      payload.quick_proposal_has_addl_driver =
+        result.quick_proposal_has_addl_driver;
+      payload.quick_proposal_has_yied_driver =
+        result.quick_proposal_has_yied_driver;
       break;
     }
   }
@@ -83,6 +93,65 @@ export async function saveProposalForCar(data: any) {
     payload[`quick_proposal_addl_nd${i + 1}_marital_status`] =
       driver?.marital_status || '';
   }
+
+  // Add personal information
+  const { personal_info, vehicle_info_selected } = quoteInfo.data as {
+    personal_info: {
+      name?: string;
+      nric?: string;
+      gender?: string;
+      date_of_birth?: string;
+      marital_status?: string;
+      address?: string[];
+      post_code?: string;
+    };
+    vehicle_info_selected: {
+      chasis_number?: string;
+      chassis_no?: string;
+      engine_no?: string;
+    };
+  };
+
+  payload.quick_proposal_veh_reg_no =
+    vehicle_info_selected?.chasis_number || '';
+  payload.quick_proposal_chassis_no = vehicle_info_selected?.chassis_no || '';
+  payload.quick_proposal_engine_no = vehicle_info_selected?.engine_no || '';
+  payload.quick_proposal_hire_purchase = quoteInfo.company?.name || '';
+  payload.quick_proposal_proposer_name = personal_info?.name || '';
+  payload.quick_proposal_proposer_nric = personal_info?.nric || '';
+  payload.quick_proposal_proposer_gender = personal_info?.gender || '';
+  payload.quick_proposal_proposer_marital_status =
+    personal_info?.marital_status || '';
+  payload.quick_proposal_address_line1 = personal_info?.address?.[0] || '';
+  payload.quick_proposal_address_line2 = personal_info?.address?.[1] || '';
+  payload.quick_proposal_address_line3 = personal_info?.address?.[2] || '';
+  payload.quick_proposal_post_code = personal_info?.post_code || '';
+
+  logger.info(`Payload for save proposal: ${JSON.stringify(payload)}`);
+
+  const resSaveProposal = await handleApiCallToISP('/b2c/proposal', payload);
+  logger.info(
+    `Response from save proposal: ${JSON.stringify(resSaveProposal)}`,
+  );
+
+  if (resSaveProposal.status !== 0) {
+    return ErrFromISPRes('Failed to save proposal');
+  }
+
+  // Update the quote in the database
+  const quoteData = quoteInfo.data;
+  await prisma.quote.update({
+    where: {
+      id: quoteInfo.id,
+    },
+    data: {
+      data: {
+        ...(quoteData && typeof quoteData === 'object' ? quoteData : {}),
+        selected_addons: selected_addons,
+        add_named_driver_info: add_named_driver_info,
+      },
+    },
+  });
 
   return successRes({
     message: 'Proposal saved successfully',

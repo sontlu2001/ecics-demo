@@ -1,5 +1,4 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { StepProcessBar } from '@/libs/enums/processBarEnums';
@@ -11,20 +10,20 @@ import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
 import { ROUTES } from '@/constants/routes';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
 
+import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
 import BusinessPartnerBar from './components/BusinessPartnerBar';
 
 const stepToRoute: Record<StepProcessBar, string> = {
-  [StepProcessBar.POLICY_DETAILS]: ROUTES.INSURANCE.BASIC_DETAIL_SINGPASS,
+  [StepProcessBar.POLICY_DETAILS]: ROUTES.INSURANCE.BASIC_DETAIL,
   [StepProcessBar.SELECT_PLAN]: ROUTES.INSURANCE.PLAN,
   [StepProcessBar.SELECT_ADD_ON]: ROUTES.INSURANCE.ADD_ON,
   [StepProcessBar.COMPLETE_PURCHASE]: ROUTES.INSURANCE.COMPLETE_PURCHASE,
 };
 
 function InsuranceLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
+  const router = useRouterWithQuery();
   const { isMobile } = useDeviceDetection();
   const [currentStep, setCurrentStep] = useState(StepProcessBar.POLICY_DETAILS);
-
   const handleChangeStep = (step: StepProcessBar) => {
     if (step === currentStep) return;
     const path = stepToRoute[step];

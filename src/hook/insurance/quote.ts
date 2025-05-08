@@ -1,5 +1,9 @@
 import insurance from '@/api/base-service/insurance';
-import { QuoteCreationPayload } from '@/libs/types/quote';
+import {
+  ProposalPayload,
+  QuoteCreationPayload,
+  QuoteData,
+} from '@/libs/types/quote';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 export const useGetQuote = (key: string) => {
@@ -11,18 +15,41 @@ export const useGetQuote = (key: string) => {
   return useQuery({
     queryFn: fetchQuote,
     queryKey: ['quote', key],
+    enabled: !!key,
   });
 };
 
-export const useCreateQuote = () => {
-  const createQuote = async (data: QuoteCreationPayload | any) => {
-    const res = await insurance.createQuote(data);
+export const useGenerateQuote = () => {
+  const generateQuote = async (data: QuoteCreationPayload | any) => {
+    const res = await insurance.generateQuote(data);
     return res.data.data;
   };
 
   return useMutation({
-    mutationFn: createQuote,
-    mutationKey: ['quote'],
+    mutationFn: generateQuote,
+    mutationKey: ['generate-quote'],
+  });
+};
+
+export const useSaveProposal = () => {
+  const saveProposal = async (data: ProposalPayload) => {
+    const res = await insurance.saveProposal(data);
+    return res.data.data;
+  };
+  return useMutation({
+    mutationFn: saveProposal,
+    mutationKey: ['save-proposal'],
+  });
+};
+
+export const useSaveQuote = () => {
+  const saveQuote = async ({ key, data }: { key: string; data: QuoteData }) => {
+    const res = await insurance.saveQuote(key, data);
+    return res.data.data;
+  };
+  return useMutation({
+    mutationFn: saveQuote,
+    mutationKey: ['save-quote'],
   });
 };
 

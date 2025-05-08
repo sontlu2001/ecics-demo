@@ -1,4 +1,4 @@
-import { CAR_INSURANCE } from "../constants/car.insurance";
+import { CAR_INSURANCE } from '../constants/car.insurance';
 
 export function mappedPlanPremiums(quoteData: any): Record<string, number> {
   return {
@@ -143,7 +143,7 @@ export function mappedAddonPremiums(quoteData: any): Record<string, number> {
   };
 }
 
-export const addonToQuickProposalMap: Record<string, string> = {
+export const addonForCarMapCOM: Record<string, string> = {
   CAR_COM_ANW: 'quick_proposal_any_workshop',
   CAR_COM_AJE: 'quick_proposal_excess',
   CAR_COM_BUN: 'quick_proposal_bun',
@@ -152,17 +152,41 @@ export const addonToQuickProposalMap: Record<string, string> = {
   CAR_COM_PAC: 'quick_proposal_pa_plus',
   CAR_COM_MDE: 'quick_proposal_me',
   CAR_COM_KRC: 'quick_proposal_krc',
+};
+
+export const addonForCarMapTPFT: Record<string, string> = {
   CAR_TPFT_BUN: 'quick_proposal_bun',
+};
+
+export const addonForCarMapTPO: Record<string, string> = {
   CAR_TPO_BUN: 'quick_proposal_bun',
 };
 
-export function applyAddlDriverLogic(selected_value: string){
+export function mappingAddonByPlan(
+selected_plan: string,
+): Record<string, string> {
+ switch (selected_plan) {
+    case CAR_INSURANCE.PLAN_NAME.COM:
+      return addonForCarMapCOM
+    case CAR_INSURANCE.PLAN_NAME.TPFT:
+      return addonForCarMapTPFT
+    case CAR_INSURANCE.PLAN_NAME.TPO:
+      return addonForCarMapTPO
+    default:
+     return {};
+ }
+}
+
+export function applyAddlDriverLogic(selected_value: string) {
   if (selected_value === CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.ALL_DRIVERS) {
     return {
       quick_proposal_has_addl_driver: CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.NO,
       quick_proposal_has_yied_driver: CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.YES,
     };
-  } else if (selected_value === CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.DRIVERS_AGE_FROM_27_TO_70) {
+  } else if (
+    selected_value ===
+    CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.DRIVERS_AGE_FROM_27_TO_70
+  ) {
     return {
       quick_proposal_has_addl_driver: CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.YES,
       quick_proposal_has_yied_driver: CAR_INSURANCE.ADD_ONS.ADDL_DRIVER.NO,

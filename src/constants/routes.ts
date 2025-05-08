@@ -1,5 +1,6 @@
 export const ROUTES = {
   INSURANCE: {
+    BASIC_DETAIL: '/insurance/basic-detail',
     BASIC_DETAIL_SINGPASS: '/insurance/basic-detail?manual=false',
     BASIC_DETAIL_MANUAL: '/insurance/basic-detail?manual=true',
     PLAN: '/insurance/plan',

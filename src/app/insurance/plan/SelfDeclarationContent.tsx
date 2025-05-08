@@ -1,5 +1,6 @@
-import { PrimaryButton } from '@/components/ui/buttons';
 import { Checkbox } from 'antd';
+
+import { PrimaryButton } from '@/components/ui/buttons';
 
 const SelfDeclarationContent = ({ onSave }: { onSave: () => void }) => {
   return (

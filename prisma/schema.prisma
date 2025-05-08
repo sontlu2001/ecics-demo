@@ -73,6 +73,7 @@ model Quote {
   policy_id          String?   @map("policy_id")
   product_id         String?   @map("product_id")
   proposal_id        String?   @map("proposal_id")
+  payment_id         String?   
   phone              String?
   email              String?
   name               String?
@@ -81,6 +82,7 @@ model Quote {
   partner_code       String?   @map("partner_code")
   is_finalized       Boolean   @default(false) @map("is_finalized")
   is_paid            Boolean   @default(false) @map("is_paid")
+  is_sending_email     Boolean   @default(false)
   expiration_date    DateTime? @map("expiration_date")
   key                String
 
@@ -133,8 +135,7 @@ model PersonalInfo {
   marital_status       String?
   date_of_birth        String?  @map("date_of_birth")
   address              String[] @default([])
-  vehicle_make         String?  @map("vehicle_make")
-  vehicle_model        String?  @map("vehicle_model")
+  vehicle_info_selected Json?
   year_of_registration String?  @map("year_of_registration")
   vehicles             Json
   created_at           DateTime @default(now())

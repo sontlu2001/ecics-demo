@@ -21,7 +21,9 @@ export const InputField = ({ name, label, ...props }: InputFieldProps) => {
               {...props}
               {...field}
               status={fieldState.invalid ? 'error' : undefined}
-              className={`w-full ${fieldState.invalid ? '!border-red-500' : ''}`}
+              className={`w-full ${fieldState.invalid ? '!border-red-500' : ''} ${
+                props.disabled ? 'bg-gray-200' : ''
+              }`}
             />
             {fieldState.error && (
               <span className='block text-sm text-red-500'>

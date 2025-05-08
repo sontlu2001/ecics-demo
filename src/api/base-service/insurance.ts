@@ -1,5 +1,10 @@
 import { SavePersonalInfoPayload } from '@/libs/types/auth';
-import { QuoteCreationPayload, QuoteResponse } from '@/libs/types/quote';
+import {
+  ProposalPayload,
+  QuoteCreationPayload,
+  QuoteData,
+  QuoteResponse,
+} from '@/libs/types/quote';
 
 import { API_POST_PERSONAL_INFO_SAVE } from '@/constants/api.constant';
 
@@ -10,8 +15,18 @@ export default {
   getQuoteByKey(key: string) {
     return baseClient.get<QuoteResponse>('/quote/' + key);
   },
-  createQuote(data: QuoteCreationPayload) {
+  generateQuote(data: QuoteCreationPayload) {
     return baseClient.post<QuoteResponse>('/car/quote', data);
+  },
+  saveProposal(data: ProposalPayload) {
+    return baseClient.post<any>('/car/proposal', data);
+  },
+  saveQuote(key: string, data: QuoteData) {
+    const formatData = {
+      data: { ...data },
+      key: key,
+    };
+    return baseClient.post<QuoteResponse>('/quote/save', formatData);
   },
   postPersonalInfoSave(payload: SavePersonalInfoPayload) {
     return baseClient.post<any>(`${API_POST_PERSONAL_INFO_SAVE}`, payload);

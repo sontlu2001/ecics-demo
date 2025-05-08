@@ -1,106 +1,124 @@
 'use client';
 
 import { PrimaryButton } from '@/components/ui/buttons';
-import { useCreateQuote, useGetQuote } from '@/hook/insurance/quote';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import {
+  useGenerateQuote,
+  useGetQuote,
+  useSaveQuote,
+} from '@/hook/insurance/quote';
+import { Plan } from '@/libs/types/quote';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import { Navigation } from 'swiper/modules';
-import { Swiper, SwiperSlide } from 'swiper/react';
 import PlanCardDesktop from './components/PlanCardDesktop';
 import PlanCardMobile from './components/PlanCardMobile';
 import SelfDeclarationConfirmModal from './components/SelfDeclarationConfirmModal';
-
+import { Spin } from 'antd';
+import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
+import { ROUTES } from '@/constants/routes';
+export interface FormatPlan extends Plan {
+  discount: number;
+  currentPrice: number;
+}
 function PlanPage() {
-  const [screenWidth, setScreenWith] = useState(0);
+  const router = useRouterWithQuery();
+  const searchParams = useSearchParams();
+  const key = searchParams.get('key') || '';
+
   const [showConfirmDeclaration, setShowConfirmDeclaration] = useState(false);
-  // using this to really get the quote data from the API
-  // const { data, isLoading } = useGetQuote('9dbb6b4e00432677');
-
-  // using for testing purpose
-  const { mutate: createQuote, data, isSuccess } = useCreateQuote();
+  const [selectedPlan, setSelectedPlan] = useState<FormatPlan | null>(null);
+  const { data: quoteInfo, isLoading } = useGetQuote(key);
+  const { mutate: saveQuote, isPending: isSaving, isSuccess } = useSaveQuote();
+  const plans = quoteInfo?.data?.plans ?? [];
   useEffect(() => {
-    const payload = {
-      key: 'bd6e8c8259ee4196',
-      partner_code: 'A0000165',
-      promo_code: 'ECICS5',
-      company_id: 2,
-      personal_info: {
-        name: 'Sayan',
-        gender: 'Male',
-        maritalStatus: 'Single',
-        date_of_birth: '08/04/2000',
-        nric: 'S6020900F',
-        address: '10 Eunos Road Singapore 4324',
-        driving_experience: 2,
-        phone_number: '98989898',
-        email: 'test321@gmail.com',
-      },
-      vehicle_basic_details: {
-        make: 'Audi',
-        model: 'A1 1.0',
-        first_registered_year: '2024',
-        chasis_number: 'SBA123A',
-      },
-      insurance_additional_info: {
-        no_claim_discount: 10,
-        no_of_claim: 0,
-        start_date: '10/05/2025',
-        end_date: '10/05/2026',
-      },
-    };
-    createQuote(payload);
-  }, []);
+    if (isSuccess) {
+      router.push(ROUTES.INSURANCE.ADD_ON);
+    }
+  }, [isSuccess]);
 
-  useLayoutEffect(() => {
-    if (!window?.innerWidth) return;
-    setScreenWith(window?.innerWidth - 32);
-  }, []);
+  const plansFormatted: FormatPlan[] = plans.map((plan) => ({
+    ...plan,
+    discount: quoteInfo?.promo_code?.discount ?? 0,
+    currentPrice:
+      plan.premium_with_gst /
+      (1 - (quoteInfo?.promo_code?.discount ?? 0) / 100),
+  }));
+
+  useEffect(() => {
+    if (!plansFormatted.length) return;
+    if (quoteInfo?.data?.selected_plan) {
+      const selectedPlan = plansFormatted.find(
+        (plan) => plan.title === quoteInfo?.data?.selected_plan,
+      );
+      if (selectedPlan) {
+        setSelectedPlan(selectedPlan);
+        return;
+      }
+    }
+    const recommendedPlan = plansFormatted.find((plan) => plan.is_recommended);
+    if (recommendedPlan) {
+      setSelectedPlan(recommendedPlan);
+      return;
+    }
+  }, [plans]);
+
+  const choicePlan = (plan: FormatPlan | null) => {
+    const data = {
+      ...quoteInfo?.data,
+      selected_plan: plan?.title,
+      key: key,
+    };
+    saveQuote({ key, data });
+    setShowConfirmDeclaration(false);
+  };
+  if (isLoading) {
+    return (
+      <div className='flex h-96 w-full items-center justify-center'>
+        <Spin size='large' />
+      </div>
+    );
+  }
 
   return (
     <div className='flex w-full flex-col justify-center'>
       {/* UI for Mobile */}
-      <div
-        className='mx-4 md:hidden'
-        // When using Next.js (SSR), Swiper may throw a "createContext" error due to server-side rendering issues.
-        // This can lead to incorrect width calculations for the Swiper component.
-        // To address this, we recalculate the width dynamically on the client side.
-        style={{
-          width: screenWidth,
-        }}
-      >
-        <Swiper
-          spaceBetween={50}
-          slidesPerView={1}
-          navigation
-          modules={[Navigation]}
-        >
-          {data?.plans.map((plan, index) => (
-            <SwiperSlide key={index}>
-              <PlanCardMobile plan={plan} active={index === 0} />
-            </SwiperSlide>
-          ))}
-        </Swiper>
+      <div className='mx-4 pb-20 md:hidden'>
+        <PlanCardMobile
+          plans={plansFormatted}
+          selectedPlan={selectedPlan}
+          setSelectedPlan={setSelectedPlan}
+        />
       </div>
 
       {/* UI for Desktop */}
       <div className='hidden pt-4 md:block'>
-        <PlanCardDesktop plans={data?.plans} />
+        <PlanCardDesktop
+          plans={plansFormatted}
+          selectedPlan={selectedPlan}
+          setSelectedPlan={setSelectedPlan}
+        />
       </div>
-      <div className='fixed bottom-0 left-1/2 z-10 mt-4 w-full -translate-x-1/2 transform shadow-sm shadow-gray-300 md:bottom-14  md:max-w-[600px] md:rounded-md md:border-none'>
+      <div className='fixed bottom-0 left-1/2 z-10 mt-4 w-full -translate-x-1/2 transform shadow-sm shadow-gray-300 md:bottom-14  md:max-w-[800px] md:rounded-md md:border-none'>
         <div className='flex w-full justify-between border-t-2 bg-white p-4 py-2 md:border-none md:py-4'>
           <div className='md:flex md:items-center md:gap-4'>
             <p>
-              <span className='text-lg font-semibold md:text-3xl'>S$ 2700</span>{' '}
-              <span className='text-lg font-semibold text-red-500 md:text-2xl'>
-                $3200
+              <span className='text-lg font-semibold md:text-3xl'>
+                S$ {selectedPlan?.premium_with_gst.toFixed(2)}
+              </span>{' '}
+              <span className='ps-4 text-lg font-semibold text-red-500 md:text-2xl'>
+                $ {selectedPlan?.currentPrice.toFixed(2)}
               </span>
             </p>
-            <p className='font-semibold'>(15 inclusive of GST)</p>
+            <p className='font-semibold'>
+              ({selectedPlan?.discount} inclusive of GST)
+            </p>
           </div>
           <PrimaryButton
             onClick={() => setShowConfirmDeclaration(true)}
             className='md:w-40'
+            disabled={!selectedPlan?.id}
+            loading={isSaving}
           >
             Continue
           </PrimaryButton>
@@ -109,7 +127,7 @@ function PlanPage() {
 
       <SelfDeclarationConfirmModal
         visible={showConfirmDeclaration}
-        onOk={() => setShowConfirmDeclaration(false)}
+        onOk={() => choicePlan(selectedPlan)}
       />
     </div>
   );

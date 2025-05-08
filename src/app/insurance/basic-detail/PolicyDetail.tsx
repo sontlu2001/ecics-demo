@@ -1,128 +1,92 @@
 'use client';
 
-import {
-  VehicleSelection,
-  VehicleSelectionModal,
-} from '@/components/VehicleSelection';
+import { PRODUCT_NAME } from '@/app/api/constants/product';
+import { DropdownOption } from '@/components/ui/form/dropdownfield';
 import { MOTOR_QUOTE } from '@/constants';
-import { adjustDateInDate } from '@/libs/utils/date-utils';
+import {
+  useGenerateQuote,
+  useGetHirePurchaseList,
+  useGetQuote,
+} from '@/hook/insurance/quote';
+import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
+import { Vehicle } from '@/libs/types/quote';
+import { adjustDateInDate, convertDateFormat } from '@/libs/utils/date-utils';
+import { generateKeyAndAttachToUrl } from '@/libs/utils/utils';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { SubmitHandler } from 'react-hook-form';
-import { DropdownOption } from '@/components/ui/form/dropdownfield';
-import { useSearchParams } from 'next/navigation';
-import { DEFAULT_PROMO_CODE } from './options';
-import { PromoCodeModel } from '../components/PromoCode';
 import VehicleBar from '../components/VehicleBar';
 import PolicyDetailForm from './PolicyDetailForm';
-import { PRODUCT_NAME } from '@/app/api/constants/product';
-import { useCreateQuote } from '@/hook/insurance/quote';
-import { QuoteCreationPayload } from '@/libs/types/quote';
-import { useRouter } from 'next/navigation';
-import { ECICS_USER_INFO } from '@/constants/general.constant';
 
 interface PolicyDetailProps {
   isSingPassFlow: boolean;
-  selected_vehicle_singpass: VehicleSelection;
-  // onSubmitPromoCode: (promoCode: string) => void;
 }
 
-export const PolicyDetail = ({
-  isSingPassFlow = false,
-  selected_vehicle_singpass,
-}: PolicyDetailProps) => {
-  const router = useRouter();
+export const PolicyDetail = ({ isSingPassFlow = false }: PolicyDetailProps) => {
+  const router = useRouterWithQuery();
   const searchParams = useSearchParams();
+
   const partner_code = searchParams.get('partner_code') || '';
   const promo_code = searchParams.get('promo_code')?.toUpperCase().trim() || '';
-  const [appliedPromoCode, setAppliedPromoCode] =
-    useState<PromoCodeModel | null>(null);
-  const [errMsgPromoCode, setErrMsgPromoCode] = useState<string>('');
-  const [isVehSelectionVisible, setIsVehSelectionVisible] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<VehicleSelection>(
-    {} as VehicleSelection,
-  );
-  const [initialValues, setInitialValues] = useState<any>(undefined);
-  const [hirePurchaseList, setHirePurchaseList] = useState<DropdownOption[]>(
-    [],
-  );
-  const [userInfo, setUserInfo] = useState<any>(null);
-  useEffect(() => {
-    const userInfo = JSON.parse(
-      sessionStorage.getItem(ECICS_USER_INFO) ?? '{}',
-    );
-    setUserInfo(userInfo);
-    if (userInfo?.vehicles?.length) {
-      const vehicle = userInfo?.vehicles[0] as any;
-      setSelectedVehicle({
-        regNo: vehicle?.chassisno?.value,
-        make: vehicle?.make?.value,
-        model: vehicle?.model?.value,
-        first_registered_year: vehicle?.yearofmanufacture.value,
-      });
-    }
-  }, []);
+  const key = searchParams.get('key') || '';
+
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const { data: hirePurchaseList } = useGetHirePurchaseList(PRODUCT_NAME.CAR);
+  const { data: quoteInfo } = useGetQuote(key);
+  const { mutate: generateQuote, isSuccess } = useGenerateQuote();
+
+  const userInfo = quoteInfo?.data?.personal_info;
+  const vehicles = quoteInfo?.data?.vehicles ?? [];
+  const vehicleSelected = quoteInfo?.data?.vehicle_info_selected;
+  const insuranceInfo = quoteInfo?.data?.insurance_additional_info;
 
   useEffect(() => {
-    //retrieve Make and Model List
-
-    // check promo code on url
-    let initial_promo_code;
-    if (promo_code) {
-      verifyPromoCode(promo_code);
-      initial_promo_code = promo_code;
-    } else if (DEFAULT_PROMO_CODE) {
-      initial_promo_code = DEFAULT_PROMO_CODE.code;
-      setAppliedPromoCode(DEFAULT_PROMO_CODE);
+    if (vehicleSelected) {
+      setSelectedVehicle(vehicleSelected);
     }
+  }, [userInfo]);
 
-    const initialValues = {
-      [MOTOR_QUOTE.quick_proposal_start_date]: new Date(),
-      [MOTOR_QUOTE.quick_proposal_end_date]: adjustDateInDate(
-        new Date(),
-        1,
-        0,
-        -1,
-      ),
-      [MOTOR_QUOTE.quick_quote_owner_ncd]: 40,
-      [MOTOR_QUOTE.quick_proposal_promo_code]: initial_promo_code || '',
-    };
+  useEffect(() => {
+    if (!isSuccess) return;
+    router.push('/insurance/plan');
+  }, [isSuccess]);
 
-    setInitialValues(initialValues);
-    fetchHirePurchaseList();
-  }, []);
+  const startDate = new Date();
+  const endDate = adjustDateInDate(new Date(), 1, 0, -1);
+
+  const initialValues = {
+    [MOTOR_QUOTE.quick_proposal_promo_code]: promo_code ?? '',
+    [MOTOR_QUOTE.quick_proposal_start_date]:
+      insuranceInfo?.start_date ?? startDate,
+    [MOTOR_QUOTE.quick_proposal_end_date]: insuranceInfo?.end_date ?? endDate,
+    [MOTOR_QUOTE.quick_quote_owner_ncd]: insuranceInfo?.no_claim_discount ?? 0,
+    [MOTOR_QUOTE.quick_quote_owner_no_of_claims]:
+      insuranceInfo?.no_of_claim ?? 0,
+
+    [MOTOR_QUOTE.quick_quote_email]: userInfo?.email ?? '',
+    [MOTOR_QUOTE.quick_quote_mobile]: userInfo?.phone ?? '',
+    [MOTOR_QUOTE.quick_quote_owner_dob]: userInfo?.date_of_birth ?? '',
+    [MOTOR_QUOTE.quick_quote_owner_drv_exp]:
+      userInfo?.driving_experience ?? undefined,
+
+    // [MOTOR_QUOTE.quick_quote_make]: selectedVehicle?.vehicle_make ?? '',
+    // [MOTOR_QUOTE.quick_quote_model]: selectedVehicle?.vehicle_model ?? '',
+    [MOTOR_QUOTE.quick_quote_reg_yyyy]:
+      selectedVehicle?.first_registered_year ?? undefined,
+    [MOTOR_QUOTE.quick_proposal_hire_purchase]:
+      quoteInfo?.company_id ?? undefined,
+  };
 
   // Options for Dropdown
-  const vehicles: VehicleSelection[] = userInfo?.vehicles?.map(
-    (vehicle: any) => ({
-      regNo: vehicle.chassisno?.value,
-      make: vehicle.make?.value,
-      model: vehicle.model?.value,
-      first_registered_year: vehicle?.yearofmanufacture?.value,
-    }),
-  );
-
-  // retrieve Hire purchase List
-  const fetchHirePurchaseList = async () => {
-    try {
-      const resp = await fetch(`/api/v1/companies/${PRODUCT_NAME.CAR}`);
-      if (resp.ok) {
-        const response = await resp.json();
-        const apiData: { id: number; name: string }[] = response.data;
-
-        const formattedData = [
-          { value: 0, text: '-- Others (Not Available in this list) --' }, // to update upon confirm hire purchase list
-          ...apiData.map((item) => ({
-            value: item.id,
-            text: item.name,
-          })),
-        ];
-
-        setHirePurchaseList(formattedData);
-      }
-    } catch (error) {
-      console.error('Failed to fetch hire purchase list:', error);
-    }
-  };
+  const hirePurchaseListFormatted: DropdownOption[] = [
+    { value: 0, text: '-- Others (Not Available in this list) --' },
+    ...(Array.isArray(hirePurchaseList)
+      ? hirePurchaseList.map((item: any) => ({
+          value: item.id,
+          text: item.name,
+        }))
+      : []),
+  ];
 
   // retrieve Hire purchase List
   const verifyPartnerCode = async () => {
@@ -138,71 +102,37 @@ export const PolicyDetail = ({
     }
   };
 
-  const verifyPromoCode = async (value: string) => {
-    const resp = await fetch('/api/v1/promo-code/validation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ promo_code: value, product_type: 'motor' }),
-    });
-    const data = await resp.json();
-    if (data.data) {
-      setAppliedPromoCode({ code: data.data.code, desc: data.data.discount });
-    } else {
-      setErrMsgPromoCode('Promo code not valid');
-    }
-  };
-
-  const handleRemovePromoCode = () => {
-    setAppliedPromoCode(null);
-  };
-
-  const onEditClick = () => {
-    setIsVehSelectionVisible(true);
-    console.log('click');
-  };
-  const { mutate: createQuote } = useCreateQuote();
-  const handleSelection = (selected: VehicleSelection | null) => {
-    if (selected) {
-      setSelectedVehicle(selected);
-    }
-    setIsVehSelectionVisible(false);
-  };
-
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     let payload;
-    payload = { ...data };
 
-    if (isSingPassFlow) {
-      const userInfo = JSON.parse(
-        sessionStorage.getItem(ECICS_USER_INFO) ?? '{}',
-      );
+    const keyQuote = generateKeyAndAttachToUrl(key);
+    payload = { ...data, key: keyQuote };
+
+    if (isSingPassFlow && userInfo) {
       // data from Singpass
       const personal_info = {
-        name: userInfo?.name.value,
-        gender: userInfo?.sex?.desc,
-        maritalStatus: userInfo?.marital?.value,
-        date_of_birth: userInfo?.dob?.value,
-        nric: userInfo?.uinfin?.value,
-        address: userInfo?.regadd?.value,
+        name: userInfo?.name,
+        gender: userInfo?.gender,
+        maritalStatus: userInfo?.marital_status,
+        date_of_birth: convertDateFormat(userInfo?.date_of_birth, 'DD/MM/YYYY'),
+        nric: userInfo?.nric,
+        address: userInfo?.address,
         driving_experience: 4,
-        phone_number: userInfo?.mobileno?.nbr?.value,
-        email: userInfo?.email?.value,
+        phone: userInfo?.phone,
+        email: userInfo?.email,
       };
 
-      const vehicle_basic_details = {
-        make: selectedVehicle.make,
-        model: selectedVehicle.model,
-        first_registered_year: selectedVehicle.first_registered_year,
-        chasis_number: selectedVehicle.regNo,
+      const vehicle_info_selected = {
+        vehicle_make: selectedVehicle?.vehicle_make,
+        vehicle_model: selectedVehicle?.vehicle_model,
+        first_registered_year: selectedVehicle?.first_registered_year,
+        chasis_number: selectedVehicle?.chasis_number,
       };
-      payload = { ...payload, personal_info, vehicle_basic_details };
+      payload = { ...payload, personal_info, vehicle_info_selected };
     }
 
     try {
-      createQuote(payload);
-      router.push('/insurance/plan');
+      generateQuote(payload);
     } catch (error) {
       console.error('Submission error:', error);
     }
@@ -211,39 +141,24 @@ export const PolicyDetail = ({
   return (
     <>
       <div className='mt-4 px-4 md:px-12'>
-        {!isSingPassFlow ? null : (
+        {isSingPassFlow && (
           <div className='my-6 grid gap-4 lg:grid-cols-3'>
             <div className='mx-auto w-full sm:max-w-[50%] lg:col-span-1 lg:col-start-2 lg:max-w-none'>
               <VehicleBar
                 selected_vehicle={selectedVehicle}
-                onClick={onEditClick}
+                vehicles={vehicles}
+                setSelectedVehicle={setSelectedVehicle}
               />
             </div>
           </div>
         )}
         <PolicyDetailForm
           onSubmit={onSubmit}
-          veh_make_model_list={[
-            { value: 'BMW | 116d 1.5', text: 'BMW 116d 1.5' },
-            {
-              value: 'MERCEDES BENZ | A200 AMG Line 1.4',
-              text: 'MERCEDES BENZ A200 AMG Line 1.4',
-            },
-          ]}
-          hirePurchaseOptions={hirePurchaseList}
+          hirePurchaseOptions={hirePurchaseListFormatted}
           isSingpassFlow={isSingPassFlow}
-          onSubmitPromoCode={verifyPromoCode}
-          handleRemovePromoCode={handleRemovePromoCode}
-          errMsgPromoCode={errMsgPromoCode}
-          appliedPromoCode={appliedPromoCode}
           initialValues={initialValues}
-        ></PolicyDetailForm>
+        />
       </div>
-      <VehicleSelectionModal
-        vehicles={vehicles}
-        visible={isVehSelectionVisible}
-        onSubmit={handleSelection}
-      />
     </>
   );
 };

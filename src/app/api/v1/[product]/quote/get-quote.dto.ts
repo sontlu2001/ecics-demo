@@ -10,7 +10,7 @@ export const generateQuoteSchema = z.object({
   personal_info: z.object({
     name: z.string().optional(),
     gender: z.enum(['Male', 'Female', 'Other']).optional(),
-    maritalStatus: z
+    marital_status: z
       .enum(['Single', 'Married', 'Divorced', 'Widowed'])
       .optional(),
     nric: z.string().optional(),
@@ -22,17 +22,10 @@ export const generateQuoteSchema = z.object({
         'Date of birth must be in the format dd-mm-yyyy',
       ),
     driving_experience: z.number(),
-    phone_number: z
-      .string()
-      .regex(REGEX_VALUES.PHONE_NUMBER, 'Phone number invalid'),
+    phone: z.string().regex(REGEX_VALUES.PHONE_NUMBER, 'Phone number invalid'),
     email: z.string().regex(REGEX_VALUES.PHONE_NUMBER, 'Phone number invalid'),
   }),
-  vehicle_basic_details: z.object({
-    make: z.string().min(1, 'Make is required'),
-    model: z.string().min(1, 'Model is required'),
-    first_registered_year: z.string(),
-    chasis_number: z.string(),
-  }),
+  vehicle_info_selected: z.any().optional(),
   insurance_additional_info: z.object({
     no_claim_discount: z.number(),
     no_of_claim: z.number(),

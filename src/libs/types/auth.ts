@@ -11,36 +11,61 @@ export interface UserInfoPayload {
   state: string;
 }
 
-export interface Vehicle {
-  vehicleno: {
-    value: string;
+export interface SavePersonalInfoPayload {
+  key: string;
+  is_sending_email?: boolean;
+  personal_info: {
+    name: string;
+    gender: string;
+    marital_status: string;
+    nric?: string;
+    address: string[];
+    date_of_birth: string;
+    year_of_registration: string;
+    driving_experience: number;
+    phone: string;
+    email: string;
   };
-  chassisno: {
-    value: string;
+  vehicle_info_selected: {
+    vehicle_make: string;
+    vehicle_model: string;
+    first_registered_year: string;
+    chasis_number: string;
   };
-  engineno?: {
-    value: string;
-  };
-  make: {
-    value: string;
-  };
-  model: {
-    value: string;
-  };
+  vehicles: Vehicle[];
 }
 
-export interface SavePersonalInfoPayload {
-  email: string;
-  phone: string;
-  name: string;
-  nric: string;
-  gender: string;
-  marital_status: string;
-  date_of_birth: string;
-  address: string[];
+export interface Vehicle {
+  chasis_number: string;
   vehicle_make: string;
   vehicle_model: string;
-  year_of_registration: string;
-  vehicles: Vehicle[];
-  key: string;
+  first_registered_year: string;
+}
+
+export interface VehicleMakeResponse {
+  message: string;
+  data: {
+    id: string;
+    name: string;
+    group_name: string;
+  }[];
+}
+export interface VehicleModelResponse {
+  message: string;
+  data: {
+    id: string;
+    name: string;
+  }[];
+}
+
+export interface VehicleCheckResponse {
+  message: string;
+  data?: {
+    id: number;
+    name: string;
+    vehicle_make: {
+      id: number;
+      name: string;
+    };
+  };
 }

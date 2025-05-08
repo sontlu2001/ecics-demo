@@ -1,10 +1,13 @@
-import React, { forwardRef } from 'react';
 import { Button, ButtonProps } from 'antd';
+import React, { forwardRef } from 'react';
 
 interface CustomButtonProps extends ButtonProps {}
 
 export const PrimaryButton = forwardRef<HTMLButtonElement, CustomButtonProps>(
-  ({ className = '', children, disabled, ...rest }, ref) => {
+  (
+    { className = '', children, disabled, htmlType = 'button', ...rest },
+    ref,
+  ) => {
     const baseStyle = 'px-3 text-base font-semibold hover:opacity-85';
 
     const enabledStyle = 'bg-[#00adef] text-white';
@@ -18,6 +21,7 @@ export const PrimaryButton = forwardRef<HTMLButtonElement, CustomButtonProps>(
         className={`${className} ${baseStyle} ${disabled ? disabledStyle : enabledStyle}`}
         ref={ref}
         disabled={disabled}
+        htmlType={htmlType}
         {...rest}
       >
         {children}
@@ -27,13 +31,14 @@ export const PrimaryButton = forwardRef<HTMLButtonElement, CustomButtonProps>(
 );
 
 export const SecondaryButton = forwardRef<HTMLButtonElement, CustomButtonProps>(
-  ({ className, children, ...rest }, ref) => {
+  ({ className, children, htmlType = 'button', ...rest }, ref) => {
     return (
       <Button
         type='default'
         size='large'
         className={`${className} border-blue-400 px-3 text-base font-semibold text-blue-400 hover:bg-blue-50`}
         ref={ref}
+        htmlType={htmlType}
         {...rest}
       >
         {children}

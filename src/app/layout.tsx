@@ -4,6 +4,7 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import '@/styles/app.scss';
 import { ReduxProvider } from '@/providers/redux';
 import { ReactQueryProvider } from '@/providers/react-query';
+import { Suspense } from 'react';
 
 const openSans = Open_Sans({
   subsets: ['latin'],
@@ -26,11 +27,13 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body className={openSans.className}>
-        <ReduxProvider>
-          <ReactQueryProvider>
-            <AntdRegistry>{children}</AntdRegistry>
-          </ReactQueryProvider>
-        </ReduxProvider>
+        <Suspense fallback={null}>
+          <ReduxProvider>
+            <ReactQueryProvider>
+              <AntdRegistry>{children}</AntdRegistry>
+            </ReactQueryProvider>
+          </ReduxProvider>
+        </Suspense>
       </body>
     </html>
   );

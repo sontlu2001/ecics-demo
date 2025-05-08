@@ -1,33 +1,33 @@
 'use client';
 import CrossMarkIcon from '@/components/icons/CrossMark';
+import PlanNormalIcon from '@/components/icons/PlanNormalIcon';
 import PlanPremiumIcon from '@/components/icons/PlanPremiumIcon';
 import TickCircleIcon from '@/components/icons/TickCircleIcon';
 import { PrimaryButton } from '@/components/ui/buttons';
 import clsx from 'clsx';
-import PlanNormalIcon from '@/components/icons/PlanNormalIcon';
 import { useState } from 'react';
-import { Plan } from '@/libs/types/quote';
+import { FormatPlan } from '../page';
 
 function PlanCardDesktop({
   plans,
-  onClick,
+  selectedPlan,
+  setSelectedPlan,
 }: {
-  active?: boolean;
-  plans: Plan[] | undefined;
-  onClick?: () => void;
+  plans: FormatPlan[] | undefined;
+  selectedPlan: FormatPlan | null;
+  setSelectedPlan: (plan: FormatPlan | null) => void;
 }) {
-  const [activePlan, setActivePlan] = useState('Third Party & Theft');
   return (
     <div className='flex  w-full justify-center gap-6 lg:gap-10'>
       {plans?.map((plan, index) => {
-        const active = activePlan === plan.title;
         const isRecommended = plan.is_recommended;
-        const activeFeatures = plan.benefits.filter(
-          (feature) => feature.is_active,
-        );
-        const inactiveFeatures = plan.benefits.filter(
-          (feature) => !feature.is_active,
-        );
+        const activeFeatures = plan.benefits
+          .filter((feature) => feature.is_active)
+          .sort((a, b) => a.order - b.order);
+        const inactiveFeatures = plan.benefits
+          .filter((feature) => !feature.is_active)
+          .sort((a, b) => a.order - b.order);
+        const active = selectedPlan?.id === plan.id;
         return (
           <div
             key={index}
@@ -38,7 +38,6 @@ function PlanCardDesktop({
                 'border-sky-500': active,
               },
             )}
-            onClick={onClick}
           >
             <div className='flex h-full flex-col justify-between px-4'>
               <div className='relative z-10'>
@@ -59,12 +58,16 @@ function PlanCardDesktop({
                 )}
                 <div className='flex max-w-80 items-center justify-between pb-5 pt-3'>
                   <p className='text-xl font-extrabold'>
-                    S$ {plan.premium_with_gst}
+                    S$ {plan.premium_with_gst.toFixed(2)}
                   </p>
-                  <p className='text-lg text-sky-500 line-through decoration-1'>
-                    S$ {plan.premium_bef_gst}
-                  </p>
-                  <p className='text-xs text-gray-400'>{`(${plan.premium_bef_gst}% off applied)`}</p>
+                  {!!plan.discount && (
+                    <>
+                      <p className='text-lg text-sky-500 line-through decoration-1'>
+                        S$ {plan.currentPrice.toFixed(2)}
+                      </p>
+                      <p className='text-xs text-gray-400'>{`(${plan.discount}% off applied)`}</p>
+                    </>
+                  )}
                 </div>
                 {activeFeatures.map((feature, index) => (
                   <div className='mt-4 flex items-start gap-4' key={index}>
@@ -86,7 +89,7 @@ function PlanCardDesktop({
                 className={clsx('w-full py-2 transition-colors duration-500', {
                   'bg-black hover:opacity-80': active,
                 })}
-                onClick={() => setActivePlan(plan.title)}
+                onClick={() => setSelectedPlan(plan)}
               >
                 Select
               </PrimaryButton>

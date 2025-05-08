@@ -1,10 +1,29 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+
 import LimitedPeriodOffer from '@/app/(auth)/login/LimitedPeriodOffer';
+import MyInfoLoginSection from '@/app/(auth)/login/MyInfoLoginSection';
+import { useVerifyPromoCode } from '@/hook/insurance/common';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
 
 const Login = () => {
   const { isMobile } = useDeviceDetection();
+  const searchParams = useSearchParams();
+  const promoCodeDefault =
+    searchParams.get('promo_code')?.toUpperCase().trim() || '';
+
+  const { mutate: verifyPromoCode, data: promoCodeData } = useVerifyPromoCode();
+
+  useEffect(() => {
+    if (promoCodeDefault) {
+      verifyPromoCode(promoCodeDefault);
+    }
+  }, [promoCodeDefault, verifyPromoCode]);
+
+  const showPromo =
+    !!promoCodeDefault && promoCodeData?.data?.is_valid === true;
 
   if (isMobile) {
     return (
@@ -17,7 +36,13 @@ const Login = () => {
         <div className='text-center text-primaryBlue'>
           Get an instant quote with Myinfo login
         </div>
-        <LimitedPeriodOffer />
+        <MyInfoLoginSection />
+        {showPromo && (
+          <LimitedPeriodOffer
+            promoCode={promoCodeDefault}
+            promoCodeData={promoCodeData}
+          />
+        )}
         <img
           src='/login_bg_bottom.svg'
           alt='Background Image'
@@ -55,7 +80,13 @@ const Login = () => {
               directly from Myinfo
             </span>
           </div>
-          <LimitedPeriodOffer />
+          <MyInfoLoginSection />
+          {showPromo && (
+            <LimitedPeriodOffer
+              promoCode={promoCodeDefault}
+              promoCodeData={promoCodeData}
+            />
+          )}
         </div>
       </div>
     </div>

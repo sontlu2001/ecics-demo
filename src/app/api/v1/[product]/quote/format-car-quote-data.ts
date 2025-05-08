@@ -22,6 +22,8 @@ export async function formatCarQuoteInfo(
         select: {
           id: true,
           name: true,
+          order: true,
+          is_active: true,
         },
       },
       product_type: {

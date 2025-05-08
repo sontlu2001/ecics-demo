@@ -46,3 +46,15 @@ export const CLAIM_AMOUNT_OPTIONS: DropdownOption[] = [
   { value: '<20000', text: 'less than SGD 20K' },
   { value: '>20000', text: 'more than SGD 20K' },
 ];
+
+export const GENDER_OPTIONS: DropdownOption[] = [
+  { value: 'MALE', text: 'Male' },
+  { value: 'FEMALE', text: 'Female' },
+];
+
+export const MARITAL_STATUS_OPTIONS: DropdownOption[] = [
+  { value: 'MARRIED', text: 'Married' },
+  { value: 'SINGLE', text: 'Single' },
+  { value: 'WIDOWED', text: 'Widowed' },
+  { value: 'DIVORCED', text: 'Divorced' },
+];
