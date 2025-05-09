@@ -51,34 +51,47 @@ export async function saveProposalForCar(data: saveQuoteProposalDTO) {
   if (selected_plan === CAR_INSURANCE.PLAN_NAME.TPO) {
     payload.quick_proposal_any_workshop = 'N.A.';
     payload.quick_proposal_excess = 'N.A.';
+    const result = applyAddlDriverLogic('CAR_COM_AND');
+    payload.quick_proposal_has_addl_driver = result.quick_proposal_has_addl_driver;
+    payload.quick_proposal_has_yied_driver = result.quick_proposal_has_yied_driver;
   }
+
   if (selected_plan === CAR_INSURANCE.PLAN_NAME.TPFT) {
     payload.quick_proposal_any_workshop = 'N.A.';
     payload.quick_proposal_excess = 'N.A.';
+
+    const {
+      quick_proposal_has_addl_driver,
+      quick_proposal_has_yied_driver
+    } = applyAddlDriverLogic(selected_addons['CAR_TPFT_AND']);
+    payload.quick_proposal_has_addl_driver = quick_proposal_has_addl_driver;
+    payload.quick_proposal_has_yied_driver = quick_proposal_has_yied_driver;
+
+    const {
+      quick_proposal_lou,
+      quick_proposal_cc,
+    } = applyLouAndCcLogic(selected_addons['CAR_TPFT_LOU']);
+    payload.quick_proposal_lou = quick_proposal_lou;
+    payload.quick_proposal_cc = quick_proposal_cc;
   }
 
-  // Add-on LOU & CC
-  const louKeys = CAR_INSURANCE.CODE_LOUS;
-  for (const key of louKeys) {
-    if (selected_addons[key]) {
-      const result = applyLouAndCcLogic(selected_addons[key]);
-      payload.quick_proposal_lou = result.quick_proposal_lou;
-      payload.quick_proposal_cc = result.quick_proposal_cc;
-      break;
-    }
-  }
+  if (selected_plan === CAR_INSURANCE.PLAN_NAME.TPO) {
+    payload.quick_proposal_any_workshop = 'N.A.';
+    payload.quick_proposal_excess = 'N.A.';
 
-  // Add-on additional driver
-  const addlDriverKeys = CAR_INSURANCE.CODE_ADDL_DRIVERS;
-  for (const addlDriverKey of addlDriverKeys) {
-    if (selected_addons[addlDriverKey]) {
-      const result = applyAddlDriverLogic(selected_addons[addlDriverKey]);
-      payload.quick_proposal_has_addl_driver =
-        result.quick_proposal_has_addl_driver;
-      payload.quick_proposal_has_yied_driver =
-        result.quick_proposal_has_yied_driver;
-      break;
-    }
+    const {
+      quick_proposal_has_addl_driver,
+      quick_proposal_has_yied_driver
+    } = applyAddlDriverLogic(selected_addons['CAR_TPO_AND']);
+    payload.quick_proposal_has_addl_driver = quick_proposal_has_addl_driver;
+    payload.quick_proposal_has_yied_driver = quick_proposal_has_yied_driver;
+
+    const {
+      quick_proposal_lou,
+      quick_proposal_cc,
+    } = applyLouAndCcLogic(selected_addons['CAR_TPO_LOU']);
+    payload.quick_proposal_lou = quick_proposal_lou;
+    payload.quick_proposal_cc = quick_proposal_cc;
   }
 
   // Add named driver information
@@ -155,7 +168,7 @@ export async function saveProposalForCar(data: saveQuoteProposalDTO) {
 
   return successRes({
     message: 'Proposal saved successfully',
-    data: payload,
+    data: resSaveProposal.data,
   });
 }
 
