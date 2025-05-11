@@ -6,6 +6,7 @@ import { saveToSessionStorage } from '@/libs/utils/utils';
 import insurance from '@/api/base-service/insurance';
 import auth from '@/api/singpass-service/auth';
 import { ECICS_USER_INFO } from '@/constants/general.constant';
+import { ROUTES } from '@/constants/routes';
 
 export const useRequestLogin = () => {
   const requestLogin = async () => {
@@ -61,5 +62,11 @@ export const usePostPersonalInfo = () => {
   return useMutation({
     mutationFn: postPersonalInfo,
     mutationKey: ['personal-info'],
+    onSuccess: (_data, variables) => {
+      const queryParams = new URLSearchParams({
+        key: variables.key,
+      }).toString();
+      window.location.href = `${ROUTES.INSURANCE.BASIC_DETAIL_SINGPASS}&${queryParams}`;
+    },
   });
 };

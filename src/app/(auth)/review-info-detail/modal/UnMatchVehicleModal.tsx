@@ -1,6 +1,8 @@
 import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 
+import { saveToSessionStorage } from '@/libs/utils/utils';
+
 import { PrimaryButton } from '@/components/ui/buttons';
 import {
   DropdownField,
@@ -14,14 +16,26 @@ import {
   useGetVehicleModels,
 } from '@/hook/insurance/common';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
-import { saveToSessionStorage } from '@/libs/utils/utils';
+import { usePostPersonalInfo } from '@/hook/auth/login';
+import {
+  calculateDrivingExperienceFromLicences,
+  convertDateToDDMMYYYY,
+  extractYear,
+} from '@/libs/utils/date-utils';
+import { SavePersonalInfoPayload } from '@/libs/types/auth';
+import { v4 as uuid } from 'uuid';
 
-const UnMatchVehicleModal = ({ onClose }: { onClose: () => void }) => {
+interface UnMatchVehicleModalProps {
+  onClose: () => void;
+}
+
+const UnMatchVehicleModal = ({ onClose }: UnMatchVehicleModalProps) => {
   const { isMobile } = useDeviceDetection();
   const methods = useForm();
   const { setValue, watch } = methods;
-
   const selectedMakeId = watch('vehicle_make');
+
+  const { mutate: savePersonalInfo } = usePostPersonalInfo();
 
   const sessionData = JSON.parse(
     sessionStorage.getItem(ECICS_USER_INFO) || '{}',
@@ -38,28 +52,89 @@ const UnMatchVehicleModal = ({ onClose }: { onClose: () => void }) => {
     );
 
     if (selectedMake && selectedModel) {
-      const updatedVehicles = (sessionData.vehicles || []).map(
-        (vehicle: any, index: number) => {
-          if (index === 0) {
-            return {
-              ...vehicle,
-              make: { value: selectedMake.text },
-              model: { value: selectedModel.text },
-            };
-          }
-          return vehicle;
-        },
-      );
+      if (sessionData.vehicles.length > 1) {
+        const updatedVehicle = {
+          ...sessionData.vehicle_selected,
+          make: { value: selectedMake.text },
+          model: { value: selectedModel.text },
+        };
 
-      const updatedSession = {
-        ...sessionData,
-        vehicles: updatedVehicles,
-      };
-      saveToSessionStorage({
-        [ECICS_USER_INFO]: JSON.stringify(updatedSession),
-      });
+        const updatedParsed = {
+          ...sessionData,
+          vehicle_selected: [updatedVehicle],
+        };
+        saveToSessionStorage({
+          [ECICS_USER_INFO]: JSON.stringify(updatedParsed),
+        });
+
+        const v = updatedParsed?.vehicle_selected || {};
+        console.log('v', v);
+        const vehicle_info_selected = {
+          chasis_number: v[0].vehicleno?.value || '',
+          vehicle_make: v[0].make?.value || '',
+          vehicle_model: v[0].model?.value || '',
+          first_registered_year:
+            extractYear(v[0].firstregistrationdate?.value) || '',
+        };
+        const qdlClasses = updatedParsed?.drivinglicence?.qdl?.classes || [];
+
+        const payload: SavePersonalInfoPayload = {
+          key: `${uuid()}`,
+          is_sending_email: false,
+          personal_info: {
+            name: updatedParsed.name?.value || '',
+            gender: updatedParsed.sex?.desc || '',
+            marital_status: updatedParsed.marital?.desc || '',
+            nric: updatedParsed.uinfin?.value || '',
+            address: [
+              `${updatedParsed.regadd?.block?.value || ''} ${updatedParsed.regadd?.street?.value || ''} #${updatedParsed.regadd?.floor?.value || ''}-${updatedParsed.regadd?.unit?.value || ''}, ${updatedParsed.regadd?.postal?.value || ''}, ${updatedParsed.regadd?.country?.desc || ''}`,
+            ].filter(Boolean),
+            date_of_birth: updatedParsed.dob?.value
+              ? convertDateToDDMMYYYY(updatedParsed.dob.value)
+              : '',
+            year_of_registration: updatedParsed.year_of_registration || '',
+            driving_experience:
+              qdlClasses.length > 0
+                ? `${calculateDrivingExperienceFromLicences(qdlClasses)} years`
+                : '1 year',
+            phone: `${updatedParsed.mobileno?.nbr?.value || ''}`,
+            email: updatedParsed.email?.value || '',
+          },
+          vehicle_info_selected,
+          vehicles:
+            updatedParsed.vehicles?.map((v: any) => ({
+              chasis_number: v.vehicleno?.value || '',
+              vehicle_make: v.make?.value || '',
+              vehicle_model: v.model?.value || '',
+              first_registered_year:
+                extractYear(v.firstregistrationdate?.value) || '',
+            })) || [],
+        };
+        savePersonalInfo(payload);
+        onClose();
+      } else if (sessionData.vehicles.length <= 1) {
+        const updatedVehicles = sessionData.vehicles.map(
+          (vehicle: any, index: number) => {
+            if (index === 0) {
+              return {
+                ...vehicle,
+                make: { value: selectedMake.text },
+                model: { value: selectedModel.text },
+              };
+            }
+            return vehicle;
+          },
+        );
+
+        saveToSessionStorage({
+          [ECICS_USER_INFO]: JSON.stringify({
+            ...sessionData,
+            vehicles: updatedVehicles,
+          }),
+        });
+        onClose();
+      }
     }
-    onClose();
   });
 
   const { data } = useGetVehicleMakes();

@@ -2,16 +2,19 @@
 
 import ArrowDownIcon from '@/components/icons/ArrowDownIcon';
 import ArrowUpIcon from '@/components/icons/ArrowUpIcon';
+import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 
 interface ReviewSectionProps {
   title: string;
   description: string;
   icon: React.ReactNode;
-  data: { title: string; value: string }[];
+  data: { title: string; value: any }[];
   isExpanded: boolean;
   onToggle: () => void;
   setShowModal: (showModal: boolean) => void;
+  editRoute?: string;
 }
 
 const ReviewSection: React.FC<ReviewSectionProps> = ({
@@ -22,7 +25,19 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
   isExpanded,
   onToggle,
   setShowModal,
+  editRoute,
 }) => {
+  const router = useRouterWithQuery();
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (editRoute) {
+      router.push(editRoute);
+    } else {
+      setShowModal(true);
+    }
+  };
+
   return (
     <div className='mt-4 flex flex-col gap-2 rounded-lg border shadow-sm'>
       <div
@@ -43,13 +58,7 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
             <div onClick={onToggle} className='cursor-pointer'>
               {isExpanded ? (
                 <div className='gap flex flex-row items-center'>
-                  <p
-                    className='mr-2 font-bold'
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowModal(true);
-                    }}
-                  >
+                  <p className='mr-2 font-bold' onClick={handleEditClick}>
                     Edit
                   </p>
                   <ArrowUpIcon className='text-[#00ADEF]' size={15} />
@@ -64,16 +73,21 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
 
       {isExpanded && (
         <div className='flex flex-col gap-2 px-4 pb-2'>
-          {data.map((item, index) => (
-            <div key={index} className='flex flex-row justify-between'>
-              <p>{item.title}</p>
-              <p>{item.value}</p>
-            </div>
-          ))}
+          {data.map((item, index) =>
+            item.value === '' ? (
+              <div key={index} className='font-semibold'>
+                {item.title}
+              </div>
+            ) : (
+              <div key={index} className='flex flex-row justify-between'>
+                <p>{item.title}</p>
+                <p>{item.value}</p>
+              </div>
+            ),
+          )}
         </div>
       )}
     </div>
   );
 };
-
 export default ReviewSection;

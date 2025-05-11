@@ -7,7 +7,7 @@ export const CAR_INSURANCE = {
   },
   PLAN_NAME: {
     COM: 'Comprehensive',
-    TPFT: 'Third Party Fire & Theft',
+    TPFT: 'Third Party, Fire & Theft',
     TPO: 'Third Party Only',
   },
 
@@ -32,4 +32,25 @@ export const CAR_INSURANCE = {
   CODE_ADDL_DRIVERS: ['CAR_COM_AND', 'CAR_TPFT_AND', 'CAR_TPO_AND'],
 
   CODE_LOUS: ['CAR_COM_LOU'],
+};
+
+export const PLAN_ADDON_CONFIG = {
+  [CAR_INSURANCE.PLAN_NAME.COM]: {
+    andKey: 'CAR_COM_AND',
+    louKey: 'CAR_COM_LOU',
+    applyLouAndCc: true,
+    setDefaults: false,
+  },
+  [CAR_INSURANCE.PLAN_NAME.TPFT]: {
+    andKey: 'CAR_TPFT_AND',
+    louKey: 'CAR_TPFT_LOU',
+    applyLouAndCc: true,
+    setDefaults: true,
+  },
+  [CAR_INSURANCE.PLAN_NAME.TPO]: {
+    andKey: 'CAR_TPO_AND',
+    louKey: 'CAR_TPO_LOU',
+    applyLouAndCc: true,
+    setDefaults: true,
+  },
 };

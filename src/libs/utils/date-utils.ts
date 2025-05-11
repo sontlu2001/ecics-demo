@@ -162,3 +162,52 @@ export const convertDateToDDMMYYYY = (date: string) => {
   const year = dateObj.getFullYear();
   return `${day}/${month}/${year}`;
 };
+
+//get only year
+export const extractYear = (dateString?: string): string | null => {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? null : date.getFullYear().toString();
+};
+
+export const calculateDrivingExperienceFromLicences = (
+  classes: Array<{
+    class?: { value?: string };
+    issuedate?: { value?: string };
+  }>,
+): number => {
+  if (!classes || classes.length === 0) return 1;
+  const targetClasses = ['3', '3A'];
+
+  const qdlDates: Date[] = [];
+
+  // Iterate over the classes to filter those with class '3' or '3A' and valid issue dates
+  for (const c of classes) {
+    const classValue = c.class?.value;
+    const issuedateStr = c.issuedate?.value;
+
+    if (classValue && targetClasses.includes(classValue) && issuedateStr) {
+      const date = new Date(issuedateStr);
+      if (!isNaN(date.getTime())) {
+        qdlDates.push(date);
+      }
+    }
+  }
+
+  if (qdlDates.length === 0) return 1;
+
+  // Find the earliest date from the filtered list of valid classes
+  const earliestQdl = new Date(Math.min(...qdlDates.map((d) => d.getTime())));
+  const today = new Date();
+
+  // Calculate the difference in milliseconds between today and the earliest issue date
+  const diffInMs = today.getTime() - earliestQdl.getTime();
+
+  // Convert milliseconds to years (exact years, not rounded down)
+  const years = diffInMs / (1000 * 60 * 60 * 24 * 365);
+
+  // Round down to the nearest whole year
+  const roundedYears = Math.floor(years);
+
+  return roundedYears > 0 ? roundedYears : 1; // Ensure at least 1 year is returned
+};

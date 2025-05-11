@@ -1,10 +1,12 @@
-import insurance from '@/api/base-service/insurance';
+import { useMutation, useQuery } from '@tanstack/react-query';
+
 import {
   ProposalPayload,
   QuoteCreationPayload,
   QuoteData,
 } from '@/libs/types/quote';
-import { useMutation, useQuery } from '@tanstack/react-query';
+
+import insurance from '@/api/base-service/insurance';
 
 export const useGetQuote = (key: string) => {
   const fetchQuote = async () => {

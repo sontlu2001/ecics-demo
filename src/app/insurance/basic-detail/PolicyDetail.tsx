@@ -1,22 +1,28 @@
 'use client';
 
-import { PRODUCT_NAME } from '@/app/api/constants/product';
+import dayjs from 'dayjs';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { SubmitHandler } from 'react-hook-form';
+
+import { Vehicle } from '@/libs/types/quote';
+import { adjustDateInDate, convertDateFormat } from '@/libs/utils/date-utils';
+import { generateKeyAndAttachToUrl } from '@/libs/utils/utils';
+
 import { DropdownOption } from '@/components/ui/form/dropdownfield';
+
+import { PRODUCT_NAME } from '@/app/api/constants/product';
 import { MOTOR_QUOTE } from '@/constants';
+import { ROUTES } from '@/constants/routes';
 import {
   useGenerateQuote,
   useGetHirePurchaseList,
   useGetQuote,
 } from '@/hook/insurance/quote';
 import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
-import { Vehicle } from '@/libs/types/quote';
-import { adjustDateInDate, convertDateFormat } from '@/libs/utils/date-utils';
-import { generateKeyAndAttachToUrl } from '@/libs/utils/utils';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { SubmitHandler } from 'react-hook-form';
-import VehicleBar from '../components/VehicleBar';
+
 import PolicyDetailForm from './PolicyDetailForm';
+import VehicleBar from '../components/VehicleBar';
 
 interface PolicyDetailProps {
   isSingPassFlow: boolean;
@@ -33,14 +39,14 @@ export const PolicyDetail = ({ isSingPassFlow = false }: PolicyDetailProps) => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const { data: hirePurchaseList } = useGetHirePurchaseList(PRODUCT_NAME.CAR);
   const { data: quoteInfo } = useGetQuote(key);
-  const { mutate: generateQuote, isSuccess } = useGenerateQuote();
+  const { mutate: generateQuote, isSuccess, isPending } = useGenerateQuote();
 
   const userInfo = quoteInfo?.data?.personal_info;
   const vehicles = quoteInfo?.data?.vehicles ?? [];
-  const vehicleSelected = quoteInfo?.data?.vehicle_info_selected;
   const insuranceInfo = quoteInfo?.data?.insurance_additional_info;
 
   useEffect(() => {
+    const vehicleSelected = quoteInfo?.data?.vehicle_info_selected;
     if (vehicleSelected) {
       setSelectedVehicle(vehicleSelected);
     }
@@ -48,33 +54,36 @@ export const PolicyDetail = ({ isSingPassFlow = false }: PolicyDetailProps) => {
 
   useEffect(() => {
     if (!isSuccess) return;
-    router.push('/insurance/plan');
+    router.push(ROUTES.INSURANCE.PLAN);
   }, [isSuccess]);
 
-  const startDate = new Date();
-  const endDate = adjustDateInDate(new Date(), 1, 0, -1);
+  const now = new Date();
+  const startData = insuranceInfo?.start_date
+    ? new Date(insuranceInfo?.start_date)
+    : now;
+  const endDate = insuranceInfo?.end_date
+    ? new Date(insuranceInfo?.end_date)
+    : adjustDateInDate(now, 1, 0, -1);
+  const dateOfBirth = userInfo?.date_of_birth
+    ? new Date(userInfo?.date_of_birth)
+    : dayjs().startOf('day').subtract(25, 'years');
 
   const initialValues = {
-    [MOTOR_QUOTE.quick_proposal_promo_code]: promo_code ?? '',
-    [MOTOR_QUOTE.quick_proposal_start_date]:
-      insuranceInfo?.start_date ?? startDate,
-    [MOTOR_QUOTE.quick_proposal_end_date]: insuranceInfo?.end_date ?? endDate,
-    [MOTOR_QUOTE.quick_quote_owner_ncd]: insuranceInfo?.no_claim_discount ?? 0,
-    [MOTOR_QUOTE.quick_quote_owner_no_of_claims]:
-      insuranceInfo?.no_of_claim ?? 0,
+    [MOTOR_QUOTE.promo_code]: promo_code ?? '',
+    [MOTOR_QUOTE.start_date]: startData,
+    [MOTOR_QUOTE.end_date]: endDate,
+    [MOTOR_QUOTE.owner_ncd]: insuranceInfo?.no_claim_discount ?? 0,
+    [MOTOR_QUOTE.owner_no_of_claims]: insuranceInfo?.no_of_claim ?? 0,
 
-    [MOTOR_QUOTE.quick_quote_email]: userInfo?.email ?? '',
-    [MOTOR_QUOTE.quick_quote_mobile]: userInfo?.phone ?? '',
-    [MOTOR_QUOTE.quick_quote_owner_dob]: userInfo?.date_of_birth ?? '',
-    [MOTOR_QUOTE.quick_quote_owner_drv_exp]:
-      userInfo?.driving_experience ?? undefined,
+    [MOTOR_QUOTE.email]: userInfo?.email ?? '',
+    [MOTOR_QUOTE.mobile]: userInfo?.phone ?? '',
+    [MOTOR_QUOTE.owner_dob]: dateOfBirth,
+    [MOTOR_QUOTE.owner_drv_exp]: userInfo?.driving_experience ?? undefined,
 
-    // [MOTOR_QUOTE.quick_quote_make]: selectedVehicle?.vehicle_make ?? '',
-    // [MOTOR_QUOTE.quick_quote_model]: selectedVehicle?.vehicle_model ?? '',
-    [MOTOR_QUOTE.quick_quote_reg_yyyy]:
-      selectedVehicle?.first_registered_year ?? undefined,
-    [MOTOR_QUOTE.quick_proposal_hire_purchase]:
-      quoteInfo?.company_id ?? undefined,
+    [MOTOR_QUOTE.vehicle_make]: selectedVehicle?.vehicle_make ?? '',
+    [MOTOR_QUOTE.vehicle_model]: selectedVehicle?.vehicle_model ?? '',
+    [MOTOR_QUOTE.reg_yyyy]: selectedVehicle?.first_registered_year ?? undefined,
+    [MOTOR_QUOTE.hire_purchase]: quoteInfo?.company_id ?? undefined,
   };
 
   // Options for Dropdown
@@ -156,6 +165,7 @@ export const PolicyDetail = ({ isSingPassFlow = false }: PolicyDetailProps) => {
           onSubmit={onSubmit}
           hirePurchaseOptions={hirePurchaseListFormatted}
           isSingpassFlow={isSingPassFlow}
+          isLoading={isPending}
           initialValues={initialValues}
         />
       </div>

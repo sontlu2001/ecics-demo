@@ -53,7 +53,7 @@ export const PromoCodeField = ({
   }, [applyPromoCode]);
 
   const handleSubmitPromoCode = () => {
-    const promoCode = getValues(MOTOR_QUOTE.quick_proposal_promo_code);
+    const promoCode = getValues(MOTOR_QUOTE.promo_code);
     if (promoCode) {
       verifyPromoCode(promoCode);
     }
@@ -61,7 +61,7 @@ export const PromoCodeField = ({
 
   const removePromoCode = () => {
     setPromoInfoSelected(null);
-    setValue(MOTOR_QUOTE.quick_proposal_promo_code, '');
+    setValue(MOTOR_QUOTE.promo_code, '');
   };
 
   return (
@@ -98,7 +98,7 @@ export const PromoCodeField = ({
       )}
       {!isDisablePromoCode && !isValidPromoCode && (
         <Form.Item
-          name={MOTOR_QUOTE.quick_proposal_promo_code}
+          name={MOTOR_QUOTE.promo_code}
           required={false}
           validateStatus={errorMessage ? 'error' : ''}
           className='mx-1 border p-3 font-semibold shadow-xl'
@@ -106,7 +106,7 @@ export const PromoCodeField = ({
           <div className='w-full'>Enter Promo Code</div>
           <Flex gap='small' className='w-full justify-between'>
             <Controller
-              name={MOTOR_QUOTE.quick_proposal_promo_code}
+              name={MOTOR_QUOTE.promo_code}
               control={control}
               defaultValue={applyPromoCode}
               render={({ field }) => (

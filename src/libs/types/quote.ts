@@ -83,6 +83,7 @@ export interface Vehicle {
   chasis_number: string;
   vehicle_model: string;
   first_registered_year: string;
+  engine_number?: string;
 }
 
 export interface InsuranceAdditionalInfo {

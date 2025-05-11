@@ -1,7 +1,8 @@
 'use client';
 
-import CouponIconSvg from '@/assets/icons/coupon.svg';
 import SvgIcon, { SvgIconProps } from '@/components/SvgIcon';
+
+import CouponIconSvg from '@/assets/icons/coupon.svg';
 
 const CouponIcon = (props: Omit<SvgIconProps, 'svg'>) => {
   return <SvgIcon svg={CouponIconSvg} {...props} />;

@@ -11,7 +11,11 @@ import { v4 as uuid } from 'uuid';
 import { z } from 'zod';
 
 import { SavePersonalInfoPayload, Vehicle } from '@/libs/types/auth';
-import { convertDateToDDMMYYYY } from '@/libs/utils/date-utils';
+import {
+  calculateDrivingExperienceFromLicences,
+  convertDateToDDMMYYYY,
+  extractYear,
+} from '@/libs/utils/date-utils';
 import {
   calculateAge,
   capitalizeWords,
@@ -76,18 +80,84 @@ const ReviewInfoDetail = () => {
   const [isDisabled, setIsDisabled] = useState(false);
   const [showChooseVehicleModal, setShowChooseVehicleModal] = useState(false);
   const [showUnMatchModal, setShowUnMatchModal] = useState(false);
-  const [showOverAgeModal, setShowOverAgeModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   const [refreshSession, setRefreshSession] = useState(false);
 
   const handleGoBack = () => {
-    setShowOverAgeModal(false);
+    setShowContactModal(false);
     router.push(ROUTES.AUTH.LOGIN);
   };
 
   const { mutate: savePersonalInfo } = usePostPersonalInfo();
-  const { mutate: postCheckVehicle } = usePostCheckVehicle(() => {
+  const { mutate: postCheckVehicle, isSuccess } = usePostCheckVehicle(() => {
     setShowUnMatchModal(true);
   });
+
+  useEffect(() => {
+    if (isSuccess) {
+      const sessionDataRaw = sessionStorage.getItem(ECICS_USER_INFO);
+      if (!sessionDataRaw) return;
+
+      const parsed = JSON.parse(sessionDataRaw);
+      if (Array.isArray(parsed.vehicles) && parsed.vehicles.length === 1) {
+        const vehicleSelected = [...parsed.vehicles];
+        const updatedParsed = {
+          ...parsed,
+          vehicle_selected: vehicleSelected,
+        };
+        saveToSessionStorage({
+          [ECICS_USER_INFO]: JSON.stringify(updatedParsed),
+        });
+
+        const v = updatedParsed.vehicle_selected[0] || {};
+
+        const vehicle_info_selected = {
+          chasis_number: v.vehicleno?.value || '',
+          vehicle_make: v.make?.value || '',
+          vehicle_model: v.model?.value || '',
+          first_registered_year:
+            extractYear(v.firstregistrationdate?.value) || '',
+        };
+
+        const qdlClasses = updatedParsed?.drivinglicence?.qdl?.classes || [];
+
+        const payload: SavePersonalInfoPayload = {
+          key: `${uuid()}`,
+          is_sending_email: false,
+          personal_info: {
+            name: updatedParsed.name?.value || '',
+            gender: updatedParsed.sex?.desc || '',
+            marital_status: updatedParsed.marital?.desc || '',
+            nric: updatedParsed.uinfin?.value || '',
+            address: [
+              `${updatedParsed.regadd?.block?.value || ''} ${updatedParsed.regadd?.street?.value || ''} #${updatedParsed.regadd?.floor?.value || ''}-${updatedParsed.regadd?.unit?.value || ''}, ${updatedParsed.regadd?.postal?.value || ''}, ${updatedParsed.regadd?.country?.desc || ''}`,
+            ].filter(Boolean),
+            date_of_birth: updatedParsed.dob?.value
+              ? convertDateToDDMMYYYY(updatedParsed.dob.value)
+              : '',
+            year_of_registration: updatedParsed.year_of_registration || '',
+            driving_experience:
+              qdlClasses.length > 0
+                ? `${calculateDrivingExperienceFromLicences(qdlClasses)} years`
+                : '1 year',
+            phone: `${updatedParsed.mobileno?.nbr?.value || ''}`,
+            email: updatedParsed.email?.value || '',
+          },
+          vehicle_info_selected,
+          vehicles:
+            updatedParsed.vehicles?.map((v: any) => ({
+              chasis_number: v.vehicleno?.value || '',
+              vehicle_make: v.make?.value || '',
+              vehicle_model: v.model?.value || '',
+              first_registered_year:
+                extractYear(v.firstregistrationdate?.value) || '',
+            })) || [],
+        };
+
+        savePersonalInfo(payload);
+      }
+    }
+  }, [isSuccess]);
 
   const methods = useForm<ReviewInfoForm>({
     resolver: zodResolver(reviewInfoSchema),
@@ -175,11 +245,7 @@ const ReviewInfoDetail = () => {
                   },
                   {
                     label: 'Year of Registration',
-                    value: v.firstregistrationdate?.value
-                      ? new Date(v.firstregistrationdate.value)
-                          .getFullYear()
-                          .toString()
-                      : null,
+                    value: extractYear(v.firstregistrationdate?.value) || null,
                   },
                   {
                     label: 'Vehicle Make',
@@ -239,29 +305,40 @@ const ReviewInfoDetail = () => {
         email: transformed.email,
         phone: transformed.phone,
       });
-      if ((parsed.vehicles?.length || 0) > 1) {
-        setShowChooseVehicleModal(true);
-      }
 
       if (parsed.vehicles?.length === 1) {
-        const singleVehicle = parsed.vehicles[0];
-        postCheckVehicle({
-          vehicle_make: singleVehicle.make?.value,
-          vehicle_model: singleVehicle.model?.value,
-        });
+        const vehicle = parsed.vehicles[0];
+        const make = vehicle?.make?.value?.trim();
+        const model = vehicle?.model?.value?.trim();
+        if (!make || !model) {
+          setShowUnMatchModal(true);
+        }
+
+        const registrationYearStr = extractYear(
+          vehicle.firstregistrationdate?.value,
+        );
+        const registrationYear = Number(registrationYearStr);
+        const currentYear = new Date().getFullYear();
+        if (!registrationYear || registrationYear < currentYear - 20) {
+          setShowContactModal(true);
+        }
       }
     }
   }, [methods, refreshSession]);
 
-  const stored = sessionStorage.getItem(ECICS_USER_INFO);
-  const parsed = stored ? JSON.parse(stored) : null;
+  const getVehiclesFromSession = (): Vehicle[] => {
+    const stored = sessionStorage.getItem(ECICS_USER_INFO);
+    const parsed = stored ? JSON.parse(stored) : null;
 
-  const vehicles: Vehicle[] = (parsed?.vehicles ?? []).map((vehicle: any) => ({
-    chasis_number: vehicle.vehicleno?.value,
-    vehicle_make: vehicle.make?.value,
-    vehicle_model: vehicle.model?.value,
-    first_registered_year: vehicle.firstregistrationdate?.value,
-  }));
+    return (parsed?.vehicles ?? []).map((vehicle: any) => ({
+      chasis_number: vehicle.vehicleno?.value,
+      vehicle_make: vehicle.make?.value,
+      vehicle_model: vehicle.model?.value,
+      first_registered_year: vehicle.firstregistrationdate?.value,
+    }));
+  };
+
+  const vehicles: Vehicle[] = getVehiclesFromSession();
 
   const handleSelection = (selected: Vehicle | null) => {
     if (selected) {
@@ -295,54 +372,96 @@ const ReviewInfoDetail = () => {
     }
     const parsed = JSON.parse(stored);
 
-    const payload: SavePersonalInfoPayload = {
-      key: `key-${uuid()}`,
-      personal_info: {
-        name: parsed.name?.value || '',
-        gender: parsed.sex?.desc || '',
-        marital_status: parsed.marital?.desc || '',
-        nric: parsed.uinfin?.value || '',
-        address: [
-          `${parsed.regadd?.block?.value || ''} ${parsed.regadd?.street?.value || ''} #${parsed.regadd?.floor?.value || ''}-${parsed.regadd?.unit?.value || ''}, ${parsed.regadd?.postal?.value || ''}, ${parsed.regadd?.country?.desc || ''}`,
-        ].filter(Boolean),
-        date_of_birth: parsed.dob?.value
-          ? convertDateToDDMMYYYY(parsed.dob.value)
-          : '',
-        year_of_registration: parsed.year_of_registration || '',
-        driving_experience: parsed.driving_experience || 0,
-        phone: `${parsed.mobileno?.nbr?.value || ''}`,
-        email: parsed.email?.value || '',
-      },
-      vehicle_info_selected: {
-        vehicle_make: parsed.vehicle_make || '',
-        vehicle_model: parsed.vehicle_model || '',
-        first_registered_year: parsed.year_of_registration || '',
-        chasis_number: parsed.chassisno?.value || '',
-      },
-      vehicles:
-        parsed.vehicles?.map((v: any) => ({
-          chasis_number: v.vehicleno?.value || '',
-          vehicle_make: v.make?.value || '',
-          vehicle_model: v.model?.value || '',
-          first_registered_year: v.year_of_registration || '',
-        })) || [],
-    };
-
-    //Check age
-    const age = calculateAge(payload?.personal_info.date_of_birth);
-    if (age < 26 || age > 70) {
-      setShowOverAgeModal(true);
+    // Requirement: Check age (between 26 and 70) or (>= 2 years)
+    const age = calculateAge(parsed?.dob.value);
+    const drivingExperience = calculateDrivingExperienceFromLicences(
+      parsed?.drivinglicence?.qdl?.classes || [],
+    );
+    if (age < 26 || age > 70 || drivingExperience < 2) {
+      setShowContactModal(true);
       return;
     }
 
-    savePersonalInfo(payload);
-    // Redirect
-    const queryParams = new URLSearchParams({
-      key: `${uuid()}`,
-    }).toString();
-    const url = `${ROUTES.INSURANCE.BASIC_DETAIL_SINGPASS}&${queryParams}`;
-    router.push(url);
+    // Case 0 vehicle
+    if (parsed.vehicles?.length === 0) {
+      const v = parsed?.vehicle_selected || {};
+      const vehicle_info_selected = {
+        chasis_number: v[0].vehicleno?.value || '',
+        vehicle_make: v[0].make?.value || '',
+        vehicle_model: v[0].model?.value || '',
+        first_registered_year:
+          extractYear(v[0].firstregistrationdate?.value) || '',
+      };
+      const qdlClasses = parsed?.drivinglicence?.qdl?.classes || [];
+
+      const payload: SavePersonalInfoPayload = {
+        key: `${uuid()}`,
+        is_sending_email: false,
+        personal_info: {
+          name: parsed.name?.value || '',
+          gender: parsed.sex?.desc || '',
+          marital_status: parsed.marital?.desc || '',
+          nric: parsed.uinfin?.value || '',
+          address: [
+            `${parsed.regadd?.block?.value || ''} ${parsed.regadd?.street?.value || ''} #${parsed.regadd?.floor?.value || ''}-${parsed.regadd?.unit?.value || ''}, ${parsed.regadd?.postal?.value || ''}, ${parsed.regadd?.country?.desc || ''}`,
+          ].filter(Boolean),
+          date_of_birth: parsed.dob?.value
+            ? convertDateToDDMMYYYY(parsed.dob.value)
+            : '',
+          year_of_registration: parsed.year_of_registration || '',
+          driving_experience:
+            qdlClasses.length > 0
+              ? `${calculateDrivingExperienceFromLicences(qdlClasses)} years`
+              : '1 year',
+          phone: `${parsed.mobileno?.nbr?.value || ''}`,
+          email: parsed.email?.value || '',
+        },
+        vehicle_info_selected,
+        vehicles:
+          parsed.vehicles?.map((v: any) => ({
+            chasis_number: v.vehicleno?.value || '',
+            vehicle_make: v.make?.value || '',
+            vehicle_model: v.model?.value || '',
+            first_registered_year:
+              extractYear(v.firstregistrationdate?.value) || '',
+          })) || [],
+      };
+      savePersonalInfo(payload);
+    }
+
+    // Case 1 vehicle
+    if (parsed.vehicles?.length === 1) {
+      const singleVehicle = parsed.vehicles[0];
+      postCheckVehicle({
+        vehicle_make: singleVehicle.make?.value,
+        vehicle_model: singleVehicle.model?.value,
+      });
+    }
+    // Case > 1 vehicle
+    if (parsed.vehicles?.length > 1) {
+      setShowChooseVehicleModal(true);
+    }
   };
+
+  // Group to show data on Vehicle Details (separated vehicle per box)
+  const groupedVehicles: { label: string; value: string | number }[][] = [];
+  let currentVehicle: { label: string; value: string | number }[] = [];
+  commonInfo?.vehicle?.forEach((item) => {
+    if (item.label === 'Vehicle Number') {
+      // If there is a vehicle before that, add it to the groupedVehicles list.
+      if (currentVehicle.length > 0) {
+        groupedVehicles.push(currentVehicle);
+      }
+      currentVehicle = [item];
+    } else {
+      // Add another fields to current vehicle
+      currentVehicle.push(item);
+    }
+  });
+  // Add last vehicles if possible
+  if (currentVehicle.length > 0) {
+    groupedVehicles.push(currentVehicle);
+  }
 
   const handleCloseModal = () => {
     setShowConfirmModal(true);
@@ -398,13 +517,20 @@ const ReviewInfoDetail = () => {
               )}
               {!showChooseVehicleModal &&
                 !showUnMatchModal &&
-                commonInfo?.vehicle && (
+                groupedVehicles.length > 0 &&
+                groupedVehicles.map((vehicle, index) => (
                   <InfoSection
-                    title='Vehicle Details'
-                    data={commonInfo.vehicle}
+                    key={index}
+                    vehicleIndex={index}
+                    title={
+                      groupedVehicles.length === 1
+                        ? 'Vehicle Details'
+                        : `Vehicle Details ${index + 1}`
+                    }
+                    data={vehicle}
                     setIsDisabled={setIsDisabled}
                   />
-                )}
+                ))}
             </div>
           ) : (
             <div className='w-full justify-self-center'>
@@ -442,14 +568,20 @@ const ReviewInfoDetail = () => {
               )}
               {!showChooseVehicleModal &&
                 !showUnMatchModal &&
-                commonInfo?.vehicle && (
+                groupedVehicles.length > 0 &&
+                groupedVehicles.map((vehicle, index) => (
                   <InfoSection
-                    title='Vehicle Details'
-                    data={commonInfo.vehicle}
-                    boxClass='mt-4'
+                    key={index}
+                    vehicleIndex={index}
+                    title={
+                      groupedVehicles.length === 1
+                        ? 'Vehicle Details'
+                        : `Vehicle Details ${index + 1}`
+                    }
+                    data={vehicle}
                     setIsDisabled={setIsDisabled}
                   />
-                )}
+                ))}
             </div>
           )}
         </div>
@@ -478,6 +610,7 @@ const ReviewInfoDetail = () => {
           <VehicleSelectionModal
             isReviewScreen={true}
             visible={showChooseVehicleModal}
+            setShowChooseVehicleModal={setShowChooseVehicleModal}
             vehicles={vehicles}
             setSelected={handleSelection}
           />
@@ -485,8 +618,8 @@ const ReviewInfoDetail = () => {
         {showUnMatchModal && (
           <UnMatchVehicleModal onClose={() => setShowUnMatchModal(false)} />
         )}
-        {showOverAgeModal && (
-          <UnableQuote onClick={handleGoBack} visible={showOverAgeModal} />
+        {showContactModal && (
+          <UnableQuote onClick={handleGoBack} visible={showContactModal} />
         )}
       </div>
     </FormProvider>

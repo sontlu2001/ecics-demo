@@ -24,6 +24,7 @@ export default function BusinessPartnerBar({
           icon={<ArrowBackIcon size={16} />}
           shape='circle'
           className='border-none bg-gray-200 pt-[6px]'
+          onClick={onBackClick}
         />
         <div className='text-xs'>
           <p>{businessName}</p>

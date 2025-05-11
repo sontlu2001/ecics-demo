@@ -1,13 +1,31 @@
 import EditIcon from '@/components/icons/EditIcon';
 import { SecondaryButton } from '@/components/ui/buttons';
+import { ROUTES } from '@/constants/routes';
+import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
+import { Vehicle } from '@/libs/types/quote';
 
 interface Props {
   setIsModalVisible: (isVisible: boolean) => void;
+  selectPlan?: string;
+  vehicleInfo?: Vehicle;
+  insuranceAdditionalInfo?: number;
 }
 
-const HeaderAddOn = ({ setIsModalVisible }: Props) => {
-  const CAR_INFO = ['BMW 520i 2.0', 'SBP1818T', '2024', 'NCD: 50%'];
-  const INSURANCE_PLAN = 'Third Party Fire & Theft';
+const HeaderAddOn = ({
+  setIsModalVisible,
+  selectPlan,
+  vehicleInfo,
+  insuranceAdditionalInfo,
+}: Props) => {
+  const router = useRouterWithQuery();
+
+  const CAR_INFO = [
+    `${vehicleInfo?.vehicle_make} ${vehicleInfo?.vehicle_model}`,
+    vehicleInfo?.chasis_number,
+    vehicleInfo?.first_registered_year,
+    `NCD: ${insuranceAdditionalInfo}%`,
+  ];
+  const INSURANCE_PLAN = selectPlan;
 
   const renderInfoCar = () => (
     <div className='flex items-center justify-between rounded-2xl border border-[#EEEEEE] px-6 py-3 shadow-sm'>
@@ -23,7 +41,7 @@ const HeaderAddOn = ({ setIsModalVisible }: Props) => {
         <SecondaryButton
           className='flex items-center rounded-[52px] bg-[#00ADEF] px-5 py-2 font-bold text-white'
           icon={<EditIcon size={18} className='mt-1' />}
-          onClick={() => setIsModalVisible(true)}
+          onClick={() => router.push(ROUTES.INSURANCE.BASIC_DETAIL)}
         >
           Edit
         </SecondaryButton>
@@ -41,6 +59,7 @@ const HeaderAddOn = ({ setIsModalVisible }: Props) => {
         <SecondaryButton
           className='flex items-center rounded-[52px] bg-[#00ADEF] px-5 py-2 font-bold text-white'
           icon={<EditIcon size={18} className='mt-1' />}
+          onClick={() => router.push(ROUTES.INSURANCE.PLAN)}
         >
           Edit
         </SecondaryButton>

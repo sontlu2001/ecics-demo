@@ -4,7 +4,10 @@ import { toast } from 'react-toastify';
 import { v4 as uuid } from 'uuid';
 
 import { SavePersonalInfoPayload } from '@/libs/types/auth';
-import { convertDateToDDMMYYYY } from '@/libs/utils/date-utils';
+import {
+  calculateDrivingExperienceFromLicences,
+  convertDateToDDMMYYYY,
+} from '@/libs/utils/date-utils';
 import { calculateAge } from '@/libs/utils/utils';
 
 import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
@@ -54,9 +57,10 @@ const ConfirmInfoModal = ({
     }
 
     const parsed = JSON.parse(stored);
+    const qdlClasses = parsed?.drivinglicence?.qdl?.classes || [];
 
     const payload: SavePersonalInfoPayload = {
-      key: `key-${uuid()}`,
+      key: `${uuid()}`,
       is_sending_email: true,
       personal_info: {
         name: parsed.name?.value || '',
@@ -70,7 +74,10 @@ const ConfirmInfoModal = ({
           ? convertDateToDDMMYYYY(parsed.dob.value)
           : '',
         year_of_registration: parsed.year_of_registration || '',
-        driving_experience: parsed.driving_experience || 0,
+        driving_experience:
+          qdlClasses.length > 0
+            ? `${calculateDrivingExperienceFromLicences(qdlClasses)} years`
+            : '1 year',
         phone: `${parsed.mobileno?.nbr?.value || ''}`,
         email: parsed.email?.value || '',
       },

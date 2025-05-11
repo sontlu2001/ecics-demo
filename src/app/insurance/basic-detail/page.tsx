@@ -1,4 +1,5 @@
 import { PolicyDetail } from './PolicyDetail';
+
 interface PolicyDetailPageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }

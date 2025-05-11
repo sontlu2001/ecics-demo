@@ -57,6 +57,8 @@ const VehicleBar = ({
         visible={isVehSelectionVisible}
         selected={selected_vehicle}
         setSelected={handleSelection}
+        setShowChooseVehicleModal={setIsVehSelectionVisible}
+        onClose={() => setIsVehSelectionVisible(false)}
       />
     </>
   );

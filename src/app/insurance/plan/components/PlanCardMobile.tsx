@@ -14,7 +14,7 @@ function PlanCardMobile({
   setSelectedPlan: (plan: FormatPlan | null) => void;
 }) {
   return (
-    <div>
+    <div className='flex flex-col gap-2'>
       {plans.map((plan, index) => {
         const isRecommended = plan.is_recommended;
         const activeFeatures = plan.benefits
@@ -80,7 +80,7 @@ function PlanCardMobile({
                 </div>
                 <div className='mx-4 border-t border-dashed border-secondaryBlue' />
                 <div className='p-4 pt-[10px]'>
-                  {plan.discount && (
+                  {!!plan.discount && (
                     <div className='text-sm font-semibold text-black'>
                       CAR ({plan.discount}% off applied)
                     </div>

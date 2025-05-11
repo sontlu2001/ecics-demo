@@ -1,9 +1,11 @@
 'use client';
+
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 
 import ArrowDownCircleIcon from '@/components/icons/ArrowDownCircle';
 import FinishIcon from '@/components/icons/FinishIcon';
+
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
 
 export type Status = 'new' | 'completed';

@@ -1,10 +1,11 @@
 'use client';
+import { ProcessBarType } from '@/app/insurance/layout';
 import { StepProcessBar } from '@/libs/enums/processBarEnums';
 import type { StepsProps } from 'antd';
 import { Steps } from 'antd';
 
 interface ProcessBarProps {
-  currentStep: StepProcessBar;
+  currentStep: ProcessBarType;
   onChange?: (current: number) => void;
 }
 
@@ -15,8 +16,8 @@ const stepsData = [
   { step: StepProcessBar.COMPLETE_PURCHASE, title: 'Complete Purchase' },
 ];
 
-const getStepStatus = (step: StepProcessBar, currentStep: StepProcessBar) => {
-  if (step < currentStep) return 'finish';
+const getStepStatus = (step: StepProcessBar, currentStep: ProcessBarType) => {
+  if (currentStep !== undefined && step < currentStep) return 'finish';
   if (step === currentStep) return 'process';
   return 'wait';
 };

@@ -1,5 +1,5 @@
 import { handleApiCallToISP } from '@/app/api/configs/api.config';
-import { CAR_INSURANCE } from '@/app/api/constants/car.insurance';
+import { PLAN_ADDON_CONFIG } from '@/app/api/constants/car.insurance';
 import { ErrFromISPRes, ErrNotFound } from '@/app/api/core/error.response';
 import { successRes } from '@/app/api/core/success.response';
 import logger from '@/app/api/libs/logger';
@@ -41,57 +41,33 @@ export async function saveProposalForCar(data: saveQuoteProposalDTO) {
     return_baseurl: process.env.NEXT_PUBLIC_CALLBACK_PAYMENT_URL,
   };
 
-  const addonKeysMapping = mappingAddonByPlan(selected_plan)
-
+  const addonKeysMapping = mappingAddonByPlan(selected_plan);
   for (const [addonKey, quickKey] of Object.entries(addonKeysMapping)) {
     payload[quickKey] = selected_addons[addonKey] || 'NO';
   }
 
-  //customize other add-ons by plan
-  if (selected_plan === CAR_INSURANCE.PLAN_NAME.TPO) {
-    payload.quick_proposal_any_workshop = 'N.A.';
-    payload.quick_proposal_excess = 'N.A.';
-    const result = applyAddlDriverLogic('CAR_COM_AND');
-    payload.quick_proposal_has_addl_driver = result.quick_proposal_has_addl_driver;
-    payload.quick_proposal_has_yied_driver = result.quick_proposal_has_yied_driver;
-  }
+  const planAddOnConfig = PLAN_ADDON_CONFIG[selected_plan];
 
-  if (selected_plan === CAR_INSURANCE.PLAN_NAME.TPFT) {
-    payload.quick_proposal_any_workshop = 'N.A.';
-    payload.quick_proposal_excess = 'N.A.';
+  if (planAddOnConfig) {
+    if (planAddOnConfig.setDefaults) {
+      payload.quick_proposal_any_workshop = 'N.A.';
+      payload.quick_proposal_excess = 'N.A.';
+    }
 
-    const {
-      quick_proposal_has_addl_driver,
-      quick_proposal_has_yied_driver
-    } = applyAddlDriverLogic(selected_addons['CAR_TPFT_AND']);
+    const { quick_proposal_has_addl_driver, quick_proposal_has_yied_driver } =
+      applyAddlDriverLogic(selected_addons[planAddOnConfig.andKey]);
+
     payload.quick_proposal_has_addl_driver = quick_proposal_has_addl_driver;
     payload.quick_proposal_has_yied_driver = quick_proposal_has_yied_driver;
 
-    const {
-      quick_proposal_lou,
-      quick_proposal_cc,
-    } = applyLouAndCcLogic(selected_addons['CAR_TPFT_LOU']);
-    payload.quick_proposal_lou = quick_proposal_lou;
-    payload.quick_proposal_cc = quick_proposal_cc;
-  }
+    if (planAddOnConfig.applyLouAndCc && planAddOnConfig.louKey) {
+      const { quick_proposal_lou, quick_proposal_cc } = applyLouAndCcLogic(
+        selected_addons[planAddOnConfig.louKey],
+      );
 
-  if (selected_plan === CAR_INSURANCE.PLAN_NAME.TPO) {
-    payload.quick_proposal_any_workshop = 'N.A.';
-    payload.quick_proposal_excess = 'N.A.';
-
-    const {
-      quick_proposal_has_addl_driver,
-      quick_proposal_has_yied_driver
-    } = applyAddlDriverLogic(selected_addons['CAR_TPO_AND']);
-    payload.quick_proposal_has_addl_driver = quick_proposal_has_addl_driver;
-    payload.quick_proposal_has_yied_driver = quick_proposal_has_yied_driver;
-
-    const {
-      quick_proposal_lou,
-      quick_proposal_cc,
-    } = applyLouAndCcLogic(selected_addons['CAR_TPO_LOU']);
-    payload.quick_proposal_lou = quick_proposal_lou;
-    payload.quick_proposal_cc = quick_proposal_cc;
+      payload.quick_proposal_lou = quick_proposal_lou;
+      payload.quick_proposal_cc = quick_proposal_cc;
+    }
   }
 
   // Add named driver information
@@ -171,4 +147,3 @@ export async function saveProposalForCar(data: saveQuoteProposalDTO) {
     data: resSaveProposal.data,
   });
 }
-

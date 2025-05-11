@@ -22,7 +22,7 @@ export interface SavePersonalInfoPayload {
     address: string[];
     date_of_birth: string;
     year_of_registration: string;
-    driving_experience: number;
+    driving_experience: string;
     phone: string;
     email: string;
   };
@@ -40,6 +40,18 @@ export interface Vehicle {
   vehicle_make: string;
   vehicle_model: string;
   first_registered_year: string;
+}
+
+export interface VehicleSingPassResponse {
+  chassisno: { value: string };
+  engineno: { value: string };
+  firstregistrationdate: { value: string };
+  make: { value: string };
+  model: { value: string };
+  vehicleno: { value: string };
+  yearofmanufacture: { value: string };
+  enginecapacity: { value: number };
+  powerrate: { value: number };
 }
 
 export interface VehicleMakeResponse {
@@ -67,5 +79,14 @@ export interface VehicleCheckResponse {
       id: number;
       name: string;
     };
+  };
+}
+
+export interface ClassInfo {
+  class: {
+    value: string;
+  };
+  issuedate: {
+    value: string;
   };
 }

@@ -51,7 +51,7 @@ function PlanCardDesktop({
                   )}
                 </div>
                 <p className='text-2xl font-semibold'>{plan.title}</p>
-                {plan.subtitle && (
+                {!!plan.subtitle && (
                   <p className='text-sm font-light text-gray-400'>
                     {plan.subtitle}
                   </p>

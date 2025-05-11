@@ -143,6 +143,8 @@ export function mappedAddonPremiums(quoteData: any): Record<string, number> {
   };
 }
 
+// NOTE: The 'Loss Of Use' and 'Add Additional Named Driver(s)' addons will be handled with custom logic via the functions applyAddlDriverLogic and applyLouAndCcLogic
+
 export const addonForCarMapCOM: Record<string, string> = {
   CAR_COM_ANW: 'quick_proposal_any_workshop',
   CAR_COM_AJE: 'quick_proposal_excess',
@@ -163,18 +165,18 @@ export const addonForCarMapTPO: Record<string, string> = {
 };
 
 export function mappingAddonByPlan(
-selected_plan: string,
+  selected_plan: string,
 ): Record<string, string> {
- switch (selected_plan) {
+  switch (selected_plan) {
     case CAR_INSURANCE.PLAN_NAME.COM:
-      return addonForCarMapCOM
+      return addonForCarMapCOM;
     case CAR_INSURANCE.PLAN_NAME.TPFT:
-      return addonForCarMapTPFT
+      return addonForCarMapTPFT;
     case CAR_INSURANCE.PLAN_NAME.TPO:
-      return addonForCarMapTPO
+      return addonForCarMapTPO;
     default:
-     return {};
- }
+      return {};
+  }
 }
 
 export function applyAddlDriverLogic(selected_value: string) {
