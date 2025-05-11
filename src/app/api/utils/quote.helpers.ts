@@ -13,46 +13,6 @@ export function mappedAddonPremiums(quoteData: any): Record<string, number> {
     workshop_if_selected:
       quoteData?.comp_plan?.add_ons?.addl_prem_for_any_workshop
         ?.any_workshop_if_selected ?? 0,
-    discount_if_any_workshop_not_selected_750:
-      quoteData?.comp_plan?.add_ons?.discount_if_any_workshop_not_selected?.[
-        '$750_as_default'
-      ] ?? 0,
-    discount_if_any_workshop_not_selected_1000:
-      quoteData?.comp_plan?.add_ons?.discount_if_any_workshop_not_selected?.[
-        '$1000_if_selected'
-      ] ?? 0,
-    discount_if_any_workshop_not_selected_1500:
-      quoteData?.comp_plan?.add_ons?.discount_if_any_workshop_not_selected?.[
-        '$1500_if_selected'
-      ] ?? 0,
-    discount_if_any_workshop_not_selected_2000:
-      quoteData?.comp_plan?.add_ons?.discount_if_any_workshop_not_selected?.[
-        '$2000_if_selected'
-      ] ?? 0,
-    discount_if_any_workshop_not_selected_3000:
-      quoteData?.comp_plan?.add_ons?.discount_if_any_workshop_not_selected?.[
-        '$3000_if_selected'
-      ] ?? 0,
-    discount_if_any_workshop_not_selected_5000:
-      quoteData?.comp_plan?.add_ons?.discount_if_any_workshop_not_selected?.[
-        '$5000_if_selected'
-      ] ?? 0,
-    discount_if_any_workshop_selected_1500:
-      quoteData?.comp_plan?.add_ons?.discount_if_any_workshop_selected?.[
-        '$1500_as_default'
-      ] ?? 0,
-    discount_if_any_workshop_selected_2000:
-      quoteData?.comp_plan?.add_ons?.discount_if_any_workshop_selected?.[
-        '$2000_if_selected'
-      ] ?? 0,
-    discount_if_any_workshop_selected_3000:
-      quoteData?.comp_plan?.add_ons?.discount_if_any_workshop_selected?.[
-        '$3000_if_selected'
-      ] ?? 0,
-    discount_if_any_workshop_selected_5000:
-      quoteData?.comp_plan?.add_ons?.discount_if_any_workshop_selected?.[
-        '$5000_if_selected'
-      ] ?? 0,
     drivers_age_from_27_to_70_if_not_selected:
       quoteData?.comp_plan?.add_ons
         ?.addl_named_drivers_premium_if_any_workshop_not_selected
@@ -142,6 +102,11 @@ export function mappedAddonPremiums(quoteData: any): Record<string, number> {
         ?.buy_up_ncd_if_selected ?? 0,
   };
 }
+
+export const listKeyMapOptions = new Set<string>([
+  "workshop_if_selected",
+  "transport_allowance_if_selected"
+]);
 
 // NOTE: The 'Loss Of Use' and 'Add Additional Named Driver(s)' addons will be handled with custom logic via the functions applyAddlDriverLogic and applyLouAndCcLogic
 

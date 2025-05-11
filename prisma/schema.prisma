@@ -73,7 +73,7 @@ model Quote {
   policy_id          String?   @map("policy_id")
   product_id         String?   @map("product_id")
   proposal_id        String?   @map("proposal_id")
-  payment_id         String?   
+  payment_id         String?
   phone              String?
   email              String?
   name               String?
@@ -251,8 +251,8 @@ model Benefit {
   name       String
   order      Int
   is_active  Boolean  @default(true)
-  plan       Plan     @relation(fields: [plan_id], references: [id])
-  plan_id    Int
+  plan       Plan?     @relation(fields: [plan_id], references: [id])
+  plan_id    Int?
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
 
