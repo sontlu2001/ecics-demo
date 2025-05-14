@@ -86,3 +86,21 @@ export const calculateAge = (dob: string) => {
   }
   return age;
 };
+
+export const parsePhoneNumber = (raw: string) => {
+  const cleaned = raw.replace(/\s+/g, '').trim(); // remove all spaces
+
+  // Remove '+' if present
+  let remaining = cleaned;
+  let prefix = '';
+  if (remaining.startsWith('+')) {
+    prefix = '+';
+    remaining = remaining.slice(1);
+  }
+
+  // Separate the region code (first 2 digits), the rest is nbr
+  const areaCode = remaining.slice(0, 2);
+  const nbr = remaining.slice(2);
+
+  return { prefix, areaCode, nbr };
+};

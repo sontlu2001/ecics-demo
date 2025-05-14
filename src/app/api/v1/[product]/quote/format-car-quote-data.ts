@@ -1,5 +1,8 @@
+import logger from '@/app/api/libs/logger';
 import { prisma } from '@/app/api/libs/prisma';
 import {
+  mappedAddonEligibility,
+  mappedAddOnIncludePlan,
   mappedAddonPremiums,
   mappedPlanPremiums,
 } from '@/app/api/utils/quote.helpers';
@@ -10,6 +13,8 @@ export async function formatCarQuoteInfo(
 ): Promise<any[]> {
   const mappedPlanValues = mappedPlanPremiums(quoteInfo);
   const mappedAddonValues = mappedAddonPremiums(quoteInfo);
+  const mappedAddonEligibilityValues = mappedAddonEligibility(quoteInfo);
+  const mappedAddOnIncludePlanValues = mappedAddOnIncludePlan(quoteInfo);
 
   const plans = await prisma.plan.findMany({
     where: {
@@ -93,9 +98,12 @@ export async function formatCarQuoteInfo(
   plans.forEach((plan) => {
     if (plan.code && plan.code in mappedPlanValues) {
       plan.premium_with_gst = mappedPlanValues[plan.code];
+      plan.add_ons_included_in_this_plan =
+        mappedAddOnIncludePlanValues[plan.code];
     }
 
     for (const addon of plan.addons) {
+      addon.is_display = mappedAddonEligibilityValues[addon.code as string];
       if (addon.key_map && addon.options.length === 0) {
         addon.premium_with_gst = mappedAddonValues[addon.key_map];
       } else {

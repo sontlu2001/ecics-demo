@@ -21,6 +21,7 @@ export const saveQuoteDTOSchema = z.object({
   country_nationality_id: z.number().nullable().optional(),
   product_type_id: z.number().nullable().optional(),
   promo_code_id: z.number().nullable().optional(),
+  is_sending_email: z.boolean().nullable().optional(),
 });
 
 export type saveQuoteDTO = z.infer<typeof saveQuoteDTOSchema>;

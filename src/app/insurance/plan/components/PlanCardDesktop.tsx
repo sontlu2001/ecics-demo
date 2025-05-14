@@ -5,8 +5,7 @@ import PlanPremiumIcon from '@/components/icons/PlanPremiumIcon';
 import TickCircleIcon from '@/components/icons/TickCircleIcon';
 import { PrimaryButton } from '@/components/ui/buttons';
 import clsx from 'clsx';
-import { useState } from 'react';
-import { FormatPlan } from '../page';
+import { FormatPlan } from '../PlanDetail';
 
 function PlanCardDesktop({
   plans,
@@ -28,6 +27,7 @@ function PlanCardDesktop({
           .filter((feature) => !feature.is_active)
           .sort((a, b) => a.order - b.order);
         const active = selectedPlan?.id === plan.id;
+
         return (
           <div
             key={index}
@@ -40,7 +40,7 @@ function PlanCardDesktop({
             )}
           >
             <div className='flex h-full flex-col justify-between px-4'>
-              <div className='relative z-10'>
+              <div className='relative'>
                 <div className='flex justify-between py-6 pt-2'>
                   {isRecommended ? <PlanPremiumIcon /> : <PlanNormalIcon />}
 
@@ -50,22 +50,28 @@ function PlanCardDesktop({
                     </div>
                   )}
                 </div>
-                <p className='text-2xl font-semibold'>{plan.title}</p>
+                <p
+                  className={clsx('text-2xl font-semibold text-[#1B223C]', {
+                    '!font-normal': active,
+                  })}
+                >
+                  {plan.title}
+                </p>
                 {!!plan.subtitle && (
                   <p className='text-sm font-light text-gray-400'>
                     {plan.subtitle}
                   </p>
                 )}
                 <div className='flex max-w-80 items-center justify-between pb-5 pt-3'>
-                  <p className='text-xl font-extrabold'>
+                  <p className='text-xl font-bold text-[#1B223C]'>
                     S$ {plan.premium_with_gst.toFixed(2)}
                   </p>
                   {!!plan.discount && (
                     <>
-                      <p className='text-lg text-sky-500 line-through decoration-1'>
+                      <p className='text-lg font-normal text-[#00ADEF] line-through decoration-1'>
                         S$ {plan.currentPrice.toFixed(2)}
                       </p>
-                      <p className='text-xs text-gray-400'>{`(${plan.discount}% off applied)`}</p>
+                      <p className='text-xs font-light text-[#797878]'>{`(${plan.discount}% off applied)`}</p>
                     </>
                   )}
                 </div>
@@ -76,12 +82,15 @@ function PlanCardDesktop({
                   </div>
                 ))}
                 {inactiveFeatures.map((feature, index) => (
-                  <div className='mt-4 flex items-start gap-4' key={index}>
+                  <div className='mt-4 flex items-start gap-2' key={index}>
                     <CrossMarkIcon
                       size={20}
                       className='mt-[6px] text-sky-700'
                     />
-                    <div dangerouslySetInnerHTML={{ __html: feature.name }} />
+                    <div
+                      className='text-[#B4B4B4]'
+                      dangerouslySetInnerHTML={{ __html: feature.name }}
+                    />
                   </div>
                 ))}
               </div>

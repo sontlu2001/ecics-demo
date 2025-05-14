@@ -1,5 +1,5 @@
 'use client';
-import { ProcessBarType } from '@/app/insurance/layout';
+import { ProcessBarType } from '@/app/insurance/InsuranceLayout';
 import { StepProcessBar } from '@/libs/enums/processBarEnums';
 import type { StepsProps } from 'antd';
 import { Steps } from 'antd';
@@ -44,7 +44,7 @@ export default function ProcessBar({ currentStep, onChange }: ProcessBarProps) {
         </p>
       ),
       status: stepStatus,
-      // disabled: stepStatus === 'wait',
+      disabled: stepStatus === 'wait',
       icon:
         stepStatus === 'wait' ? (
           <div className='custom-step-wait'></div>

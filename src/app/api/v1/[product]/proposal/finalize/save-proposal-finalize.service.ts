@@ -1,4 +1,5 @@
 import { handleApiCallToISP } from '@/app/api/configs/api.config';
+import { CAR_INSURANCE } from '@/app/api/constants/car.insurance';
 import { ErrFromISPRes, ErrNotFound } from '@/app/api/core/error.response';
 import { successRes } from '@/app/api/core/success.response';
 import logger from '@/app/api/libs/logger';
@@ -25,11 +26,18 @@ export async function saveProposalFinalizeForCar(data: { key: string }) {
 
   const { quote_id, proposal_id } = quoteInfo;
 
-  const resSaveProposalFinalize = await handleApiCallToISP('/b2c/proposal', {
-    proposal_id,
-    quote_id,
-    __finalize: 1,
-  });
+  logger.info(
+    `Saving proposal for car with quote_id: ${quote_id}, proposal_id: ${proposal_id}`,
+  );
+
+  const resSaveProposalFinalize = await handleApiCallToISP(
+    `/${CAR_INSURANCE.PREFIX_ENDPOINT}/proposal`,
+    {
+      proposal_id,
+      quote_id,
+      __finalize: 1,
+    },
+  );
 
   if (resSaveProposalFinalize.status !== 0) {
     logger.error(

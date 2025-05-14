@@ -1,3 +1,5 @@
+'use client';
+import InsuranceLayout from '../InsuranceLayout';
 import { PolicyDetail } from './PolicyDetail';
 
 interface PolicyDetailPageProps {
@@ -10,5 +12,11 @@ export default function PolicyDetailPage({
   const params = searchParams;
   const isManual = params?.manual === 'true' ? true : false;
 
-  return <PolicyDetail isSingPassFlow={!isManual} />;
+  return (
+    <InsuranceLayout>
+      {({ onSave }) => (
+        <PolicyDetail onSaveRegister={onSave} isSingPassFlow={!isManual} />
+      )}
+    </InsuranceLayout>
+  );
 }

@@ -1,14 +1,17 @@
 export const CAR_INSURANCE = {
+  PREFIX_ENDPOINT: 'b2c_privatecar',
   TYPE: 'car',
   PLAN_CODE: {
     COM: 'COM',
     TPFT: 'TPFT',
     TPO: 'TPO',
+    FNCD: 'FNCD',
   },
   PLAN_NAME: {
     COM: 'Comprehensive',
     TPFT: 'Third Party, Fire & Theft',
     TPO: 'Third Party Only',
+    FNCD: 'Comprehensive - Family NCD Builder',
   },
 
   ADD_ONS: {
@@ -53,4 +56,9 @@ export const PLAN_ADDON_CONFIG = {
     applyLouAndCc: true,
     setDefaults: true,
   },
+};
+
+export const ADD_ON_VALUES = {
+  YES: 'Yes',
+  NO: 'No',
 };

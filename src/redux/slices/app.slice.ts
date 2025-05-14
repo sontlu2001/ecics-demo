@@ -1,20 +1,15 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
-interface AppState {
+interface AppState {}
 
-}
-
-const initialState: AppState = {
-
-};
+const initialState: AppState = {};
 
 const appSlice = createSlice({
   name: 'app',
   initialState,
-  reducers: {
-  },
+  reducers: {},
 });
 
-export const { } = appSlice.actions;
+export const {} = appSlice.actions;
 
 export default appSlice.reducer;

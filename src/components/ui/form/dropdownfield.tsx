@@ -44,7 +44,7 @@ export const DropdownField = ({
               disabled={disabled}
               optionFilterProp='children'
               status={fieldState.invalid ? 'error' : ''}
-              className={`w-full ${fieldState.invalid ? '!border-red-500' : ''}`}
+              className={`custom-select h-[30px] w-full ${fieldState.invalid ? '!border-red-500' : ''}`}
               suffixIcon={
                 <ArrowDownIcon
                   size={12}

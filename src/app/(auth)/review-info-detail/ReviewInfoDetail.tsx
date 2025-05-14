@@ -1,9 +1,9 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Tooltip } from 'antd';
+import { Form } from 'antd';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -15,6 +15,7 @@ import {
   calculateDrivingExperienceFromLicences,
   convertDateToDDMMYYYY,
   extractYear,
+  formatDateToEnGb,
 } from '@/libs/utils/date-utils';
 import {
   calculateAge,
@@ -22,9 +23,7 @@ import {
   saveToSessionStorage,
 } from '@/libs/utils/utils';
 
-import WarningIcon from '@/components/icons/WarningIcon';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
-import { InputField } from '@/components/ui/form/inputfield';
 
 import ConfirmInfoModalWrapper from '@/app/(auth)/review-info-detail/modal/ConfirmInfoModalWrapper';
 import UnMatchVehicleModal from '@/app/(auth)/review-info-detail/modal/UnMatchVehicleModal';
@@ -32,7 +31,11 @@ import { UnableQuote } from '@/app/insurance/basic-detail/modal/UnableQuote';
 import { VehicleSelectionModal } from '@/app/insurance/components/VehicleSelection';
 import { ECICS_USER_INFO } from '@/constants/general.constant';
 import { ROUTES } from '@/constants/routes';
-import { emailRegex, phoneRegex } from '@/constants/validation.constant';
+import {
+  emailRegex,
+  phoneRegex,
+  vehicleNumberRegex,
+} from '@/constants/validation.constant';
 import { usePostPersonalInfo } from '@/hook/auth/login';
 import { usePostCheckVehicle } from '@/hook/insurance/common';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
@@ -40,42 +43,87 @@ import { useDeviceDetection } from '@/hook/useDeviceDetection';
 import InfoSection from './InfoSection';
 
 const reviewInfoSchema = z.object({
-  email: z.string().regex(emailRegex, 'Please enter a valid email address.'),
-  phone: z
-    .string()
+  email_address: z
+    .string({
+      required_error: 'This field is required',
+    })
+    .regex(emailRegex, 'Please enter a valid email address.'),
+  phone_number: z
+    .string({
+      required_error: 'This field is required',
+    })
     .length(8, "Please enter an 8-digit number starting with '8' or '9'.")
     .regex(
       phoneRegex,
       "Please enter an 8-digit number starting with '8' or '9'.",
     ),
-  personal: z.object({
-    nameAsPerNric: z.string().min(1, 'Required'),
-    nric: z.string().min(1, 'Required'),
-    gender: z.string().min(1, 'Required'),
-    maritalStatus: z.string().min(1, 'Required'),
-    dateOfBirth: z.string().min(1, 'Required'),
-    address: z.string().min(1, 'Required'),
-  }),
-  vehicle: z.object({
-    vehicleMake: z.string().min(1, 'Required'),
-    yearOfRegistration: z.string().min(4, 'Enter a valid year'),
-    chassisNumber: z.string().min(1, 'Required'),
-  }),
+  vehicle_number: z
+    .string({
+      required_error: 'This field is required',
+    })
+    .min(1, 'This field is required')
+    .regex(
+      vehicleNumberRegex,
+      'Please enter a valid vehicle registration no. (e.g. SBA123A).',
+    ),
+  vehicle_make: z
+    .string({
+      required_error: 'This field is required',
+    })
+    .min(1, 'This field is required'),
+  vehicle_model: z
+    .string({
+      required_error: 'This field is required',
+    })
+    .min(1, 'This field is required'),
+  engine_number: z
+    .string()
+    .max(50, 'Engine Number must be 50 characters or fewer.')
+    .optional(),
+  chassis_number: z
+    .string({
+      required_error: 'This field is required',
+    })
+    .min(1, 'This field is required')
+    .max(50, 'Chassis Number must be 50 characters or fewer.'),
+  engine_capacity: z
+    .string()
+    .max(50, 'Engine Capacity must be 50 characters or fewer.')
+    .optional(),
+  power_rate: z
+    .string()
+    .max(50, 'Power Rate must be 50 characters or fewer.')
+    .optional(),
+  year_of_manufacture: z
+    .string()
+    .max(4, 'Enter a valid year (max 4 digits).')
+    .regex(/^\d*$/, 'Year of Manufacture must be numbers only.')
+    .optional(),
+  year_of_registration: z
+    .string({
+      required_error: 'This field is required',
+    })
+    .min(4, 'Enter a valid year'),
 });
 
 type ReviewInfoForm = z.infer<typeof reviewInfoSchema>;
 
 interface CommonInfo {
-  email: string;
-  phone: string;
+  email: string | null;
+  phone: string | null;
   personal: Array<{ label: string; value: string }>;
   vehicle: Array<{ label: string; value: string }>;
 }
 
 const ReviewInfoDetail = () => {
   const router = useRouter();
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [form] = Form.useForm();
+  const searchParams = useSearchParams();
   const { isMobile } = useDeviceDetection();
+  const partner_code = searchParams.get('partner_code') || '';
+  const promo_code = searchParams.get('promo_code')?.toUpperCase().trim() || '';
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [commonInfo, setCommonInfo] = useState<CommonInfo | null>(null);
   const [isDisabled, setIsDisabled] = useState(false);
   const [showChooseVehicleModal, setShowChooseVehicleModal] = useState(false);
@@ -112,11 +160,16 @@ const ReviewInfoDetail = () => {
         const v = updatedParsed.vehicle_selected[0] || {};
 
         const vehicle_info_selected = {
-          chasis_number: v.vehicleno?.value || '',
-          vehicle_make: v.make?.value || '',
-          vehicle_model: v.model?.value || '',
+          vehicle_number: v.vehicleno?.value || '',
           first_registered_year:
             extractYear(v.firstregistrationdate?.value) || '',
+          vehicle_make: v.make?.value || '',
+          vehicle_model: v.model?.value || '',
+          engine_number: v.engineno?.value || '',
+          chasis_number: v.chassisno?.value || '',
+          engine_capacity: v.enginecapacity?.value || '',
+          power_rate: v.powerrate?.value || '',
+          year_of_manufacture: v.yearofmanufacture?.value || '',
         };
 
         const qdlClasses = updatedParsed?.drivinglicence?.qdl?.classes || [];
@@ -124,6 +177,8 @@ const ReviewInfoDetail = () => {
         const payload: SavePersonalInfoPayload = {
           key: `${uuid()}`,
           is_sending_email: false,
+          promo_code: promo_code,
+          partner_code: partner_code,
           personal_info: {
             name: updatedParsed.name?.value || '',
             gender: updatedParsed.sex?.desc || '',
@@ -162,8 +217,8 @@ const ReviewInfoDetail = () => {
   const methods = useForm<ReviewInfoForm>({
     resolver: zodResolver(reviewInfoSchema),
     defaultValues: {
-      email: '',
-      phone: '',
+      email_address: '',
+      phone_number: '',
     },
   });
 
@@ -173,8 +228,13 @@ const ReviewInfoDetail = () => {
       const parsed = JSON.parse(stored);
 
       const transformed = {
-        email: parsed.email?.value || '',
-        phone: `${parsed.mobileno?.prefix?.value || ''}${parsed.mobileno?.areacode?.value || ''} ${parsed.mobileno?.nbr?.value || ''}`,
+        email: parsed.email?.value || null,
+        phone:
+          parsed.mobileno?.prefix?.value &&
+          parsed.mobileno?.areacode?.value &&
+          parsed.mobileno?.nbr?.value
+            ? `${parsed.mobileno.prefix.value}${parsed.mobileno.areacode.value} ${parsed.mobileno.nbr.value}`
+            : null,
         personal: [
           {
             label: 'Name as per NRIC',
@@ -221,18 +281,12 @@ const ReviewInfoDetail = () => {
                   .map((c: any) => {
                     const cls = c.class?.value || '';
                     const issued = c.issuedate?.value
-                      ? new Date(c.issuedate.value)
-                          .toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })
-                          .replace(/ /g, ' ')
+                      ? formatDateToEnGb(c.issuedate.value)
                       : '';
                     return `${cls} / ${issued}`;
                   })
                   .join(', ')
-              : '',
+              : null,
           },
         ],
         vehicle:
@@ -291,19 +345,27 @@ const ReviewInfoDetail = () => {
                 { label: 'Year of Manufacture', value: null },
               ],
       };
+
       setCommonInfo(transformed);
 
-      // Check if any vehicle field has "null"
+      // Check if any field has "null"
+      const hasMissingEmailOrPhone =
+        !transformed?.email?.trim() || !transformed?.phone?.trim();
+      const hasMissingQDL = transformed.personal.find(
+        (item) =>
+          item.label === 'Qualified Driving License' &&
+          (!item.value || item.value.trim() === ''),
+      );
       const hasInvalidVehicle = transformed.vehicle.some(
         (item: any) => item.value === null,
       );
-      if (hasInvalidVehicle) {
+      if (hasInvalidVehicle || hasMissingEmailOrPhone || hasMissingQDL) {
         setIsDisabled(true);
       }
 
       methods.reset({
-        email: transformed.email,
-        phone: transformed.phone,
+        email_address: transformed.email,
+        phone_number: transformed.phone ?? undefined,
       });
 
       if (parsed.vehicles?.length === 1) {
@@ -386,17 +448,24 @@ const ReviewInfoDetail = () => {
     if (parsed.vehicles?.length === 0) {
       const v = parsed?.vehicle_selected || {};
       const vehicle_info_selected = {
-        chasis_number: v[0].vehicleno?.value || '',
-        vehicle_make: v[0].make?.value || '',
-        vehicle_model: v[0].model?.value || '',
+        vehicle_number: v[0].vehicleno?.value || '',
         first_registered_year:
           extractYear(v[0].firstregistrationdate?.value) || '',
+        vehicle_make: v[0].make?.value || '',
+        vehicle_model: v[0].model?.value || '',
+        engine_number: v[0].engineno?.value || '',
+        chasis_number: v[0].chassisno?.value || '',
+        engine_capacity: v[0].enginecapacity?.value || '',
+        power_rate: v[0].powerrate?.value || '',
+        year_of_manufacture: v[0].yearofmanufacture?.value || '',
       };
       const qdlClasses = parsed?.drivinglicence?.qdl?.classes || [];
 
       const payload: SavePersonalInfoPayload = {
         key: `${uuid()}`,
         is_sending_email: false,
+        promo_code: promo_code,
+        partner_code: partner_code,
         personal_info: {
           name: parsed.name?.value || '',
           gender: parsed.sex?.desc || '',
@@ -469,159 +538,173 @@ const ReviewInfoDetail = () => {
 
   return (
     <FormProvider {...methods}>
-      <div className='flex min-h-screen flex-col'>
-        <div className='relative z-10 flex-grow p-6'>
-          <div className='flex items-center justify-between'>
+      <Form
+        form={form}
+        scrollToFirstError={{
+          behavior: 'smooth',
+          block: 'center',
+        }}
+        onFinish={methods.handleSubmit(handleContinue)}
+        className='w-full'
+      >
+        <div className='flex min-h-screen flex-col'>
+          <div className='relative z-10 flex-grow p-6'>
+            <div className='flex items-center justify-between'>
+              {isMobile ? (
+                <>
+                  <Image
+                    src='/singpass.svg'
+                    alt='Singpass Logo'
+                    width={170}
+                    height={170}
+                  />
+                  <Image
+                    src='/ecics.svg'
+                    alt='ECICS Logo'
+                    width={100}
+                    height={100}
+                  />
+                </>
+              ) : (
+                <>
+                  <Image src='/ecics.svg' alt='Logo' width={100} height={100} />
+                  <Image
+                    src='/singpass.svg'
+                    alt='Logo'
+                    width={170}
+                    height={170}
+                  />
+                </>
+              )}
+            </div>
+            <div className='mt-6 text-lg font-bold'>
+              Review your Myinfo details
+            </div>
             {isMobile ? (
-              <>
-                <Image
-                  src='/singpass.svg'
-                  alt='Singpass Logo'
-                  width={170}
-                  height={170}
+              <div>
+                <InfoSection
+                  title='Enter a valid Email and Contact Number'
+                  data={[
+                    {
+                      label: 'Email Address',
+                      value: commonInfo?.email ?? null,
+                    },
+                    { label: 'Phone Number', value: commonInfo?.phone ?? null },
+                  ]}
+                  setIsDisabled={setIsDisabled}
+                  validationSchema={reviewInfoSchema}
                 />
-                <Image
-                  src='/ecics.svg'
-                  alt='ECICS Logo'
-                  width={100}
-                  height={100}
-                />
-              </>
+                {commonInfo?.personal && (
+                  <InfoSection
+                    title='Personal Info'
+                    data={commonInfo.personal}
+                    setIsDisabled={setIsDisabled}
+                    validationSchema={reviewInfoSchema}
+                  />
+                )}
+                {!showChooseVehicleModal &&
+                  !showUnMatchModal &&
+                  groupedVehicles.length > 0 &&
+                  groupedVehicles.map((vehicle, index) => (
+                    <InfoSection
+                      key={index}
+                      vehicleIndex={index}
+                      title={
+                        groupedVehicles.length === 1
+                          ? 'Vehicle Details'
+                          : `Vehicle Details ${index + 1}`
+                      }
+                      data={vehicle}
+                      setIsDisabled={setIsDisabled}
+                      validationSchema={reviewInfoSchema}
+                    />
+                  ))}
+              </div>
             ) : (
-              <>
-                <Image src='/ecics.svg' alt='Logo' width={100} height={100} />
-                <Image
-                  src='/singpass.svg'
-                  alt='Logo'
-                  width={170}
-                  height={170}
+              <div className='w-full justify-self-center'>
+                <InfoSection
+                  title='Enter a valid Email and Contact Number'
+                  data={[
+                    {
+                      label: 'Email Address',
+                      value: commonInfo?.email ?? null,
+                    },
+                    { label: 'Phone Number', value: commonInfo?.phone ?? null },
+                  ]}
+                  setIsDisabled={setIsDisabled}
+                  validationSchema={reviewInfoSchema}
                 />
-              </>
+                {commonInfo?.personal && (
+                  <InfoSection
+                    title='Personal Info'
+                    data={commonInfo.personal}
+                    boxClass='mt-4'
+                    setIsDisabled={setIsDisabled}
+                    validationSchema={reviewInfoSchema}
+                  />
+                )}
+                {!showChooseVehicleModal &&
+                  !showUnMatchModal &&
+                  groupedVehicles.length > 0 &&
+                  groupedVehicles.map((vehicle, index) => (
+                    <InfoSection
+                      key={index}
+                      vehicleIndex={index}
+                      title={
+                        groupedVehicles.length === 1
+                          ? 'Vehicle Details'
+                          : `Vehicle Details ${index + 1}`
+                      }
+                      data={vehicle}
+                      setIsDisabled={setIsDisabled}
+                      validationSchema={reviewInfoSchema}
+                    />
+                  ))}
+              </div>
             )}
           </div>
-          <div className='mt-6 text-lg font-bold'>
-            Review your Myinfo details
+          <div className='sticky bottom-0 left-0 right-0 z-20 flex justify-center gap-4 border-t bg-white p-4'>
+            <SecondaryButton
+              className='w-[10vw] min-w-[150px] rounded-md px-4 py-2 transition sm:w-[50vw] md:w-[10vw]'
+              onClick={handleCloseModal}
+            >
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton
+              onClick={handleContinue}
+              className='w-[10vw] min-w-[150px] rounded-md px-4 py-2 transition sm:w-[50vw] md:w-[10vw]'
+              disabled={isDisabled}
+            >
+              Continue
+            </PrimaryButton>
           </div>
-          {isMobile ? (
-            <div>
-              <div className='mt-4'>
-                <div className='text-sm font-bold'>Email Address</div>
-                <InputField name='email' />
-              </div>
-              <div className='mt-4'>
-                <div className='text-sm font-bold'>Phone Number</div>
-                <InputField name='phone' />
-              </div>
-              {commonInfo?.personal && (
-                <InfoSection title='Personal Info' data={commonInfo.personal} />
-              )}
-              {!showChooseVehicleModal &&
-                !showUnMatchModal &&
-                groupedVehicles.length > 0 &&
-                groupedVehicles.map((vehicle, index) => (
-                  <InfoSection
-                    key={index}
-                    vehicleIndex={index}
-                    title={
-                      groupedVehicles.length === 1
-                        ? 'Vehicle Details'
-                        : `Vehicle Details ${index + 1}`
-                    }
-                    data={vehicle}
-                    setIsDisabled={setIsDisabled}
-                  />
-                ))}
-            </div>
-          ) : (
-            <div className='w-full justify-self-center'>
-              <div className='mt-6 items-center justify-between rounded-md border border-gray-300 bg-gray-100 p-4'>
-                <div className='flex items-center justify-between'>
-                  <div className='text-base font-bold'>
-                    Enter a valid Email and Contact Number
-                  </div>
-                  <Tooltip title='We use this information to verify your identity and pre-fill your application with accurate government-verified data. This helps ensure a faster, more secure, and seamless submission process.'>
-                    <span className='flex cursor-pointer items-center font-bold'>
-                      <WarningIcon size={14} />
-                      <span className='ml-1 text-[10px]'>
-                        Why do we need this?
-                      </span>
-                    </span>
-                  </Tooltip>
-                </div>
-                <div className='mt-4 flex gap-4'>
-                  <div className='w-[calc(50%-10px)]'>
-                    <div className='text-sm font-bold'>Email Address</div>
-                    <InputField name='email' />
-                  </div>
-                  <div className='w-[calc(50%-10px)]'>
-                    <div className='text-sm font-bold'>Phone Number</div>
-                    <InputField name='phone' />
-                  </div>
-                </div>
-              </div>
-              {commonInfo?.personal && (
-                <InfoSection
-                  title='Personal Info'
-                  data={commonInfo.personal}
-                  boxClass='mt-4'
-                />
-              )}
-              {!showChooseVehicleModal &&
-                !showUnMatchModal &&
-                groupedVehicles.length > 0 &&
-                groupedVehicles.map((vehicle, index) => (
-                  <InfoSection
-                    key={index}
-                    vehicleIndex={index}
-                    title={
-                      groupedVehicles.length === 1
-                        ? 'Vehicle Details'
-                        : `Vehicle Details ${index + 1}`
-                    }
-                    data={vehicle}
-                    setIsDisabled={setIsDisabled}
-                  />
-                ))}
-            </div>
+          {showConfirmModal && (
+            <ConfirmInfoModalWrapper
+              showConfirmModal={showConfirmModal}
+              setShowConfirmModal={setShowConfirmModal}
+            />
+          )}
+          {showChooseVehicleModal && (
+            <VehicleSelectionModal
+              isReviewScreen={true}
+              visible={showChooseVehicleModal}
+              setShowChooseVehicleModal={setShowChooseVehicleModal}
+              vehicles={vehicles}
+              setSelected={handleSelection}
+              setRefreshSession={setRefreshSession}
+            />
+          )}
+          {showUnMatchModal && (
+            <UnMatchVehicleModal
+              onClose={() => setShowUnMatchModal(false)}
+              setRefreshSession={setRefreshSession}
+            />
+          )}
+          {showContactModal && (
+            <UnableQuote onClick={handleGoBack} visible={showContactModal} />
           )}
         </div>
-        <div className='sticky bottom-0 left-0 right-0 z-20 flex justify-center gap-4 border-t bg-white p-4'>
-          <SecondaryButton
-            className='w-[10vw] min-w-[150px] rounded-md px-4 py-2 transition sm:w-[50vw] md:w-[10vw]'
-            onClick={handleCloseModal}
-          >
-            Cancel
-          </SecondaryButton>
-          <PrimaryButton
-            onClick={handleContinue}
-            className='w-[10vw] min-w-[150px] rounded-md px-4 py-2 transition sm:w-[50vw] md:w-[10vw]'
-            disabled={isDisabled}
-          >
-            Continue
-          </PrimaryButton>
-        </div>
-        {showConfirmModal && (
-          <ConfirmInfoModalWrapper
-            showConfirmModal={showConfirmModal}
-            setShowConfirmModal={setShowConfirmModal}
-          />
-        )}
-        {showChooseVehicleModal && (
-          <VehicleSelectionModal
-            isReviewScreen={true}
-            visible={showChooseVehicleModal}
-            setShowChooseVehicleModal={setShowChooseVehicleModal}
-            vehicles={vehicles}
-            setSelected={handleSelection}
-          />
-        )}
-        {showUnMatchModal && (
-          <UnMatchVehicleModal onClose={() => setShowUnMatchModal(false)} />
-        )}
-        {showContactModal && (
-          <UnableQuote onClick={handleGoBack} visible={showContactModal} />
-        )}
-      </div>
+      </Form>
     </FormProvider>
   );
 };

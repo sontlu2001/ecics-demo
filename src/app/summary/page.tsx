@@ -133,7 +133,7 @@ export default function Summary() {
           { label: 'Email', value: quote?.data.personal_info?.email || 'N/A' },
           {
             label: 'Address',
-            value: quote?.data.personal_info?.address || 'N/A',
+            value: quote?.data.personal_info?.address[0] || 'N/A',
           },
         ]}
       />

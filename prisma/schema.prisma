@@ -234,6 +234,7 @@ model Plan {
   key_map          String?
   premium_with_gst Float?    @default(0.0)
   premium_bef_gst  Float?    @default(0.0)
+  add_ons_included_in_this_plan Json @default("[]")
   benefits         Benefit[]
   addons           Addon[]
   created_at       DateTime  @default(now())

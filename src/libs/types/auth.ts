@@ -14,6 +14,8 @@ export interface UserInfoPayload {
 export interface SavePersonalInfoPayload {
   key: string;
   is_sending_email?: boolean;
+  promo_code?: string;
+  partner_code?: string;
   personal_info: {
     name: string;
     gender: string;
@@ -27,12 +29,18 @@ export interface SavePersonalInfoPayload {
     email: string;
   };
   vehicle_info_selected: {
+    vehicle_number: string;
+    first_registered_year: string;
     vehicle_make: string;
     vehicle_model: string;
-    first_registered_year: string;
+    engine_number: string;
     chasis_number: string;
+    engine_capacity: string;
+    power_rate: string;
+    year_of_manufacture: string;
   };
   vehicles: Vehicle[];
+  shouldRedirect?: boolean;
 }
 
 export interface Vehicle {
@@ -40,6 +48,7 @@ export interface Vehicle {
   vehicle_make: string;
   vehicle_model: string;
   first_registered_year: string;
+  vehicle_number: string;
 }
 
 export interface VehicleSingPassResponse {

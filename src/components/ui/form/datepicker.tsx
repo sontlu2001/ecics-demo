@@ -31,6 +31,7 @@ export const DatePickerField = ({
               onChange={(date) => {
                 // Convert dayjs to Date for react-hook-form
                 field.onChange(date ? date.toDate() : null);
+                props.onChange?.(date, date ? date.format('DD/MM/YYYY') : '');
               }}
               status={fieldState.invalid ? 'error' : undefined}
               suffixIcon={

@@ -5,11 +5,13 @@ import { memo, useEffect, useMemo, useState } from 'react';
 
 import { AddNamedDriverInfo } from '@/libs/types/quote';
 
-import { SecondaryButton } from '@/components/ui/buttons';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
 
 import AddOnRow from './AddOnRow';
-import { AddOnFormat } from './page';
 import AdditionDriver from '../components/AdditionDriver';
+import { AddOnFormat } from './AddonDetail';
+import dayjs from 'dayjs';
+import { set } from 'zod';
 
 const ADDON_CARS = ['CAR_COM_AND', 'CAR_TPFT_AND', 'CAR_TPO_AND'];
 
@@ -21,6 +23,7 @@ function AddOnRowDetail({
   setAddonsSelected,
   drivers,
   setDrivers,
+  policyStartDate,
 }: {
   addon: AddOnFormat;
   addonsAdded: any;
@@ -29,6 +32,7 @@ function AddOnRowDetail({
   setAddonsSelected: (feeAdditions: any) => void;
   drivers: AddNamedDriverInfo[];
   setDrivers: (drivers: AddNamedDriverInfo[]) => void;
+  policyStartDate?: string;
 }) {
   const [isShowAdditionDriver, setIsShowAdditionDriver] = useState(false);
   const [selectedOption, setSelectedOption] = useState<any>(null);
@@ -62,6 +66,12 @@ function AddOnRowDetail({
       ...prev,
       [addon.code]: selectedOption,
     }));
+  };
+  const handleRemoveAdditionalDriver = (driver: AddNamedDriverInfo) => {
+    const updatedDrivers = drivers.filter(
+      (d) => d.nric_or_fin !== driver.nric_or_fin,
+    );
+    setDrivers(updatedDrivers);
   };
   useEffect(() => {
     if (!isAddonCars) return;
@@ -129,6 +139,7 @@ function AddOnRowDetail({
   if (addon.is_display === false) {
     return null;
   }
+
   return (
     <AddOnRow
       isRecommended={addon.is_recommended}
@@ -170,11 +181,9 @@ function AddOnRowDetail({
             </>
           )}
           {addon.type === 'select' && isAddonCars && (
-            <>
-              <div className='flex items-center justify-between text-[14px]'>
-                <p className='font-semibold leading-[20px] text-[#525252]'>
-                  Select Coverage Amount
-                </p>
+            <div className='flex flex-col gap-2'>
+              <div className='flex items-center justify-between pt-2 text-[14px] font-semibold leading-5'>
+                <p className='text-[#525252]'>SGD {addon.feeSelected ?? 0}</p>
                 {drivers.length > 0 ? (
                   <SecondaryButton
                     className='black h-8 w-28 rounded-md '
@@ -185,9 +194,12 @@ function AddOnRowDetail({
                 ) : (
                   <SecondaryButton
                     className='black h-8 w-28 rounded-md'
-                    onClick={() => setIsShowAdditionDriver(true)}
+                    onClick={() => {
+                      // handleAddAddonWithDriver(addon);
+                      setIsShowAdditionDriver(true);
+                    }}
                   >
-                    Add Driver
+                    Add
                   </SecondaryButton>
                 )}
                 {isShowAdditionDriver && (
@@ -196,19 +208,34 @@ function AddOnRowDetail({
                     setIsShowAdditionDriver={setIsShowAdditionDriver}
                     setDataDrivers={setDrivers}
                     dataDrivers={drivers}
+                    policyStartDate={dayjs(
+                      policyStartDate,
+                      'DD/MM/YYYY',
+                    ).toDate()}
                   />
                 )}
               </div>
-              <div className='flex items-center justify-between pt-2 text-[14px] font-semibold leading-5'>
-                <p className='text-[#525252]'>SGD {addon.feeSelected ?? 0}</p>
-                <SecondaryButton
-                  className='black h-8 w-28 rounded-md'
-                  onClick={() => handleAddAddonWithDriver(addon)}
-                >
-                  Add
-                </SecondaryButton>
-              </div>
-            </>
+              {drivers.length > 0 && (
+                <>
+                  {drivers.map((driver, index) => (
+                    <div
+                      className='flex items-center justify-between text-[14px]'
+                      key={index}
+                    >
+                      <p className='font-semibold leading-[20px] text-[#525252]'>
+                        Additional Driver: {driver.name}
+                      </p>
+                      <PrimaryButton
+                        className='black h-8 w-28 rounded-md bg-red-400'
+                        onClick={() => handleRemoveAdditionalDriver(driver)}
+                      >
+                        Remove
+                      </PrimaryButton>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
           )}
           {addon.type === 'checkbox' && (
             <div className='flex items-center justify-between pt-2 text-[14px] font-semibold leading-5'>

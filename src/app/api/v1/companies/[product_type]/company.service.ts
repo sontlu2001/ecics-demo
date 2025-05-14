@@ -1,4 +1,3 @@
-import { log } from 'console';
 import logger from '../../../libs/logger';
 import { prisma } from '../../../libs/prisma';
 

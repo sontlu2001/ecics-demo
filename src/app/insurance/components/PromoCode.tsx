@@ -26,42 +26,45 @@ export const PromoCodeField = ({
   ...props
 }: InputFieldProps) => {
   const { control, getValues, setValue } = useFormContext();
-  const { mutate: verifyPromoCode, data, isPending } = useVerifyPromoCode();
+  const { mutateAsync: verifyPromoCode, isPending } = useVerifyPromoCode();
   const [promoInfoSelected, setPromoInfoSelected] =
     useState<PromoCodeResponse | null>(null);
   const isValidPromoCode = promoInfoSelected?.data?.is_valid;
   const errorMessage = isValidPromoCode ? '' : promoInfoSelected?.message;
 
-  useEffect(() => {
-    if (!isValidPromoCode) {
-      setApplyPromoCode('');
-    } else {
-      setApplyPromoCode(promoInfoSelected?.data.code);
+  const handleVerifyPromoCode = async (promoCode: string) => {
+    try {
+      const response: any = await verifyPromoCode(promoCode);
+      const isValid = response?.data?.is_valid;
+      if (!isValid) {
+        setApplyPromoCode('');
+      } else {
+        setApplyPromoCode(promoCode);
+      }
+      setPromoInfoSelected(response);
+    } catch (error) {
+      setPromoInfoSelected(null);
     }
-  }, [isValidPromoCode]);
-
-  useEffect(() => {
-    if (!data) return;
-    setPromoInfoSelected(data);
-  }, [data]);
+  };
 
   // Automatically verify the default promo code on mount (if provided).
   useEffect(() => {
     if (applyPromoCode) {
-      verifyPromoCode(applyPromoCode);
+      handleVerifyPromoCode(applyPromoCode);
     }
   }, [applyPromoCode]);
 
   const handleSubmitPromoCode = () => {
     const promoCode = getValues(MOTOR_QUOTE.promo_code);
     if (promoCode) {
-      verifyPromoCode(promoCode);
+      handleVerifyPromoCode(promoCode);
     }
   };
 
   const removePromoCode = () => {
     setPromoInfoSelected(null);
     setValue(MOTOR_QUOTE.promo_code, '');
+    setApplyPromoCode('');
   };
 
   return (
@@ -135,7 +138,8 @@ export const PromoCodeField = ({
                 <TagOutlined />
               </span>
               <span className='pl-1 text-green-500'>
-                Use {data?.data.code} for {data?.data.discount}% off
+                Use {promoInfoSelected?.data.code} for{' '}
+                {promoInfoSelected?.data.discount}% off
               </span>
             </div>
           )}

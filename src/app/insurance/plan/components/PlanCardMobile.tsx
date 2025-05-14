@@ -2,7 +2,7 @@
 import CrossMarkIcon from '@/components/icons/CrossMark';
 import TickCircleIcon from '@/components/icons/TickCircleIcon';
 import clsx from 'clsx';
-import { FormatPlan } from '../page';
+import { FormatPlan } from '../PlanDetail';
 
 function PlanCardMobile({
   plans,
@@ -40,7 +40,7 @@ function PlanCardMobile({
                 <span className='text-white'>Recommended</span>
               </div>
             )}
-            <div className='text-lg font-bold'>{plan.title}</div>
+            <div className='text-lg font-bold text-[#080808]'>{plan.title}</div>
             {activeFeatures.map((feature, index) => (
               <div className='mt-4 flex items-start gap-2' key={index}>
                 <TickCircleIcon size={12} className='mt-[6px]' />
@@ -49,8 +49,14 @@ function PlanCardMobile({
             ))}
             {inactiveFeatures.map((feature, index) => (
               <div className='mt-4 flex items-start' key={index}>
-                <CrossMarkIcon size={12} className='mt-[6px]' />
-                <div dangerouslySetInnerHTML={{ __html: feature.name }} />
+                <CrossMarkIcon
+                  size={15}
+                  className='mr-1 mt-[6px] text-[#00ADEF]'
+                />
+                <div
+                  className='text-[#1E1E1E61]'
+                  dangerouslySetInnerHTML={{ __html: feature.name }}
+                />
               </div>
             ))}
             <div className='relative mt-6'>

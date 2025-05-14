@@ -2,11 +2,10 @@
 
 import dayjs from 'dayjs';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { SubmitHandler } from 'react-hook-form';
 
-import { Vehicle } from '@/libs/types/quote';
-import { adjustDateInDate, convertDateFormat } from '@/libs/utils/date-utils';
+import { convertDateFormat } from '@/libs/utils/date-utils';
 import { generateKeyAndAttachToUrl } from '@/libs/utils/utils';
 
 import { DropdownOption } from '@/components/ui/form/dropdownfield';
@@ -21,67 +20,63 @@ import {
 } from '@/hook/insurance/quote';
 import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
 
+import HeaderVehicleInfo from '../plan/components/HeaderVehicleInfo';
+import HeaderVehicleInfoMobile from '../plan/components/HeaderVehicleInfoMobile';
 import PolicyDetailForm from './PolicyDetailForm';
-import VehicleBar from '../components/VehicleBar';
 
 interface PolicyDetailProps {
+  onSaveRegister: (fn: () => any) => void;
   isSingPassFlow: boolean;
 }
 
-export const PolicyDetail = ({ isSingPassFlow = false }: PolicyDetailProps) => {
+export const PolicyDetail = ({
+  isSingPassFlow = false,
+  onSaveRegister,
+}: PolicyDetailProps) => {
   const router = useRouterWithQuery();
   const searchParams = useSearchParams();
 
-  const partner_code = searchParams.get('partner_code') || '';
   const promo_code = searchParams.get('promo_code')?.toUpperCase().trim() || '';
   const key = searchParams.get('key') || '';
 
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const { data: hirePurchaseList } = useGetHirePurchaseList(PRODUCT_NAME.CAR);
   const { data: quoteInfo } = useGetQuote(key);
   const { mutate: generateQuote, isSuccess, isPending } = useGenerateQuote();
 
   const userInfo = quoteInfo?.data?.personal_info;
-  const vehicles = quoteInfo?.data?.vehicles ?? [];
   const insuranceInfo = quoteInfo?.data?.insurance_additional_info;
-
-  useEffect(() => {
-    const vehicleSelected = quoteInfo?.data?.vehicle_info_selected;
-    if (vehicleSelected) {
-      setSelectedVehicle(vehicleSelected);
-    }
-  }, [userInfo]);
+  const selectedVehicle = quoteInfo?.data?.vehicle_info_selected;
+  const savedPromoCode = quoteInfo?.promo_code;
 
   useEffect(() => {
     if (!isSuccess) return;
     router.push(ROUTES.INSURANCE.PLAN);
   }, [isSuccess]);
 
-  const now = new Date();
-  const startData = insuranceInfo?.start_date
-    ? new Date(insuranceInfo?.start_date)
-    : now;
-  const endDate = insuranceInfo?.end_date
-    ? new Date(insuranceInfo?.end_date)
-    : adjustDateInDate(now, 1, 0, -1);
   const dateOfBirth = userInfo?.date_of_birth
-    ? new Date(userInfo?.date_of_birth)
-    : dayjs().startOf('day').subtract(25, 'years');
+    ? dayjs(userInfo?.date_of_birth, 'DD/MM/YYYY').toDate()
+    : undefined;
+  const startData = insuranceInfo?.start_date
+    ? dayjs(insuranceInfo?.start_date, 'DD/MM/YYYY').toDate()
+    : undefined;
+  const endDate = insuranceInfo?.end_date
+    ? dayjs(insuranceInfo?.end_date, 'DD/MM/YYYY').toDate()
+    : undefined;
 
   const initialValues = {
-    [MOTOR_QUOTE.promo_code]: promo_code ?? '',
+    [MOTOR_QUOTE.promo_code]: savedPromoCode?.code ?? promo_code ?? '',
     [MOTOR_QUOTE.start_date]: startData,
     [MOTOR_QUOTE.end_date]: endDate,
-    [MOTOR_QUOTE.owner_ncd]: insuranceInfo?.no_claim_discount ?? 0,
-    [MOTOR_QUOTE.owner_no_of_claims]: insuranceInfo?.no_of_claim ?? 0,
+    [MOTOR_QUOTE.owner_ncd]: insuranceInfo?.no_claim_discount ?? undefined,
+    [MOTOR_QUOTE.owner_no_of_claims]: insuranceInfo?.no_of_claim ?? undefined,
 
     [MOTOR_QUOTE.email]: userInfo?.email ?? '',
     [MOTOR_QUOTE.mobile]: userInfo?.phone ?? '',
     [MOTOR_QUOTE.owner_dob]: dateOfBirth,
     [MOTOR_QUOTE.owner_drv_exp]: userInfo?.driving_experience ?? undefined,
 
-    [MOTOR_QUOTE.vehicle_make]: selectedVehicle?.vehicle_make ?? '',
-    [MOTOR_QUOTE.vehicle_model]: selectedVehicle?.vehicle_model ?? '',
+    [MOTOR_QUOTE.vehicle_make]: selectedVehicle?.vehicle_make ?? undefined,
+    [MOTOR_QUOTE.vehicle_model]: selectedVehicle?.vehicle_model ?? undefined,
     [MOTOR_QUOTE.reg_yyyy]: selectedVehicle?.first_registered_year ?? undefined,
     [MOTOR_QUOTE.hire_purchase]: quoteInfo?.company_id ?? undefined,
   };
@@ -97,26 +92,11 @@ export const PolicyDetail = ({ isSingPassFlow = false }: PolicyDetailProps) => {
       : []),
   ];
 
-  // retrieve Hire purchase List
-  const verifyPartnerCode = async () => {
-    try {
-      const resp = await fetch(`/api/v1/partner/info/${partner_code}`);
-      if (resp.ok) {
-        const response = await resp.json();
-        const apiData: { partner_code: number; partner_name: string } =
-          response.data;
-      }
-    } catch (error) {
-      console.error('Failed to fetch hire purchase list:', error);
-    }
-  };
-
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     let payload;
 
     const keyQuote = generateKeyAndAttachToUrl(key);
     payload = { ...data, key: keyQuote };
-
     if (isSingPassFlow && userInfo) {
       // data from Singpass
       const personal_info = {
@@ -126,18 +106,28 @@ export const PolicyDetail = ({ isSingPassFlow = false }: PolicyDetailProps) => {
         date_of_birth: convertDateFormat(userInfo?.date_of_birth, 'DD/MM/YYYY'),
         nric: userInfo?.nric,
         address: userInfo?.address,
-        driving_experience: 4,
+        driving_experience: userInfo?.driving_experience,
         phone: userInfo?.phone,
         email: userInfo?.email,
       };
-
+      const personalInfo = {
+        date_of_birth: personal_info.date_of_birth,
+        driving_experience: personal_info.driving_experience,
+        email: personal_info.email,
+        phone: personal_info.phone,
+      };
       const vehicle_info_selected = {
+        chasis_number: selectedVehicle?.chasis_number,
+        first_year_registered: selectedVehicle?.first_registered_year,
         vehicle_make: selectedVehicle?.vehicle_make,
         vehicle_model: selectedVehicle?.vehicle_model,
-        first_registered_year: selectedVehicle?.first_registered_year,
-        chasis_number: selectedVehicle?.chasis_number,
       };
-      payload = { ...payload, personal_info, vehicle_info_selected };
+
+      payload = {
+        ...payload,
+        personal_info: personalInfo,
+        vehicle_info_selected: vehicle_info_selected,
+      };
     }
 
     try {
@@ -151,15 +141,21 @@ export const PolicyDetail = ({ isSingPassFlow = false }: PolicyDetailProps) => {
     <>
       <div className='mt-4 px-4 md:px-12'>
         {isSingPassFlow && (
-          <div className='my-6 grid gap-4 lg:grid-cols-3'>
-            <div className='mx-auto w-full sm:max-w-[50%] lg:col-span-1 lg:col-start-2 lg:max-w-none'>
-              <VehicleBar
-                selected_vehicle={selectedVehicle}
-                vehicles={vehicles}
-                setSelectedVehicle={setSelectedVehicle}
+          <>
+            <div className='mb-8 hidden items-center justify-between md:flex md:flex-col md:gap-4'>
+              <HeaderVehicleInfo
+                vehicleInfo={quoteInfo?.data.vehicle_info_selected}
+                insuranceAdditionalInfo={
+                  quoteInfo?.data.insurance_additional_info
+                }
               />
             </div>
-          </div>
+            <div className='py-4 md:hidden'>
+              <HeaderVehicleInfoMobile
+                vehicleInfo={quoteInfo?.data.vehicle_info_selected}
+              />
+            </div>
+          </>
         )}
         <PolicyDetailForm
           onSubmit={onSubmit}
@@ -167,6 +163,7 @@ export const PolicyDetail = ({ isSingPassFlow = false }: PolicyDetailProps) => {
           isSingpassFlow={isSingPassFlow}
           isLoading={isPending}
           initialValues={initialValues}
+          onSaveRegister={onSaveRegister}
         />
       </div>
     </>

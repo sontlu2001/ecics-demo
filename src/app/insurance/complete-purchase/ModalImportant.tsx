@@ -3,24 +3,23 @@ import { useDeviceDetection } from '@/hook/useDeviceDetection';
 import { Drawer, Modal } from 'antd';
 
 interface Props {
-  onSave: () => void;
-  setIsShowRecalculation: (IsShowRecalculation: boolean) => void;
-  IsShowRecalculation: boolean;
-  isPending: boolean;
+  isShowPopupImportant: boolean;
+  handleRedirect: () => void;
+  setIsShowPopupImportant: (isShowPopupImportant: boolean) => void;
 }
 
-const ImportantNoticeModal = (props: Props) => {
-  const { onSave, setIsShowRecalculation, IsShowRecalculation, isPending } =
+const ModalImportant = (props: Props) => {
+  const { isShowPopupImportant, handleRedirect, setIsShowPopupImportant } =
     props;
-  const isMobile = useDeviceDetection();
 
+  const { isMobile } = useDeviceDetection();
   const modalContent = (
     <div className='flex h-full flex-col justify-between p-4'>
       <div className='mb-10 w-full text-center text-[16px] font-normal leading-[25px] text-[#000000] md:mb-2 md:text-[24px] md:font-semibold md:leading-[30px] md:text-[#171A1F]'>
         Important Notice: Quote Recalculation
       </div>
 
-      {!isMobile.isMobile && (
+      {!isMobile && (
         <div className='mt-2 rounded-lg bg-[#81899414] px-2 py-4 text-center text-[15px] font-[300] leading-[25px] text-[#000000]'>
           Please note that any changes to these details will impact your quote,
           and a new quote will be generated accordingly.
@@ -30,14 +29,13 @@ const ImportantNoticeModal = (props: Props) => {
       <div className='mt-6 flex w-full justify-center gap-4 md:flex-col'>
         <SecondaryButton
           className='flex-1 md:py-4'
-          onClick={() => setIsShowRecalculation(false)}
+          onClick={() => setIsShowPopupImportant(false)}
         >
           Cancel
         </SecondaryButton>
         <PrimaryButton
-          onClick={onSave}
+          onClick={handleRedirect}
           className='flex-1 text-white md:py-5'
-          loading={isPending}
         >
           Proceed
         </PrimaryButton>
@@ -45,10 +43,10 @@ const ImportantNoticeModal = (props: Props) => {
     </div>
   );
 
-  return isMobile.isMobile ? (
+  return isMobile ? (
     <Drawer
       placement='bottom'
-      open={IsShowRecalculation}
+      open={isShowPopupImportant}
       closable={false}
       height='auto'
       className='rounded-t-xl'
@@ -57,15 +55,15 @@ const ImportantNoticeModal = (props: Props) => {
     </Drawer>
   ) : (
     <Modal
-      open={IsShowRecalculation}
+      open={isShowPopupImportant}
       closable={false}
       footer={null}
       centered
-      onCancel={() => setIsShowRecalculation(false)}
+      onCancel={() => setIsShowPopupImportant(false)}
     >
       {modalContent}
     </Modal>
   );
 };
 
-export default ImportantNoticeModal;
+export default ModalImportant;
