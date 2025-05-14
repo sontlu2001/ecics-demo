@@ -10,8 +10,11 @@ import AdditionalDriverDetailsIcon from '@/components/icons/AdditionalDriverDeta
 import ReviewDesktop from './ReviewDesktop';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
 import { ROUTES } from '@/constants/routes';
-import { useGetQuote } from '@/hook/insurance/quote';
-import { AddOnFormat } from '../add-on/page';
+import {
+  useGetQuote,
+  usePayment,
+  useSaveProposalFinalize,
+} from '@/hook/insurance/quote';
 import { Option } from '@/libs/types/quote';
 import { PricingSummary } from '../components/FeeBar';
 import { useSearchParams } from 'next/navigation';
@@ -21,6 +24,10 @@ import RepairIcon from '@/components/icons/RepairIcon';
 import RoadSideIcon from '@/components/icons/RoadSideIcon';
 import EnhancedAccidentIcon from '@/components/icons/EnhancedAccidentIcon';
 import PersonalAccidentIcon from '@/components/icons/PersonalAccidentIcon';
+import { SecondaryButton } from '@/components/ui/buttons';
+import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
+import { AddOnFormat } from '../add-on/AddonDetail';
+import ImportantNoticeModal from './review-your-detail/modal/ImportantNoticeModal';
 
 function calculateFee(
   option: Option,
@@ -86,6 +93,7 @@ export default function Page() {
   }>({});
   const [showModal, setShowModal] = useState(false);
   const { isMobile } = useDeviceDetection();
+  const [isShowRecalculation, setIsShowRecalculation] = useState(false);
 
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => ({
@@ -96,7 +104,15 @@ export default function Page() {
 
   const searchParams = useSearchParams();
   const key = searchParams.get('key') || '';
+  const router = useRouterWithQuery();
   const { data: quote, isLoading } = useGetQuote(key);
+  const { mutate: saveProposalFinalize } = useSaveProposalFinalize();
+  const {
+    mutate: payment,
+    data: dataPayment,
+    isPending,
+    isSuccess,
+  } = usePayment();
 
   const handleEditClick = (key: string) => {
     toggleSection(key);
@@ -105,13 +121,14 @@ export default function Page() {
   const routerBySectionKey = (key: string) => {
     switch (key) {
       case 'basic':
+      case 'vehicle':
+      case 'owner':
         return ROUTES.INSURANCE.BASIC_DETAIL;
       case 'addons':
+      case 'driver':
         return ROUTES.INSURANCE.ADD_ON;
       case 'policy':
         return ROUTES.INSURANCE.PLAN;
-      case 'driver':
-        return ROUTES.INSURANCE.ADD_ON;
       default:
         return undefined;
     }
@@ -327,6 +344,17 @@ export default function Page() {
     setAddonsSelected(defaultAddonsSelected);
   }, [defaultAddonsAdded, defaultAddonsSelected]);
 
+  useEffect(() => {
+    if (isSuccess && dataPayment.payment_url) {
+      router.push(dataPayment.payment_url);
+    }
+  }, [isSuccess, dataPayment]);
+
+  const onPay = async () => {
+    saveProposalFinalize(key);
+    payment(key);
+  };
+
   const addons = plan?.addons ?? [];
 
   const addonsFormatted: AddOnFormat[] = addons.map((addon) => {
@@ -398,21 +426,26 @@ export default function Page() {
 
     return (
       <div>
-        <div className='flex w-full min-w-[300px] flex-col gap-6 rounded-lg border border-[#E4E4E4] p-4'>
+        <div className='flex justify-end'>
+          <div className='flex w-[150px] cursor-pointer items-center justify-center border border-[#00ADEF] py-3 font-normal'>
+            Save
+          </div>
+        </div>
+        <div className='mt-6 flex w-full flex-col gap-6 rounded-lg border border-[#E4E4E4] p-4'>
           <p className='text-center text-xl font-semibold leading-[30px] text-[#171A1F]'>
             Premium Breakdown
           </p>
           <div className='flex flex-col gap-3'>
             <div className='flex flex-col gap-2 border-b border-[#E4E4E4] px-4 py-2'>
               <div className='flex flex-row justify-between text-base leading-[30px] text-[#171A1F]'>
-                <p className='font-normal'>
+                <p className='mr-5 font-normal'>
                   {quote?.data?.selected_plan ?? ''}
                 </p>
-                <p>SDG {planFee}</p>
+                <p>SGD {planFee}</p>
               </div>
               <div className='flex flex-row justify-between text-sm font-semibold text-[#00ADEF]'>
                 <p>Coupon Discount</p>
-                <p>-SDG {couponDiscount}</p>
+                <p>-SGD {couponDiscount.toFixed(2)}</p>
               </div>
             </div>
 
@@ -420,27 +453,31 @@ export default function Page() {
               <p className='font-bold text-[#171A1F]'>Add-on:</p>
               {addonsSectionDataT.map((addon) => (
                 <p key={addon.title} className='flex flex-row justify-between'>
-                  {addon.title}: <span>SDG {addOnTotal}</span>
+                  {addon.title}: <span>SGD {addOnTotal}</span>
                 </p>
               ))}
             </div>
             <div className='flex flex-col gap-2 border-b border-[#E4E4E4] px-4 py-2 text-base font-normal leading-[30px] text-[#171A1F]'>
               <div className='flex flex-row justify-between'>
                 <p>Net Premium</p>
-                <p>SDG {netPremium.toFixed(2)}</p>
+                <p>SGD {netPremium.toFixed(2)}</p>
               </div>
               <div className='flex flex-row justify-between'>
                 <p>GST</p>
-                <p>SDG {gst}</p>
+                <p>SGD {gst}</p>
               </div>
             </div>
             <div className='flex flex-row justify-between font-bold'>
               <p>Total (including GST)</p>
             </div>
           </div>
-          <div className='w-full cursor-pointer rounded-lg bg-[#00ADEF] px-4 py-3 text-center text-base font-bold leading-[21px] text-white'>
+          <SecondaryButton
+            onClick={onPay}
+            loading={isPending}
+            className='w-full cursor-pointer rounded-lg bg-[#00ADEF] px-4 py-3 text-center text-base font-bold leading-[21px] text-white'
+          >
             Pay
-          </div>
+          </SecondaryButton>
         </div>
       </div>
     );
@@ -455,11 +492,13 @@ export default function Page() {
   }
 
   return (
-    <div className='px-4'>
-      <h1 className='mb-4 text-xl font-bold'>Review your details</h1>
-      <div className='flex w-full flex-col md:flex-row md:gap-8'>
-        <div className='flex flex-col lg:flex-row lg:gap-8'>
+    <div className='px-4 py-4 md:py-16 '>
+      <div className='flex w-full flex-col justify-center md:flex-row md:gap-6'>
+        <div className='lg:gap-600 flex flex-col lg:flex-row'>
           <div className='flex-1'>
+            <h1 className='text-center text-xl font-semibold text-[#080808] md:text-[32px] md:font-bold md:leading-[48px] md:text-[#171A1F]'>
+              Review your details
+            </h1>
             {sections.map((section) => {
               if (section.key === 'driver') {
                 const drivers = getDriverSections(
@@ -482,11 +521,7 @@ export default function Page() {
                     <ReviewDesktop
                       key={driverSection.key}
                       title={driverSection.title}
-                      description={driverSection.description}
-                      icon={driverSection.icon}
                       data={driverSection.data}
-                      isExpanded={!!expandedSections[driverSection.key]}
-                      onToggle={() => handleEditClick(driverSection.key)}
                       setShowModal={setShowModal}
                       editRoute={ROUTES.INSURANCE.ADD_ON}
                     />
@@ -510,11 +545,7 @@ export default function Page() {
                 <ReviewDesktop
                   key={section.key}
                   title={section.title}
-                  description={section.description}
-                  icon={section.icon}
                   data={sharedDataMap[section.key] || []}
-                  isExpanded={!!expandedSections[section.key]}
-                  onToggle={() => handleEditClick(section.key)}
                   setShowModal={setShowModal}
                   editRoute={routerBySectionKey(section.key)}
                 />
@@ -522,7 +553,6 @@ export default function Page() {
             })}
           </div>
         </div>
-
         {isMobile ? (
           <div className='mt-2 md:px-44'>
             <PricingSummary
@@ -530,6 +560,7 @@ export default function Page() {
               discount={15}
               title='Premium breakdown'
               textButton='Pay'
+              onClick={onPay}
             />
           </div>
         ) : (

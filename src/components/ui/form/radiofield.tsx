@@ -9,7 +9,13 @@ interface RadioFieldProps extends RadioProps {
   options: DropdownOption[];
 }
 
-const RadioField = ({ name, label, options, ...props }: RadioFieldProps) => {
+const RadioField = ({
+  name,
+  label,
+  options,
+  className,
+  ...props
+}: RadioFieldProps) => {
   const { control } = useFormContext();
 
   return (
@@ -20,12 +26,16 @@ const RadioField = ({ name, label, options, ...props }: RadioFieldProps) => {
         render={({ field, fieldState }) => (
           <>
             <span className='text-base font-semibold'>{label}</span>
-            <Radio.Group {...props} {...field} className='w-full'>
+            <Radio.Group
+              {...props}
+              {...field}
+              className={`flex w-full gap-1 ${className}`}
+            >
               {options.map((option) => (
                 <Radio
                   key={option.value}
                   value={option.value}
-                  className={`rounded-lg border p-2 transition-colors ${
+                  className={`mr-0 w-full rounded-lg border py-2 ps-2 text-[13px] transition-colors ${
                     field.value === option.value
                       ? 'border-blue-400'
                       : 'border-gray-300'

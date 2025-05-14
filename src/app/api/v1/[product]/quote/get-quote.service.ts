@@ -6,6 +6,7 @@ import { successRes } from '@/app/api/core/success.response';
 import { formatCarQuoteInfo } from './format-car-quote-data';
 import { ErrBadRequest, ErrFromISPRes } from '@/app/api/core/error.response';
 import { prisma } from '@/app/api/libs/prisma';
+import { CAR_INSURANCE } from '@/app/api/constants/car.insurance';
 
 export async function getQuoteForCar(data: generateQuoteDTO) {
   try {
@@ -45,7 +46,10 @@ export async function getQuoteForCar(data: generateQuoteDTO) {
     logger.info(`Payload for generate quote: ${JSON.stringify(payloadData)}`);
 
     // Call the API to generate quote
-    const response = await apiServer.post('/b2c/quote', payloadData);
+    const response = await apiServer.post(
+      `${CAR_INSURANCE.PREFIX_ENDPOINT}/quote`,
+      payloadData,
+    );
     logger.info(
       `Response from generate quote: ${JSON.stringify(response.data)}`,
     );

@@ -20,6 +20,10 @@ export const InputField = ({ name, label, ...props }: InputFieldProps) => {
             <Input
               {...props}
               {...field}
+              onChange={(e) => {
+                field.onChange(e);
+                props.onChange?.(e);
+              }}
               status={fieldState.invalid ? 'error' : undefined}
               className={`w-full ${fieldState.invalid ? '!border-red-500' : ''} ${
                 props.disabled ? 'bg-gray-200' : ''

@@ -2,7 +2,6 @@ import { SavePersonalInfoPayload } from '@/libs/types/auth';
 import {
   ProposalPayload,
   QuoteCreationPayload,
-  QuoteData,
   QuoteResponse,
 } from '@/libs/types/quote';
 
@@ -21,10 +20,11 @@ export default {
   saveProposal(data: ProposalPayload) {
     return baseClient.post<any>('/car/proposal', data);
   },
-  saveQuote(key: string, data: QuoteData) {
+  saveQuote(key: string, data: any, is_sending_email: boolean) {
     const formatData = {
       data: { ...data },
       key: key,
+      is_sending_email: is_sending_email,
     };
     return baseClient.post<QuoteResponse>('/quote/save', formatData);
   },
@@ -36,5 +36,11 @@ export default {
   },
   getHirePurchaseList(product_type: string) {
     return baseClient.get<any>('/companies/' + product_type);
+  },
+  saveProposalFinalize(data: { key: string }) {
+    return baseClient.post<any>('/car/proposal/finalize', data);
+  },
+  payment(data: { key: string }) {
+    return baseClient.post<any>('/payment', data);
   },
 };

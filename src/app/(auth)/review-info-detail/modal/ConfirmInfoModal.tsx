@@ -1,4 +1,4 @@
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { v4 as uuid } from 'uuid';
@@ -7,6 +7,7 @@ import { SavePersonalInfoPayload } from '@/libs/types/auth';
 import {
   calculateDrivingExperienceFromLicences,
   convertDateToDDMMYYYY,
+  extractYear,
 } from '@/libs/utils/date-utils';
 import { calculateAge } from '@/libs/utils/utils';
 
@@ -28,7 +29,10 @@ const ConfirmInfoModal = ({
   onClose: () => void;
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isMobile } = useDeviceDetection();
+  const partner_code = searchParams.get('partner_code') || '';
+  const promo_code = searchParams.get('promo_code')?.toUpperCase().trim() || '';
   const {
     mutate: savePersonalInfo,
     isSuccess,
@@ -58,10 +62,11 @@ const ConfirmInfoModal = ({
 
     const parsed = JSON.parse(stored);
     const qdlClasses = parsed?.drivinglicence?.qdl?.classes || [];
-
     const payload: SavePersonalInfoPayload = {
       key: `${uuid()}`,
       is_sending_email: true,
+      promo_code: promo_code,
+      partner_code: partner_code,
       personal_info: {
         name: parsed.name?.value || '',
         gender: parsed.sex?.desc || '',
@@ -82,10 +87,16 @@ const ConfirmInfoModal = ({
         email: parsed.email?.value || '',
       },
       vehicle_info_selected: {
-        vehicle_make: parsed.vehicle_make || '',
-        vehicle_model: parsed.vehicle_model || '',
-        first_registered_year: parsed.year_of_registration || '',
-        chasis_number: parsed.chassisno?.value || '',
+        vehicle_number: parsed.vehicles[0].vehicleno?.value || '',
+        first_registered_year:
+          extractYear(parsed.vehicles[0].firstregistrationdate?.value) || '',
+        vehicle_make: parsed.vehicles[0].make?.value || '',
+        vehicle_model: parsed.vehicles[0].model?.value || '',
+        engine_number: parsed.vehicles[0].engineno?.value || '',
+        chasis_number: parsed.vehicles[0].chassisno?.value || '',
+        engine_capacity: parsed.vehicles[0].enginecapacity?.value || '',
+        power_rate: parsed.vehicles[0].powerrate?.value || '',
+        year_of_manufacture: parsed.vehicles[0].yearofmanufacture?.value || '',
       },
       vehicles:
         parsed.vehicles?.map((v: any) => ({
@@ -102,7 +113,8 @@ const ConfirmInfoModal = ({
       setShowOverAgeModal(true);
       return;
     }
-    savePersonalInfo(payload);
+
+    savePersonalInfo({ ...payload, shouldRedirect: false });
   };
 
   return (

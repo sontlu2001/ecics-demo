@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from 'antd';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -15,23 +15,74 @@ import {
   MARITAL_STATUS_OPTIONS,
 } from '@/app/insurance/basic-detail/options';
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
+import {
+  sgCarRegNoValidator,
+  validateNRIC,
+} from '@/libs/utils/validation-utils';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
+import { useSearchParams } from 'next/navigation';
+import { useSaveQuote } from '@/hook/insurance/quote';
+import { QuoteData } from '@/libs/types/quote';
+import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
+import { ROUTES } from '@/constants/routes';
+import { isPending } from '@reduxjs/toolkit';
 
 const createSchema = () =>
   z.object({
-    name: z.string().min(1, 'Name is required'),
-    nric: z.string().min(1, 'NRIC/FIN is required'),
+    name: z
+      .string()
+      .min(3, 'Name must be at least 3 characters')
+      .max(60, 'Name must be at most 60 characters')
+      .nonempty('Name is required'),
+    nric: z
+      .string()
+      .nonempty('NRIC/FIN is required')
+      .refine((val) => validateNRIC([val]), {
+        message: 'Please enter a valid NRIC/FIN.',
+      }),
     gender: z.string().min(1, 'Gender is required'),
     maritalStatus: z.string().min(1, 'Marital status is required'),
-    address: z.string().min(1, 'Address is required'),
-    pinCode: z.string().min(1, 'Pin code is required'),
-    chasisNumber: z.string().min(1, 'Chasis number is required'),
-    engineNumber: z.string().min(1, 'Engine number is required'),
-    vehicleNumber: z.string().min(1, 'Vehicle number is required'),
+    address: z
+      .string()
+      .nonempty('Address is required')
+      .max(60, 'Address must be at most 60 characters'),
+    pinCode: z
+      .string()
+      .nonempty('PinCode is required')
+      .refine((val) => /^\d{6}$/.test(val), {
+        message: 'Pin code must be exactly 6 digits',
+      }),
+    chasisNumber: z
+      .string()
+      .nonempty('Chasis is required')
+      .max(50, 'Chasis must be at most 50 characters'),
+    engineNumber: z
+      .string()
+      .max(50, 'Engine must be at most 50 characters')
+      .optional(),
+    vehicleNumber: z
+      .string()
+      .min(1, 'Vehicle number is required')
+      .refine((val) => sgCarRegNoValidator(val), {
+        message:
+          'Please enter a valid vehicle registration no. (e.g. SBA123A).',
+      }),
   });
 
 type FormData = z.infer<ReturnType<typeof createSchema>>;
 
-const AddOnBonusDetailManualForm = () => {
+interface Props {
+  personal_info: any;
+  vehicle_info_selected?: any;
+}
+
+const AddOnBonusDetailManualForm = (props: Props) => {
+  const { personal_info, vehicle_info_selected } = props;
+  const searchParams = useSearchParams();
+  const key = searchParams.get('key') || '';
+  const { mutate: saveQuote, isPending: isPending, isSuccess } = useSaveQuote();
+  const router = useRouterWithQuery();
+
   const { isMobile } = useDeviceDetection();
   const [form] = Form.useForm();
   const schema = useMemo(() => createSchema(), []);
@@ -44,8 +95,31 @@ const AddOnBonusDetailManualForm = () => {
     formState: { errors },
   } = methods;
 
+  useEffect(() => {
+    if (isSuccess) {
+      router.push(ROUTES.INSURANCE.COMPLETE_PURCHASE);
+    }
+  }, [isSuccess]);
+
   const handleSubmit = (data: FormData) => {
-    console.log('Submitted data:', data);
+    const transformedData: any = {
+      current_step: 3,
+      personal_info: {
+        ...personal_info,
+        email: personal_info?.email ?? '',
+        phone: personal_info?.phone ?? '',
+        date_of_birth: personal_info?.date_of_birth ?? '',
+        driving_experience: personal_info?.driving_experience ?? 0,
+      },
+      vehicle_info_selected: {
+        ...vehicle_info_selected,
+        vehicle_number: data.vehicleNumber,
+        engine_number: data.engineNumber,
+        chasis_number: data.chasisNumber,
+      },
+    };
+
+    saveQuote({ key, data: transformedData, is_sending_email: false });
   };
 
   return (
@@ -87,7 +161,6 @@ const AddOnBonusDetailManualForm = () => {
             <Form.Item
               name='name'
               validateStatus={errors['name'] ? 'error' : ''}
-              help={errors['name']?.message}
             >
               <InputField
                 name='name'
@@ -99,7 +172,6 @@ const AddOnBonusDetailManualForm = () => {
             <Form.Item
               name='nric'
               validateStatus={errors['nric'] ? 'error' : ''}
-              help={errors['nric']?.message}
             >
               <InputField
                 name='nric'
@@ -111,7 +183,6 @@ const AddOnBonusDetailManualForm = () => {
             <Form.Item
               name='gender'
               validateStatus={errors['gender'] ? 'error' : ''}
-              help={errors['gender']?.message}
             >
               <DropdownField
                 name='gender'
@@ -124,7 +195,6 @@ const AddOnBonusDetailManualForm = () => {
             <Form.Item
               name='maritalStatus'
               validateStatus={errors['maritalStatus'] ? 'error' : ''}
-              help={errors['maritalStatus']?.message}
             >
               <DropdownField
                 name='maritalStatus'
@@ -137,7 +207,6 @@ const AddOnBonusDetailManualForm = () => {
             <Form.Item
               name='address'
               validateStatus={errors['address'] ? 'error' : ''}
-              help={errors['address']?.message}
             >
               <InputField
                 name='address'
@@ -149,12 +218,12 @@ const AddOnBonusDetailManualForm = () => {
             <Form.Item
               name='pinCode'
               validateStatus={errors['pinCode'] ? 'error' : ''}
-              help={errors['pinCode']?.message}
             >
               <InputField
                 name='pinCode'
                 label='Pin Code'
                 placeholder='Enter Pin Code'
+                type='number'
               />
             </Form.Item>
           </div>
@@ -171,7 +240,6 @@ const AddOnBonusDetailManualForm = () => {
             <Form.Item
               name='chasisNumber'
               validateStatus={errors['chasisNumber'] ? 'error' : ''}
-              help={errors['chasisNumber']?.message}
             >
               <InputField
                 name='chasisNumber'
@@ -183,19 +251,18 @@ const AddOnBonusDetailManualForm = () => {
             <Form.Item
               name='engineNumber'
               validateStatus={errors['engineNumber'] ? 'error' : ''}
-              help={errors['engineNumber']?.message}
             >
               <InputField
                 name='engineNumber'
                 label='Engine Number'
                 placeholder='Enter Engine Number'
+                required={false}
               />
             </Form.Item>
 
             <Form.Item
               name='vehicleNumber'
               validateStatus={errors['vehicleNumber'] ? 'error' : ''}
-              help={errors['vehicleNumber']?.message}
             >
               <InputField
                 name='vehicleNumber'
@@ -205,7 +272,24 @@ const AddOnBonusDetailManualForm = () => {
             </Form.Item>
           </div>
         </div>
-        <AddOnPricingSummary onContinue={methods.handleSubmit(handleSubmit)} />
+
+        <div className='mt-8 flex w-full flex-row justify-center gap-6 border-t border-[#F7F7F9] py-4'>
+          <SecondaryButton
+            className='w-[10vw] min-w-[150px] rounded-md px-4 py-2 transition sm:w-[50vw] md:w-[10vw]'
+            onClick={() => {
+              router.push(ROUTES.INSURANCE.ADD_ON);
+            }}
+          >
+            Cancel
+          </SecondaryButton>
+          <PrimaryButton
+            onClick={methods.handleSubmit(handleSubmit)}
+            className='w-[10vw] min-w-[150px] rounded-md px-4 py-2 transition sm:w-[50vw] md:w-[10vw]'
+            loading={isPending}
+          >
+            Submit
+          </PrimaryButton>
+        </div>
       </Form>
     </FormProvider>
   );

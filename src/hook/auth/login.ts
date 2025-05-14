@@ -63,6 +63,7 @@ export const usePostPersonalInfo = () => {
     mutationFn: postPersonalInfo,
     mutationKey: ['personal-info'],
     onSuccess: (_data, variables) => {
+      if (variables.shouldRedirect === false) return;
       const queryParams = new URLSearchParams({
         key: variables.key,
       }).toString();

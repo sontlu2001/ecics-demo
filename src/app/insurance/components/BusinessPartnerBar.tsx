@@ -31,7 +31,11 @@ export default function BusinessPartnerBar({
           <p className='font-bold'>{companyName}</p>
         </div>
       </div>
-      <SecondaryButton size='small' className='rounded-sm px-2'>
+      <SecondaryButton
+        size='small'
+        className='rounded-sm px-2'
+        onClick={onSaveClick}
+      >
         Save
       </SecondaryButton>
     </div>

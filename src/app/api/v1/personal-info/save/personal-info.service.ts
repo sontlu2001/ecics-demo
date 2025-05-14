@@ -38,29 +38,37 @@ export async function savePersonalInfo(data: savePersonalInfoDTO) {
       `Creating a new personal info: ${JSON.stringify(newPersonalInfo)}`,
     );
 
-    const newQuote = await prisma.quote.create({
+    const newQuoteInfo: any = {
+      key: data.key,
       data: {
-        key: data.key,
-        data: {
-          personal_info: data.personal_info,
-          vehicle_info_selected: data.vehicle_info_selected,
-          vehicles: data.vehicles,
-        },
-        is_sending_email: data.is_sending_email ? true : false,
+        personal_info: data.personal_info,
+        vehicle_info_selected: data.vehicle_info_selected,
+        vehicles: data.vehicles,
+        current_step: 0,
       },
-    });
+      is_sending_email: data.is_sending_email ? true : false,
+      partner_code: data.partner_code || '',
+    };
 
+    if (data.promo_code) {
+      newQuoteInfo.promo_code = {
+        connect: {
+          code: data.promo_code,
+        },
+      };
+    }
+
+    const newQuote = await prisma.quote.create({ data: newQuoteInfo });
     logger.info(`Creating a new quote info: ${JSON.stringify(newQuote)}`);
 
     if (data.is_sending_email) {
       const retrieveQuoteHTML = generateQuoteEmail({
-        name: newPersonalInfo.name ?? '',
         quote_key: newQuote.key ?? '',
       });
 
       sendMail({
         to: newPersonalInfo.email ?? '',
-        subject: `ECICS Limited |`,
+        subject: `ECICS Limited | Your Car Insurance Purchase Journey`,
         html: retrieveQuoteHTML,
       });
     }

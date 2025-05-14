@@ -25,9 +25,11 @@ const VehicleBar = ({
     }
     setIsVehSelectionVisible(false);
   };
+
   const onEditClick = () => {
     setIsVehSelectionVisible(true);
   };
+
   return (
     <>
       <Flex className='flex w-full max-w-2xl items-center justify-around rounded-lg border border-blue-400 bg-sky-50 px-1 py-2 font-semibold'>

@@ -39,7 +39,7 @@ export interface VehicleResponse {
 // eslint-disable-next-line import/no-anonymous-default-export
 export default {
   verifyPartnerCode(partner_code: string) {
-    return baseClient.get<any>('/partner/info/' + partner_code);
+    return baseClient.get<any>('/partner-info/' + partner_code);
   },
   verifyPromoCode(data: VerifyPromoCodeData) {
     return baseClient.post<PromoCodeResponse>('/promo-code/validation', data);

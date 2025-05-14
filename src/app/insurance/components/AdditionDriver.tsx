@@ -1,53 +1,129 @@
+import { PlusOutlined } from '@ant-design/icons';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Drawer, Form, Modal } from 'antd';
+import { useMemo, useRef, useState } from 'react';
+import { FormProvider, useFieldArray, useForm } from 'react-hook-form';
+import { z } from 'zod';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 import DeleteIcon from '@/components/icons/DeleteIcon';
 import { DatePickerField } from '@/components/ui/form/datepicker';
 import { DropdownField } from '@/components/ui/form/dropdownfield';
 import { InputField } from '@/components/ui/form/inputfield';
+
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
-import { PlusOutlined } from '@ant-design/icons';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Drawer, Modal } from 'antd';
-import { useMemo, useRef, useState } from 'react';
-import { FormProvider, useFieldArray, useForm } from 'react-hook-form';
-import { z } from 'zod';
+
 import {
+  DRV_EXP_OPTIONS,
   GENDER_OPTIONS,
   MARITAL_STATUS_OPTIONS,
 } from '../basic-detail/options';
+import { validateNRIC } from '@/libs/utils/validation-utils';
+import { adjustDateInDayjs, dateToDayjs } from '@/libs/utils/date-utils';
+import dayjs from 'dayjs';
+import RadioField from '@/components/ui/form/radiofield';
 
 interface Props {
   isShowAdditionDriver: boolean;
   setIsShowAdditionDriver: (value: boolean) => void;
   setDataDrivers: (data: any[]) => void;
   dataDrivers: any[];
+  policyStartDate: Date;
 }
-export const DRIVING_EXPERIENCE_OPTIONS = [
-  { value: 0, text: 'Less than 1 year' },
-  { value: 1, text: '1 year' },
-  { value: 2, text: '2 years' },
-  { value: 3, text: '3 years' },
-  { value: 4, text: '4 years' },
-  { value: 5, text: '5 years' },
-  { value: 6, text: '6 years and above' },
-];
-const createSchema = () =>
-  z.object({
-    drivers: z.array(
-      z.object({
-        name: z.string().min(1, 'Name is required'),
-        nric_or_fin: z.string().min(1, 'NRIC/FIN is required'),
-        date_of_birth: z
-          .date({ required_error: 'Date of birth is required' })
-          .refine(
-            (date) => date <= new Date(),
-            'Date of birth cannot be in the future',
-          ),
-        gender: z.string().min(1, 'Gender is required'),
-        marital_status: z.string().min(1, 'Marital status is required'),
-        driving_experience: z.number().min(1, 'Driving experience is required'),
-      }),
-    ),
-  });
 
+const createSchema = (policyStartDate: Date) =>
+  z.object({
+    drivers: z
+      .array(
+        z.object({
+          name: z
+            .string({
+              required_error: 'Name is required',
+            })
+            .min(3, 'Name must be at least 3 characters')
+            .max(60, 'Name must be at most 60 characters')
+            .nonempty('Name is required'),
+          nric_or_fin: z
+            .string({
+              required_error: 'NRIC/FIN is required',
+            })
+            .nonempty('NRIC/FIN is required')
+            .refine((val) => validateNRIC([val]), {
+              message: 'Please enter a valid NRIC/FIN.',
+            }),
+          date_of_birth: z
+            .date({ required_error: 'Date of birth is required' })
+            .refine(
+              (dob) => {
+                const minDob = adjustDateInDayjs(
+                  dateToDayjs(policyStartDate as Date),
+                  -26,
+                  0,
+                  0,
+                );
+                return dayjs(dob as Date).isSameOrBefore(minDob);
+              },
+              {
+                message: 'Driver must be older than 26 years.',
+              },
+            ),
+          gender: z.string({
+            required_error: 'Gender is required',
+            invalid_type_error: 'Gender is required',
+          }),
+          marital_status: z.string({
+            required_error: 'Marital status is required',
+            invalid_type_error: 'Marital status is required',
+          }),
+          driving_experience: z
+            .number({
+              invalid_type_error: 'Driving experience is required',
+              required_error: 'Driving experience is required',
+            })
+            .refine((val) => val > 1, {
+              message:
+                'Driver must have at least 2 years of driving experience.',
+            }),
+          is_claim_in_3_years: z
+            .string({
+              required_error: 'Claim status is required',
+              invalid_type_error: 'Claim status is required',
+            })
+            .refine((val) => val !== 'true', {
+              message: 'Driver must have no claims in the past 3 years.',
+            }),
+        }),
+      )
+      .superRefine((drivers, ctx) => {
+        // Build a map of NRIC/FIN value => array of field indices with that value.
+        const nricMap: Record<string, number[]> = {};
+        drivers.forEach((driver, index) => {
+          const nric = driver.nric_or_fin;
+          if (nric) {
+            if (!nricMap[nric]) {
+              nricMap[nric] = [index];
+            } else {
+              nricMap[nric].push(index);
+            }
+          }
+        });
+
+        // Check duplicates: for any value that appears more than once, add a custom issue
+        Object.entries(nricMap).forEach(([nric, indices]) => {
+          if (indices.length > 1) {
+            indices.forEach((idx) => {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'NRIC/FIN must be unique',
+                path: [idx, 'nric_or_fin'],
+              });
+            });
+          }
+        });
+      }),
+  });
 type FormData = z.infer<ReturnType<typeof createSchema>>;
 
 const AdditionDriver = ({
@@ -55,15 +131,37 @@ const AdditionDriver = ({
   setIsShowAdditionDriver,
   setDataDrivers,
   dataDrivers,
+  policyStartDate,
 }: Props) => {
-  const schema = useMemo(() => createSchema(), []);
+  const dob = adjustDateInDayjs(
+    dateToDayjs(policyStartDate as Date),
+    -27,
+    0,
+    0,
+  )?.toDate();
+  const defaultDriver = {
+    name: '',
+    nric_or_fin: '',
+    date_of_birth: dob,
+    gender: null,
+    marital_status: null,
+    driving_experience: null,
+  };
+  const schema = useMemo(
+    () => createSchema(policyStartDate),
+    [policyStartDate],
+  );
+
   const scrollRef = useRef<HTMLDivElement>(null);
+  const initDrivers = dataDrivers.length === 0 ? [defaultDriver] : dataDrivers;
+
   const methods = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { drivers: dataDrivers },
-    mode: 'onSubmit',
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
+    criteriaMode: 'all',
+    defaultValues: { drivers: initDrivers },
   });
-
   const {
     control,
     handleSubmit,
@@ -74,9 +172,6 @@ const AdditionDriver = ({
     control,
     name: 'drivers',
   });
-
-  const [isWarningDriver, setIsWarningDriver] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const { isMobile } = useDeviceDetection();
 
   const handleAddDriver = () => {
@@ -90,16 +185,6 @@ const AdditionDriver = ({
 
   const handleRemoveDriver = (index: number) => {
     remove(index);
-  };
-
-  const onChangeDriver = (value: string) => {
-    if (value === '1 year' || value === 'Less than 1 year') {
-      setIsWarningDriver(true);
-      setErrorMessage('Premium Increases for old/young/inexperienced drivers.');
-    } else {
-      setIsWarningDriver(false);
-      setErrorMessage('');
-    }
   };
 
   const onSubmit = (data: FormData) => {
@@ -140,6 +225,8 @@ const AdditionDriver = ({
             <DatePickerField
               name={`drivers.${index}.date_of_birth`}
               label='Date of Birth'
+              minDate={adjustDateInDayjs(dayjs(), -71, 0, 1)}
+              maxDate={adjustDateInDayjs(dayjs(), -18, 0, 0)}
             />
             <DropdownField
               name={`drivers.${index}.gender`}
@@ -157,13 +244,16 @@ const AdditionDriver = ({
               name={`drivers.${index}.driving_experience`}
               label='Driving Experience'
               placeholder='Select driving experience'
-              options={DRIVING_EXPERIENCE_OPTIONS}
-              onChange={onChangeDriver}
+              options={DRV_EXP_OPTIONS}
             />
-
-            {isWarningDriver && (
-              <p className='text-sm text-red-500'>{errorMessage}</p>
-            )}
+            <RadioField
+              name={`drivers.${index}.is_claim_in_3_years`}
+              label='Do you have a claim in the past 3 years?'
+              options={[
+                { value: 'true', text: 'Yes' },
+                { value: 'false', text: 'No' },
+              ]}
+            />
           </div>
         ))}
       </>
@@ -171,36 +261,41 @@ const AdditionDriver = ({
   };
 
   const content = (
-    <>
-      {_renderFormInput()}
-      {fields.length < 3 && (
-        <div className='flex flex-row justify-end' ref={scrollRef}>
+    <FormProvider {...methods}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className='flex h-full w-full flex-col gap-4 md:gap-8'
+      >
+        {_renderFormInput()}
+        {fields.length < 3 && (
+          <div className='flex flex-row justify-end' ref={scrollRef}>
+            <button
+              className='flex flex-row items-center gap-2 rounded-md border border-[#00ADEF] px-4 py-2 text-sm font-normal text-[#00ADEF]'
+              onClick={handleAddDriver}
+              type='button'
+            >
+              <PlusOutlined />
+              <p>Add more driver</p>
+            </button>
+          </div>
+        )}
+        <div className='absolute bottom-0 left-0 flex w-full flex-row justify-between gap-4 rounded-md bg-[#DCDDDC4F] px-6 py-4 text-base font-bold leading-[21px]'>
           <button
-            className='flex flex-row items-center gap-2 rounded-md border border-[#00ADEF] px-4 py-2 text-sm font-normal text-[#00ADEF]'
-            onClick={handleAddDriver}
+            className='rounded-md border border-[#0096D8] bg-white px-8 py-2 text-[#00ADEF]'
             type='button'
+            onClick={() => setIsShowAdditionDriver(false)}
           >
-            <PlusOutlined />
-            <p>Add more driver</p>
+            Cancel
+          </button>
+          <button
+            className='rounded-md bg-[#00ADEF] px-8 py-2 text-white'
+            type='submit'
+          >
+            Save
           </button>
         </div>
-      )}
-      <div className='flex w-full flex-row justify-between gap-4 rounded-md bg-[#DCDDDC4F] px-8 py-2 text-base font-bold leading-[21px]'>
-        <button
-          className='rounded-md border border-[#0096D8] bg-white px-8 py-2 text-[#00ADEF]'
-          type='button'
-          onClick={() => setIsShowAdditionDriver(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className='rounded-md bg-[#00ADEF] px-8 py-2 text-white'
-          type='submit'
-        >
-          Save
-        </button>
-      </div>
-    </>
+      </form>
+    </FormProvider>
   );
 
   return isMobile ? (
@@ -212,18 +307,7 @@ const AdditionDriver = ({
       className='w-full rounded-t-xl'
       onClose={() => setIsShowAdditionDriver(false)}
     >
-      <div
-        style={{ maxHeight: '90vh', overflowY: 'auto', overflowX: 'hidden' }}
-      >
-        <FormProvider {...methods}>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className='flex w-full flex-col gap-8 py-6'
-          >
-            {content}
-          </form>
-        </FormProvider>
-      </div>
+      <div className='mb-14 h-[80vh] overflow-y-scroll'>{content}</div>
     </Drawer>
   ) : (
     <Modal
@@ -236,16 +320,7 @@ const AdditionDriver = ({
       centered
       width={600}
     >
-      <div style={{ maxHeight: 'calc(100vh - 60px)', overflowY: 'auto' }}>
-        <FormProvider {...methods}>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className='flex flex-col gap-8 py-6'
-          >
-            {content}
-          </form>
-        </FormProvider>
-      </div>
+      <div className='mb-14 h-[85vh] overflow-y-scroll'>{content}</div>
     </Modal>
   );
 };

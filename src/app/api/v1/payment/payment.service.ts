@@ -1,4 +1,5 @@
 import { handleApiCallToISP } from '../../configs/api.config';
+import { CAR_INSURANCE } from '../../constants/car.insurance';
 import { ErrFromISPRes, ErrNotFound } from '../../core/error.response';
 import { successRes } from '../../core/success.response';
 import logger from '../../libs/logger';
@@ -31,7 +32,10 @@ export async function handlePayment(data: paymentDTO) {
       return_baseurl: process.env.NEXT_PUBLIC_CALLBACK_PAYMENT_URL,
     };
 
-    const resPayment = await handleApiCallToISP('/b2c/payment', payloadData);
+    const resPayment = await handleApiCallToISP(
+      `/${CAR_INSURANCE.PREFIX_ENDPOINT}/payment`,
+      payloadData,
+    );
     logger.info(`Response from payment: ${JSON.stringify(resPayment)}`);
 
     if (resPayment.status !== 0) {

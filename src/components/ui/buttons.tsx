@@ -53,7 +53,7 @@ export const LinkButton = forwardRef<HTMLButtonElement, CustomButtonProps>(
       <Button
         type='link'
         size='large'
-        className={`${className} text-base font-semibold text-blue-400 underline hover:bg-transparent hover:underline`}
+        className={`${className} text-blue-400 underline hover:bg-transparent hover:underline`}
         ref={ref}
         {...rest}
       >

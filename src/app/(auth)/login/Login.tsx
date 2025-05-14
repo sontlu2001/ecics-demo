@@ -33,7 +33,7 @@ const Login = () => {
           src='/login_bg_top.svg'
           alt='Background Image'
         />
-        <div className='text-center text-primaryBlue'>
+        <div className='text-center text-[18px] font-semibold leading-[100%] text-[#007AFF]'>
           Get an instant quote with Myinfo login
         </div>
         <MyInfoLoginSection />

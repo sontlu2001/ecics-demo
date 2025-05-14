@@ -39,7 +39,9 @@ export interface Company {
   name: string;
 }
 export interface QuoteData {
+  key?: string;
   plans?: Plan[];
+  current_step: number;
   vehicles?: Vehicle[];
   personal_info?: PersonalInfo;
   vehicle_info_selected?: Vehicle;
@@ -83,6 +85,9 @@ export interface Vehicle {
   chasis_number: string;
   vehicle_model: string;
   first_registered_year: string;
+  vehicle_number: string;
+  chassis_no?: string;
+  engine_no?: string;
   engine_number?: string;
 }
 
@@ -97,7 +102,7 @@ export interface PersonalInfo {
   nric: string;
   email: string;
   gender: string;
-  address: string;
+  address: string | string[];
   phone: string;
   date_of_birth: string;
   marital_status: string;

@@ -10,9 +10,11 @@ import { LinkButton } from '@/components/ui/buttons';
 import { ROUTES } from '@/constants/routes';
 import { useRequestLogin } from '@/hook/auth/login';
 import { useRequestLogCar } from '@/hook/insurance/quote';
+import { useDeviceDetection } from '@/hook/useDeviceDetection';
 
 const MyInfoLoginSection = () => {
   const router = useRouter();
+  const { isMobile } = useDeviceDetection();
   const [isDegreedWithDisclaimer, setIsDegreedWithDisclaimer] = useState(false);
   const [isUserActive, setIsUserActive] = useState(false);
 
@@ -34,7 +36,7 @@ const MyInfoLoginSection = () => {
   };
 
   return (
-    <div className='relative z-10 mx-auto max-w-md px-4'>
+    <div className='relative z-10 mx-auto mt-[2px] max-w-md px-4'>
       <button
         className='flex items-center gap-2 justify-self-center rounded-lg bg-white px-4 py-3 shadow-lg shadow-black/20'
         onClick={handleLogin}
@@ -52,21 +54,26 @@ const MyInfoLoginSection = () => {
         <span>or,</span>
         <LinkButton
           type='link'
-          className='pl-0'
+          className={`pl-0 ${isMobile ? 'text-[14px] font-normal leading-[100%] text-[#00ADEF]' : ''}`}
           onClick={handleContinueWithoutMyinfo}
         >
           continue without Myinfo login
         </LinkButton>
       </div>
 
-      <div className='mt-4 flex flex-wrap items-center justify-center gap-1 text-center text-sm'>
+      <div
+        className={`mt-4 flex flex-wrap items-center justify-center gap-1 text-center ${isMobile ? 'text-[12px] font-normal' : 'text-sm'}`}
+      >
         <Checkbox
           className='custom-checkbox'
           checked={isDegreedWithDisclaimer}
           onChange={(e) => setIsDegreedWithDisclaimer(e.target.checked)}
         />
         <span>By using this platform, you agree to our</span>
-        <LinkButton type='link' className='pl-0'>
+        <LinkButton
+          type='link'
+          className={`pl-0 ${isMobile ? 'text-[12px] font-normal leading-[100%]' : ''}`}
+        >
           Disclaimer
         </LinkButton>
       </div>

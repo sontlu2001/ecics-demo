@@ -1,35 +1,9 @@
-'use client';
-import { Checkbox, Drawer, Modal } from 'antd';
-import { CheckboxChangeEvent } from 'antd/es/checkbox';
-import { useState } from 'react';
+import { Checkbox } from 'antd';
 
 import { PrimaryButton } from '@/components/ui/buttons';
 
-import { ROUTES } from '@/constants/routes';
-import { useDeviceDetection } from '@/hook/useDeviceDetection';
-import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
-
-function SelfDeclarationConfirmModal({
-  visible,
-  onOk,
-  onCancel,
-}: {
-  visible: boolean;
-  onOk: () => void;
-  onCancel?: () => void;
-}) {
-  const { isMobile } = useDeviceDetection();
-  const [isChecked, setIsChecked] = useState(false);
-
-  const handleCheckboxChange = (e: CheckboxChangeEvent) => {
-    setIsChecked(e.target.checked);
-  };
-
-  const handleOkayClick = () => {
-    onOk();
-  };
-
-  const content = (
+const SelfDeclarationContent = ({ onSave }: { onSave: () => void }) => {
+  return (
     <div className='flex flex-col justify-between'>
       <div>
         <p className='text-center text-base font-bold'>Self Declaration</p>
@@ -60,11 +34,7 @@ function SelfDeclarationConfirmModal({
         </div>
       </div>
       <div className='mt-4 flex items-start gap-2 text-sm'>
-        <Checkbox
-          className='custom-checkbox'
-          checked={isChecked}
-          onChange={handleCheckboxChange}
-        />
+        <Checkbox className='custom-checkbox' />
         <span className='text-justify font-semibold'>
           I confirm that I have read and meet all the above eligibility
           criteria.
@@ -72,45 +42,14 @@ function SelfDeclarationConfirmModal({
       </div>
       <div className='mt-6 flex justify-center'>
         <PrimaryButton
-          onClick={handleOkayClick}
+          onClick={onSave}
           className='w-full py-3 text-base font-semibold text-white'
-          disabled={!isChecked}
         >
           Okay
         </PrimaryButton>
       </div>
     </div>
   );
+};
 
-  if (isMobile) {
-    return (
-      <Drawer
-        placement='bottom'
-        open={visible}
-        onClose={onCancel}
-        closable={false}
-        height='auto'
-        className='rounded-t-xl'
-      >
-        {content}
-      </Drawer>
-    );
-  }
-
-  return (
-    <Modal
-      open={visible}
-      onOk={onOk}
-      onCancel={onCancel}
-      closable={true}
-      maskClosable={true}
-      keyboard={true}
-      footer={null}
-      centered
-    >
-      {content}
-    </Modal>
-  );
-}
-
-export default SelfDeclarationConfirmModal;
+export default SelfDeclarationContent;

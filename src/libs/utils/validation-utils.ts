@@ -26,3 +26,63 @@ export function validateNRIC(params: any[]): boolean {
 
   return checksum === lastChar;
 }
+
+export function sgCarRegNoValidator(carRegNoInput: string | null): boolean {
+  if (!carRegNoInput) return true;
+  if (carRegNoInput.includes(' ')) return false;
+
+  const weightArr: number[] = [10, 15, 14, 15, 16, 17];
+  const cpLetter: string[] = [
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'G',
+    'H',
+    'J',
+    'K',
+    'L',
+    'M',
+    'P',
+    'R',
+    'S',
+    'T',
+    'U',
+    'X',
+    'Y',
+    'Z',
+  ];
+  const carPlateRegex: any = /^([a-zA-Z]{2,3})(\d{1,4})([a-zA-Z])$/;
+
+  const carRegNo = carRegNoInput.toUpperCase();
+
+  if (carRegNo.length < 2 || carRegNo.length > 9) {
+    return false;
+  }
+
+  const cpArr = carRegNo.match(carPlateRegex);
+  if (!cpArr) {
+    return false;
+  }
+
+  let cpAlphabet: string = cpArr[1];
+  const cpNumber: string = cpArr[2].padStart(4, '0');
+  const cpChkSum: string = cpArr[3];
+
+  if (cpAlphabet.length === 3) {
+    cpAlphabet = cpAlphabet.substring(1);
+  }
+
+  let sumApbWeight =
+    (cpAlphabet.charCodeAt(0) - 64) * weightArr[0] +
+    (cpAlphabet.charCodeAt(1) - 64) * weightArr[1];
+
+  for (let i = 0; i < cpNumber.length; i++) {
+    sumApbWeight += parseInt(cpNumber[i], 10) * weightArr[i + 2];
+  }
+
+  const letterIndex = sumApbWeight % 19;
+
+  return cpLetter[letterIndex] === cpChkSum;
+}

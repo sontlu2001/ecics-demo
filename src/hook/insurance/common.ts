@@ -18,7 +18,7 @@ export const useVerifyPartnerCode = (partner_code: string) => {
   return useQuery({
     queryFn: fetchQuote,
     queryKey: ['quote', partner_code],
-    enabled: false,
+    enabled: !!partner_code,
   });
 };
 

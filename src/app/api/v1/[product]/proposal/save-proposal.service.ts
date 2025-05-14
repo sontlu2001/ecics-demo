@@ -1,5 +1,8 @@
 import { handleApiCallToISP } from '@/app/api/configs/api.config';
-import { PLAN_ADDON_CONFIG } from '@/app/api/constants/car.insurance';
+import {
+  CAR_INSURANCE,
+  PLAN_ADDON_CONFIG,
+} from '@/app/api/constants/car.insurance';
 import { ErrFromISPRes, ErrNotFound } from '@/app/api/core/error.response';
 import { successRes } from '@/app/api/core/success.response';
 import logger from '@/app/api/libs/logger';
@@ -10,6 +13,7 @@ import {
   mappingAddonByPlan,
 } from '@/app/api/utils/quote.helpers';
 import { saveQuoteProposalDTO } from './save-proposal.dto';
+import { PRODUCT_ID } from '@/app/api/constants/product';
 
 export async function saveProposalForCar(data: saveQuoteProposalDTO) {
   const { key, selected_plan, selected_addons, add_named_driver_info } = data;
@@ -21,6 +25,7 @@ export async function saveProposalForCar(data: saveQuoteProposalDTO) {
     select: {
       quote_id: true,
       proposal_id: true,
+      policy_id: true,
       data: true,
       id: true,
       company: true,
@@ -31,10 +36,12 @@ export async function saveProposalForCar(data: saveQuoteProposalDTO) {
     return ErrNotFound('Quote not found');
   }
 
-  const { quote_id, proposal_id } = quoteInfo;
+  const { quote_id, policy_id, proposal_id } = quoteInfo;
   const payload: any = {
-    proposal_id,
+    product_id: PRODUCT_ID.CAR,
+    policy_id,
     quote_id,
+    proposal_id,
     quick_proposal_plan: selected_plan,
     __finalize: 0,
     redirect_url: `${process.env.NEXT_PUBLIC_REDIRECT_PAYMENT_WEBSITE}?key=${key}`,
@@ -98,11 +105,12 @@ export async function saveProposalForCar(data: saveQuoteProposalDTO) {
       chasis_number?: string;
       chassis_no?: string;
       engine_no?: string;
+      vehicle_number?: string;
     };
   };
 
   payload.quick_proposal_veh_reg_no =
-    vehicle_info_selected?.chasis_number || '';
+    vehicle_info_selected?.vehicle_number || '';
   payload.quick_proposal_chassis_no = vehicle_info_selected?.chassis_no || '';
   payload.quick_proposal_engine_no = vehicle_info_selected?.engine_no || '';
   payload.quick_proposal_hire_purchase = quoteInfo.company?.name || '';
@@ -118,7 +126,10 @@ export async function saveProposalForCar(data: saveQuoteProposalDTO) {
 
   logger.info(`Payload for save proposal: ${JSON.stringify(payload)}`);
 
-  const resSaveProposal = await handleApiCallToISP('/b2c/proposal', payload);
+  const resSaveProposal = await handleApiCallToISP(
+    `/${CAR_INSURANCE.PREFIX_ENDPOINT}/proposal`,
+    payload,
+  );
   logger.info(
     `Response from save proposal: ${JSON.stringify(resSaveProposal)}`,
   );

@@ -16,6 +16,8 @@ export const savePersonalInfoDTOSchema = z.object({
   vehicles: z.array(z.any()).optional(),
   key: z.string().min(1, 'Key is required'),
   is_sending_email: z.boolean().optional(),
+  promo_code: z.string().nullable().optional(),
+  partner_code: z.string().nullable().optional(),
 });
 
 export type savePersonalInfoDTO = z.infer<typeof savePersonalInfoDTOSchema>;
