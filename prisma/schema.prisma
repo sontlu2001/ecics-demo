@@ -4,6 +4,24 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+enum Gender {
+  Male
+  Female
+  Other
+}
+
+enum MaritalStatus {
+  Single
+  Married
+  Divorced
+  Widowed
+}
+
+enum AddonType {
+  checkbox
+  select
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,8 +31,312 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+model Promocode {
+  id                 Int      @id @default(autoincrement())
+  code               String   @unique
+  start_time         DateTime @map("start_time")
+  end_time           DateTime @map("end_time")
+  description        String
+  discount           Float
+  products           String[]
+  is_public          Boolean  @map("is_public")
+  is_show_count_down Boolean  @map("is_show_countdown")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+  quote      Quote[]
+
+  @@map("promo_code")
+}
+
+model CusstomerInfo {
+  id                          Int     @id @default(autoincrement())
+  name                        String?
+  vehicle_registration_number String  @unique @map("vehicle_registration_number")
+  sex                         String?
+  country                     String?
+  source                      String?
+  is_allowed_renewal          Boolean @default(false) @map("is_allowed_renewal")
+  is_allowed_new_biz          Boolean @default(false) @map("is_allowed_new_biz")
+  national_identity_no        String? @map("national_identity_no")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("customer_info")
+}
+
+model Quote {
+  id                 Int       @id @default(autoincrement())
+  quote_id           String?   @map("quote_id")
+  quote_no           String?   @map("quote_no")
+  policy_id          String?   @map("policy_id")
+  product_id         String?   @map("product_id")
+  proposal_id        String?   @map("proposal_id")
+  payment_id         String?   
+  phone              String?
+  email              String?
+  name               String?
+  data               Json?
+  quote_res_from_ISP Json?
+  quote_finalize_from_ISP Json?
+  partner_code       String?   @map("partner_code")
+  is_finalized       Boolean   @default(false) @map("is_finalized")
+  is_paid            Boolean   @default(false) @map("is_paid")
+  is_sending_email     Boolean   @default(false)
+  is_electric_model      Boolean   @default(false)
+  expiration_date    DateTime? @map("expiration_date")
+  key                String
+  company_name_other String? @map("company_name_other")
+
+  created_at DateTime @default(now())
+  update_at  DateTime @default(now()) @updatedAt
+
+  // Foreign Keys
+  personal_info_id Int?          @map("personal_info_id")
+  personal_info    PersonalInfo? @relation(fields: [personal_info_id], references: [id])
+
+  company_id Int?     @map("company_id")
+  company    Company? @relation(fields: [company_id], references: [id])
+
+  payment_result_id Int?           @map("payment_result_id")
+  payment_result    PaymentResult? @relation(fields: [payment_result_id], references: [id])
+
+  country_nationality_id Int?                @map("country_nationality_id")
+  country_nationality    CountryNationality? @relation(fields: [country_nationality_id], references: [id])
+
+  product_type_id Int?         @map("product_type_id")
+  product_type    ProductType? @relation(fields: [product_type_id], references: [id])
+
+  promo_code_id Int?       @map("promo_code_id")
+  promo_code    Promocode? @relation(fields: [promo_code_id], references: [id])
+
+  @@map("quote")
+}
+
+model ProductType {
+  id            Int            @id @default(autoincrement())
+  name          String
+  documents     Json?        @default("[]")
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @default(now()) @updatedAt
+  quote         Quote[]
+  company       Company[]
+  vehicle_make  VehicleMake[]
+  vehicle_model VehicleModel[]
+  plan          Plan[]
+
+  @@map("product_type")
+}
+
+model PersonalInfo {
+  id                   Int      @id @default(autoincrement())
+  phone                String?
+  email                String?
+  name                 String?
+  gender               String?
+  nric                 String?
+  marital_status       String?
+  date_of_birth        String?  @map("date_of_birth")
+  address              String[] @default([])
+  vehicle_info_selected Json?
+  year_of_registration String?  @map("year_of_registration")
+  vehicles             Json
+  driving_experience   String?  @map("driving_experience")
+  created_at           DateTime @default(now())
+  updated_at           DateTime @default(now()) @updatedAt
+  quotes               Quote[]
+
+  @@map("personal_info")
+}
+
+model Company {
+  id         Int      @id @default(autoincrement())
+  name       String
+  type       String?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+  quotes     Quote[]
+
+  product_type_id Int?         @map("product_type_id")
+  product_type    ProductType? @relation(fields: [product_type_id], references: [id])
+
+  @@map("company")
+}
+
+model PaymentResult {
+  id         Int      @id @default(autoincrement())
+  policy_id  String   @map("policy_id")
+  policy_no  String   @map("policy_no")
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+  quotes     Quote[]
+
+  @@map("payment_result")
+}
+
+model CountryNationality {
+  id         Int      @id @default(autoincrement())
+  name       String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  quotes Quote[]
+
+  @@map("country_nationality")
+}
+
+model RequestLog {
+  id           Int      @id @default(autoincrement())
+  ip           String
+  product_type String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@map("request_log")
+}
+
+model VehicleMake {
+  id         Int     @id @default(autoincrement())
+  name       String
+  group_name String? @map("group_name")
+
+  // Foreign Keys
+  product_type_id Int?         @map("product_type_id")
+  product_type    ProductType? @relation(fields: [product_type_id], references: [id])
+
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @default(now()) @updatedAt
+  vehicle_model VehicleModel[]
+
+  @@map("vehicle_make")
+}
+
+model VehicleModel {
+  id         Int     @id @default(autoincrement())
+  name       String
+  group_name String? @map("group_name")
+
+  // Foreign Keys
+  vehicle_make_id Int?         @map("vehicle_make_id")
+  vehicle_make    VehicleMake? @relation(fields: [vehicle_make_id], references: [id])
+
+  product_type_id Int?         @map("product_type_id")
+  product_type    ProductType? @relation(fields: [product_type_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("vehicle_model")
+}
+
+model Plan {
+  id               Int       @id @default(autoincrement())
+  code             String?
+  title            String
+  sub_title        String?
+  is_recommended   Boolean   @default(false)
+  key_map          String?
+  premium_with_gst Float?    @default(0.0)
+  premium_bef_gst  Float?    @default(0.0)
+  add_ons_included_in_this_plan Json @default("[]")
+  order            Int?
+  benefits         Benefit[]
+  addons           Addon[]
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @default(now()) @updatedAt
+
+  // Foreign Keys
+  product_type_id Int?         @map("product_type_id")
+  product_type    ProductType? @relation(fields: [product_type_id], references: [id])
+
+  @@map("plan")
+}
+
+model Benefit {
+  id         Int      @id @default(autoincrement())
+  name       String
+  order      Int
+  is_active  Boolean  @default(true)
+  plan       Plan     @relation(fields: [plan_id], references: [id])
+  plan_id    Int
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("benefit")
+}
+
+model Addon {
+  id                Int           @id @default(autoincrement())
+  code              String?
+  title             String
+  sub_title         String?
+  type              AddonType
+  description       String?
+  default_option_id String?
+  key_map           String?
+  is_display        Boolean       @default(true)
+  is_recommended    Boolean       @default(false)
+  premium_with_gst  Float         @default(0.0)
+  premium_bef_gst   Float         @default(0.0)
+  options           AddonOption[]
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @default(now()) @updatedAt
+
+  condition Condition[]
+
+  // Foreign Keys
+  plan_id Int?
+  plans   Plan? @relation(fields: [plan_id], references: [id])
+
+  @@map("addon")
+}
+
+model AddonOption {
+  id               Int      @id @default(autoincrement())
+  label            String
+  value            String
+  key_map          String?
+  premium_with_gst Float    @default(0.0)
+  premium_bef_gst  Float    @default(0.0)
+  description      String?  @default("")
+  addon            Addon?   @relation(fields: [addon_id], references: [id])
+  addon_id         Int?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
+
+  dependencies Dependency[]
+
+  @@map("addon_option")
+}
+
+model Dependency {
+  id               Int         @id @default(autoincrement())
+  key_map          String?
+  premium_with_gst Float       @default(0.0)
+  premium_bef_gst  Float       @default(0.0)
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @default(now()) @updatedAt
+  conditions       Condition[]
+
+  // Foreign Keys
+  option_id Int?
+  options   AddonOption? @relation(fields: [option_id], references: [id])
+
+  @@map("addon_dependency")
+}
+
+model Condition {
+  id         Int      @id @default(autoincrement())
+  addon_id   Int
+  addon      Addon    @relation(fields: [addon_id], references: [id])
+  value      String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  // Foreign Keys
+  dependency    Dependency? @relation(fields: [dependency_id], references: [id])
+  dependency_id Int?
+
+  @@map("addon_condition")
 }

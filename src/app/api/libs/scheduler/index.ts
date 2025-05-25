@@ -1,4 +1,5 @@
 import cron from 'node-cron';
+
 import logger from '../logger';
 
 export const schedule = (cronTime: string, task: () => void) => {

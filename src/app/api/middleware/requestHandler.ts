@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError } from 'zod';
-import logger from '../libs/logger';
+
 import { logRequest } from './requestLogger';
 import { HttpError } from '../core/error.response';
+import logger from '../libs/logger';
 
 export const requestHandler = (
-  handler: (req: NextRequest) => Promise<NextResponse>
+  handler: (req: NextRequest) => Promise<NextResponse>,
 ) => {
   return async (req: NextRequest) => {
-    await logRequest(req)
+    await logRequest(req);
     try {
       return await handler(req);
     } catch (err) {
@@ -24,7 +25,7 @@ export const requestHandler = (
               message: e.message,
             })),
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -35,14 +36,14 @@ export const requestHandler = (
           },
           {
             status: err.statusCode,
-          }
+          },
         );
       }
 
       // Fallback error
       return NextResponse.json(
         { error: 'Internal Server Error' },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

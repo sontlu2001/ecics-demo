@@ -1,0 +1,41 @@
+/* For dropdown arrows (e.g., Select component) */
+.ant-select-arrow .anticon > svg {
+  fill: #00adef !important; /* Brand blue */
+}
+
+/* For Dropdown component icons (e.g., DownOutlined) */
+.ant-dropdown-trigger .anticon > svg {
+  fill: #00adef !important;
+}
+
+/* override disabled text color */
+.ant-select-disabled .ant-select-selector {
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.ant-select-disabled .ant-select-arrow {
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.custom-select .ant-select-selection-placeholder {
+  color: #c9cad1 !important;
+  font-size: 14px;
+}
+
+.ant-select-item-option-content {
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+.ant-select-selection-item {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  width: calc(100vw - 200px);
+}
+
+.ant-select-selection-item p {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
