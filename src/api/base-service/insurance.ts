@@ -8,6 +8,7 @@ import {
 import {
   API_GET_QUOTE_BY_KEY,
   API_POST_PERSONAL_INFO_SAVE,
+  API_SAVE_QUOTE,
 } from '@/constants/api.constant';
 
 import baseClient from './api.config';
@@ -29,7 +30,7 @@ export default {
       key: key,
       is_sending_email: is_sending_email,
     };
-    return baseClient.post<QuoteResponse>('/quote/save', formatData);
+    return baseClient.post<QuoteResponse>(`${API_SAVE_QUOTE}`, formatData);
   },
   postPersonalInfoSave(payload: SavePersonalInfoPayload) {
     return baseClient.post<any>(`${API_POST_PERSONAL_INFO_SAVE}`, payload);

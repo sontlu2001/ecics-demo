@@ -1,21 +1,23 @@
+import { capitalizeFirstLetter } from '../../utils/text.helpers';
 import logger from '../logger';
 
 interface quoteInfo {
   quote_key: string;
+  product_name: string;
 }
 
-export const generateQuoteEmail = ({ quote_key }: quoteInfo) => {
+export const generateQuoteEmail = ({ quote_key, product_name }: quoteInfo) => {
   logger.info(`Generating quote email with details: quote_key=${quote_key}`);
 
   return `
   <div style="width: 90% !important;">
     <p>Thank you for your interest in our product(s).</p>
     <p>You can access your most recent progress from the below link that will expire in a 1 month or earlier depending on the commencement date.</p>
-    <p>Car Insurance</p>
+    <p>${capitalizeFirstLetter(product_name)} Insurance</p>
     <p> 
-      <a href="${process.env.NEXT_PUBLIC_DOMAIN_WEBSITE}?key=${quote_key}"
+      <a href="${process.env.NEXT_PUBLIC_DOMAIN_WEBSITE}/continue-quote/${product_name}?key=${quote_key}"
           style="color: #004FFF; text-decoration: underline;">
-          ${process.env.NEXT_PUBLIC_DOMAIN_WEBSITE}?key=${quote_key}
+          ${process.env.NEXT_PUBLIC_DOMAIN_WEBSITE}/continue-quote/${product_name}?key=${quote_key}
         </a>
       </p>
 
@@ -36,11 +38,10 @@ export const generateQuoteEmail = ({ quote_key }: quoteInfo) => {
 };
 
 export const quoteReminderHTML = (
-  quoteId: any,
-  quoteNo: any,
-  productType: any,
-  name: any,
-  email: any,
+  quoteKey: string,
+  quoteNo: string,
+  productType: string,
+  name: string,
 ) => {
   return `
   <div style="width: 90% !important;">
@@ -51,16 +52,16 @@ export const quoteReminderHTML = (
       <tr>
         <td
           style="border: 1px solid #cccc; text-align: left; padding: 1px 8px; text-align: center;">
-          ${productType} Insurance
+          ${capitalizeFirstLetter(productType)} Insurance
         </td>
         <td
           style="border: 1px solid #cccc; text-align: left; padding: 1px 8px;">
           <p><b>${quoteNo}</b></p>
         </td>
         <td style="border: 1px solid #cccc; text-align: left; padding: 1px 8px;">
-          <a href="${process.env.DOMAIN_WEBSITE}/retrieve-quote?quote_id=${quoteId}"
+          <a href="${process.env.NEXT_PUBLIC_DOMAIN_WEBSITE}/continue-quote/${productType}?key=${quoteKey}"
             style="color: #004FFF; text-decoration: underline;">
-            ${process.env.DOMAIN_WEBSITE}/retrieve-quote?quote_id=${quoteId}
+            ${process.env.NEXT_PUBLIC_DOMAIN_WEBSITE}/continue-quote/${productType}?key=${quoteKey}
           </a>
         </td>
       </tr>

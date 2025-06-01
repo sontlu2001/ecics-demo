@@ -3,6 +3,7 @@ import { ProcessBarType } from '@/app/motor/insurance/InsuranceLayout';
 import { StepProcessBar } from '@/libs/enums/processBarEnums';
 import type { StepsProps } from 'antd';
 import { Steps } from 'antd';
+import { useSearchParams } from 'next/navigation';
 
 interface ProcessBarProps {
   currentStep: ProcessBarType;
@@ -12,6 +13,14 @@ interface ProcessBarProps {
 }
 
 const stepsData = [
+  { step: StepProcessBar.POLICY_DETAILS, title: 'Policy Details' },
+  { step: StepProcessBar.SELECT_PLAN, title: 'Select Plan' },
+  { step: StepProcessBar.SELECT_ADD_ON, title: 'Select Add On' },
+  { step: StepProcessBar.PERSONAL_DETAIL, title: 'Details' },
+  { step: StepProcessBar.COMPLETE_PURCHASE, title: 'Complete Purchase' },
+];
+
+const stepsDataSingPass = [
   { step: StepProcessBar.POLICY_DETAILS, title: 'Policy Details' },
   { step: StepProcessBar.SELECT_PLAN, title: 'Select Plan' },
   { step: StepProcessBar.SELECT_ADD_ON, title: 'Select Add On' },
@@ -40,24 +49,30 @@ export default function ProcessBar({
   companyName,
   isFinalized,
 }: ProcessBarProps) {
-  const steps: StepsProps['items'] = stepsData.map(({ title, step }) => {
-    const stepStatus = getStepStatus(step, currentStep);
-    const [firstWord, remaining] = splitText(title);
-    return {
-      title: (
-        <p className='inline-block text-xs leading-4'>
-          <span className='block'>{firstWord}</span>
-          <span className='block'>{remaining}</span>
-        </p>
-      ),
-      status: stepStatus,
-      disabled: stepStatus === 'wait' || isFinalized,
-      icon:
-        stepStatus === 'wait' ? (
-          <div className='custom-step-wait'></div>
-        ) : undefined,
-    };
-  });
+  const searchParams = useSearchParams();
+  const isManual = searchParams.get('manual') === 'true';
+  const selectedStepsData = isManual ? stepsData : stepsDataSingPass;
+
+  const steps: StepsProps['items'] = selectedStepsData.map(
+    ({ title, step }) => {
+      const stepStatus = getStepStatus(step, currentStep);
+      const [firstWord, remaining] = splitText(title);
+      return {
+        title: (
+          <p className='inline-block text-xs leading-4'>
+            <span className='block'>{firstWord}</span>
+            <span className='block'>{remaining}</span>
+          </p>
+        ),
+        status: stepStatus,
+        disabled: stepStatus === 'wait' || isFinalized,
+        icon:
+          stepStatus === 'wait' ? (
+            <div className='custom-step-wait'></div>
+          ) : undefined,
+      };
+    },
+  );
   return (
     <div className='w-full justify-center'>
       <Steps

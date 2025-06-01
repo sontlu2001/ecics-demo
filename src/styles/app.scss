@@ -130,3 +130,10 @@
       100% 2px;
   }
 }
+
+.no-scroll-mobile {
+  overscroll-behavior: contain;
+  touch-action: none;
+  -webkit-overflow-scrolling: auto !important;
+  overflow: hidden !important;
+}

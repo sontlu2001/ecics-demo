@@ -184,8 +184,20 @@ export default function Summary() {
                   value: quote?.data?.personal_info?.email || 'N/A',
                 },
                 {
-                  label: 'Address',
-                  value: quote?.data?.personal_info?.address[0] || 'N/A',
+                  label: 'Address Line 1',
+                  value: quote?.data?.personal_info?.address?.[0] ?? 'N/A',
+                },
+                {
+                  label: 'Address Line 2',
+                  value: quote?.data?.personal_info?.address?.[1]
+                    ? quote?.data?.personal_info?.address?.[1]
+                    : 'N/A',
+                },
+                {
+                  label: 'Address Line 3',
+                  value: quote?.data?.personal_info?.address?.[2]
+                    ? quote?.data?.personal_info?.address?.[2]
+                    : 'N/A',
                 },
               ]}
             />

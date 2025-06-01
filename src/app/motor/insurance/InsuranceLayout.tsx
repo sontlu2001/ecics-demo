@@ -24,6 +24,7 @@ const stepToRoute: Record<StepProcessBar, string> = {
   [StepProcessBar.POLICY_DETAILS]: ROUTES.INSURANCE.BASIC_DETAIL,
   [StepProcessBar.SELECT_PLAN]: ROUTES.INSURANCE.PLAN,
   [StepProcessBar.SELECT_ADD_ON]: ROUTES.INSURANCE.ADD_ON,
+  [StepProcessBar.PERSONAL_DETAIL]: ROUTES.INSURANCE.PERSONAL_DETAIL,
   [StepProcessBar.COMPLETE_PURCHASE]: ROUTES.INSURANCE.COMPLETE_PURCHASE,
 };
 
@@ -110,7 +111,7 @@ function InsuranceLayout({ children }: InsuranceLayoutProps) {
 
   return (
     <>
-      <div className='mx-auto h-[163px] w-full items-center justify-center bg-white md:h-[130px] lg:max-w-[1280px]'>
+      <div className='no-scroll-mobile mx-auto h-[163px] w-full items-center justify-center bg-white md:h-[130px] lg:max-w-[1280px]'>
         <div className='block h-16 md:hidden'>
           <BusinessPartnerBar
             businessName={partnerInfo ? 'Business Partner Name' : ''}

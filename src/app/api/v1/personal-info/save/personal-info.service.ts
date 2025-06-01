@@ -66,6 +66,7 @@ export async function savePersonalInfo(data: savePersonalInfoDTO) {
     if (data.is_sending_email) {
       const retrieveQuoteHTML = generateQuoteEmail({
         quote_key: newQuote.key ?? '',
+        product_name: 'car',
       });
 
       sendMail({

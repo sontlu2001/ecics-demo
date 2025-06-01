@@ -28,6 +28,7 @@ export interface FormatPlan extends Plan {
   currentPrice: number;
   promoCode: string;
 }
+
 function PlanDetail({
   onSaveRegister,
 }: {

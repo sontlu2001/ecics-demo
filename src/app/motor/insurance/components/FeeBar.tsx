@@ -26,7 +26,7 @@ export function PricingSummary({
 
   return (
     <div
-      className='w-full md:flex md:flex-row md:justify-center '
+      className='w-full cursor-pointer md:flex md:flex-row md:justify-center'
       onClick={() => setIsShowPopupPremium?.(true)}
     >
       <div className='item-center fixed bottom-0 left-1/2 z-10 flex w-full -translate-x-1/2 transform justify-center border-[1px] border-gray-100 bg-white shadow-md shadow-gray-200'>

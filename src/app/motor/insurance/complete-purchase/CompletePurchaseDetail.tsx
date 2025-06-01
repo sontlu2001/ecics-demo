@@ -93,8 +93,9 @@ export default function CompletePurchaseDetail({
         return ROUTES.INSURANCE.BASIC_DETAIL;
       case 'addons':
       case 'driver':
-      case 'owner':
         return ROUTES.INSURANCE.ADD_ON;
+      case 'owner':
+        return ROUTES.INSURANCE.PERSONAL_DETAIL;
       default:
         return undefined;
     }
@@ -226,7 +227,22 @@ export default function CompletePurchaseDetail({
         title: 'Marital Status',
         value: quote?.data?.personal_info?.marital_status ?? 'N/A',
       },
-      { title: 'Address', value: quote?.data?.personal_info?.address ?? 'N/A' },
+      {
+        title: 'Address Line 1',
+        value: quote?.data?.personal_info?.address?.[0] ?? 'N/A',
+      },
+      {
+        title: 'Address Line 2',
+        value: quote?.data?.personal_info?.address?.[1]
+          ? quote?.data?.personal_info?.address?.[1]
+          : 'N/A',
+      },
+      {
+        title: 'Address Line 3',
+        value: quote?.data?.personal_info?.address?.[2]
+          ? quote?.data?.personal_info?.address?.[2]
+          : 'N/A',
+      },
       {
         title: 'Postal Code',
         value: quote?.data?.personal_info?.post_code ?? 'N/A',

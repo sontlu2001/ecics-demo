@@ -1,15 +1,22 @@
-import { PrismaClient } from '@prisma/client';
 import { saveQuoteDTO } from './quote.dto';
 import logger from '@/app/api/libs/logger';
 import { generateQuoteEmail } from '@/app/api/libs/mailer/templates';
 import { sendMail } from '@/app/api/libs/mailer';
-
-const prisma = new PrismaClient();
+import { capitalizeFirstLetter } from '@/app/api/utils/text.helpers';
+import { prisma } from '@/app/api/libs/prisma';
 
 export async function saveQuote(data: saveQuoteDTO) {
   const existingQuote = await prisma.quote.findFirst({
     where: {
       key: data.key,
+    },
+    include: {
+      product_type: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
 
@@ -50,7 +57,7 @@ export async function saveQuote(data: saveQuoteDTO) {
           data.payment_result_id || existingQuote.payment_result_id,
         country_nationality_id:
           data.country_nationality_id || existingQuote.country_nationality_id,
-        product_type_id: data.product_type_id || existingQuote.product_type_id,
+        product_type_id: data?.product_type_id || existingQuote.product_type_id,
         promo_code_id: data.promo_code_id || existingQuote.promo_code_id,
       },
       include: {
@@ -110,10 +117,11 @@ export async function saveQuote(data: saveQuoteDTO) {
     if (!existingQuote.is_sending_email && data.is_sending_email) {
       const retrieveQuoteHTML = generateQuoteEmail({
         quote_key: updatedQuote.key ?? '',
+        product_name: existingQuote?.product_type?.name ?? '',
       });
       sendMail({
         to: updatedQuote.email ?? '',
-        subject: `ECICS Limited | Your Car Insurance Purchase Journey`,
+        subject: `ECICS Limited | Your ${capitalizeFirstLetter(existingQuote?.product_type?.name ?? '')} Insurance Purchase Journey`,
         html: retrieveQuoteHTML,
       });
     }
@@ -128,6 +136,22 @@ export async function saveQuote(data: saveQuoteDTO) {
   logger.info(
     `Quote not found. Creating a new quote with data: ${JSON.stringify(data)}`,
   );
+
+  const productType = await prisma.productType.findFirst({
+    where: {
+      name: data?.product_name || '',
+    },
+  });
+
+  logger.info(`Product type: ${productType}`);
+
+  if (!productType) {
+    return {
+      message: 'Product type not found.',
+      data: null,
+    };
+  }
+
   const newQuote = await prisma.quote.create({
     data: {
       quote_id: data.quote_id,
@@ -135,9 +159,9 @@ export async function saveQuote(data: saveQuoteDTO) {
       policy_id: data.policy_id,
       product_id: data.product_id,
       proposal_id: data.proposal_id,
-      phone: data.phone,
-      email: data.email,
-      name: data.name,
+      phone: data.data.personal_info.phone,
+      email: data.data.personal_info.email,
+      name: data?.data?.personal_info?.name || '',
       data: data.data,
       partner_code: data.partner_code,
       is_finalized: data.is_finalized ?? false,
@@ -150,7 +174,7 @@ export async function saveQuote(data: saveQuoteDTO) {
       company_id: data.company_id,
       payment_result_id: data.payment_result_id,
       country_nationality_id: data.country_nationality_id,
-      product_type_id: data.product_type_id,
+      product_type_id: productType?.id,
       promo_code_id: data.promo_code_id,
     },
     omit: {
@@ -162,10 +186,11 @@ export async function saveQuote(data: saveQuoteDTO) {
   if (data.is_sending_email) {
     const retrieveQuoteHTML = generateQuoteEmail({
       quote_key: newQuote.key ?? '',
+      product_name: productType?.name ?? '',
     });
     sendMail({
       to: newQuote.email ?? '',
-      subject: `ECICS Limited | Your Car Insurance Purchase Journey`,
+      subject: `ECICS Limited | Your ${capitalizeFirstLetter(productType?.name ?? '')} Insurance Purchase Journey`,
       html: retrieveQuoteHTML,
     });
   }

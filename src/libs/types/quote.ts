@@ -50,6 +50,7 @@ export interface ReviewInfo {
   drivers: any[];
   addon_additional_driver: any;
   add_ons_included_in_this_plan?: AddOnIncludedInPlan[];
+  total_addon_free?: number;
 }
 
 export interface QuoteData {
