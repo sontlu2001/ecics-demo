@@ -1,45 +1,50 @@
 'use client';
 import CrossMarkIcon from '@/components/icons/CrossMark';
+import PlanNormalIcon from '@/components/icons/PlanNormalIcon';
 import PlanPremiumIcon from '@/components/icons/PlanPremiumIcon';
 import TickCircleIcon from '@/components/icons/TickCircleIcon';
 import { PrimaryButton } from '@/components/ui/buttons';
 import clsx from 'clsx';
-import { DataPlanCard } from './PlanCardMobile';
-import PlanNormalIcon from '@/components/icons/PlanNormalIcon';
 import { useState } from 'react';
+import { FormatPlan } from '../page';
 
 function PlanCardDesktop({
   plans,
-  onClick,
+  selectedPlan,
+  setSelectedPlan,
 }: {
-  isRecommended?: boolean;
-  active?: boolean;
-  plans: DataPlanCard[];
-  onClick?: () => void;
+  plans: FormatPlan[] | undefined;
+  selectedPlan: FormatPlan | null;
+  setSelectedPlan: (plan: FormatPlan | null) => void;
 }) {
-  const [activePlan, setActivePlan] = useState('Third Party & Theft');
   return (
     <div className='flex  w-full justify-center gap-6 lg:gap-10'>
-      {plans.map((plan, index) => {
-        const active = activePlan === plan.title;
+      {plans?.map((plan, index) => {
+        const isRecommended = plan.is_recommended;
+        const activeFeatures = plan.benefits
+          .filter((feature) => feature.is_active)
+          .sort((a, b) => a.order - b.order);
+        const inactiveFeatures = plan.benefits
+          .filter((feature) => !feature.is_active)
+          .sort((a, b) => a.order - b.order);
+        const active = selectedPlan?.id === plan.id;
         return (
           <div
             key={index}
             className={clsx(
-              'relative h-[620px] rounded-2xl border-[1px] border-gray-100 bg-white px-4 py-6 shadow-md',
+              'relative h-[620px] rounded-2xl border-[1px] border-gray-100 bg-white px-4 py-6 shadow-md transition-all duration-500',
               {
                 'bg-[url(/card-background.svg)] bg-cover bg-no-repeat': active,
                 'border-sky-500': active,
               },
             )}
-            onClick={onClick}
           >
             <div className='flex h-full flex-col justify-between px-4'>
               <div className='relative z-10'>
                 <div className='flex justify-between py-6 pt-2'>
-                  {plan.recommended ? <PlanPremiumIcon /> : <PlanNormalIcon />}
+                  {isRecommended ? <PlanPremiumIcon /> : <PlanNormalIcon />}
 
-                  {plan.recommended && (
+                  {isRecommended && (
                     <div className='rounded-md bg-white px-2 py-1 text-xs text-sky-500'>
                       <span> Best Offer</span>
                     </div>
@@ -52,35 +57,39 @@ function PlanCardDesktop({
                   </p>
                 )}
                 <div className='flex max-w-80 items-center justify-between pb-5 pt-3'>
-                  <p className='text-3xl font-extrabold'>S$ {plan.price}</p>
-                  <p className='text-xl text-sky-500 line-through decoration-1'>
-                    S$ {plan.discountedPrice}
+                  <p className='text-xl font-extrabold'>
+                    S$ {plan.premium_with_gst.toFixed(2)}
                   </p>
-                  <p className='text-sm text-gray-400'>{`(${plan.discount}% off applied)`}</p>
+                  {!!plan.discount && (
+                    <>
+                      <p className='text-lg text-sky-500 line-through decoration-1'>
+                        S$ {plan.currentPrice.toFixed(2)}
+                      </p>
+                      <p className='text-xs text-gray-400'>{`(${plan.discount}% off applied)`}</p>
+                    </>
+                  )}
                 </div>
-                {plan.activeFeatures.map((feature, index) => (
-                  <div className='mt-4 flex items-start' key={index}>
+                {activeFeatures.map((feature, index) => (
+                  <div className='mt-4 flex items-start gap-4' key={index}>
                     <TickCircleIcon size={12} className='mt-[6px]' />
-                    <div className='ml-2 text-start text-sm'>{feature}</div>
+                    <div dangerouslySetInnerHTML={{ __html: feature.name }} />
                   </div>
                 ))}
-                {plan.inactiveFeatures.map((feature, index) => (
-                  <div className='mt-4 flex items-start' key={index}>
+                {inactiveFeatures.map((feature, index) => (
+                  <div className='mt-4 flex items-start gap-4' key={index}>
                     <CrossMarkIcon
                       size={20}
                       className='mt-[6px] text-sky-700'
                     />
-                    <div className='ml-2 text-start text-sm text-gray-400'>
-                      {feature}
-                    </div>
+                    <div dangerouslySetInnerHTML={{ __html: feature.name }} />
                   </div>
                 ))}
               </div>
               <PrimaryButton
-                className={clsx('w-full py-2', {
-                  'bg-black hover:opacity-80': plan.recommended,
+                className={clsx('w-full py-2 transition-colors duration-500', {
+                  'bg-black hover:opacity-80': active,
                 })}
-                onClick={() => setActivePlan(plan.title)}
+                onClick={() => setSelectedPlan(plan)}
               >
                 Select
               </PrimaryButton>

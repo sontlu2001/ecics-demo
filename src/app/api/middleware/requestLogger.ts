@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+
 import logger from '../libs/logger/index';
 
 export const logRequest = async (req: NextRequest) => {
@@ -15,5 +16,7 @@ export const logRequest = async (req: NextRequest) => {
     }
   }
 
-  logger.info(`${method}:: ${url} \n header: ${JSON.stringify(headers)} \n body: ${JSON.stringify(body)}`);
+  logger.info(
+    `${method}:: ${url} \n header: ${JSON.stringify(headers)} \n body: ${JSON.stringify(body)}`,
+  );
 };

@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-<url><loc>https://tsnext-tw.thcl.dev/api/v1/test</loc><lastmod>2025-04-22T23:39:17.552Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://tsnext-tw.thcl.dev</loc><lastmod>2025-04-22T23:39:17.552Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://tsnext-tw.thcl.dev/motor</loc><lastmod>2025-05-19T07:56:58.994Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://tsnext-tw.thcl.dev</loc><lastmod>2025-05-19T07:56:58.995Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://tsnext-tw.thcl.dev/motor/summary</loc><lastmod>2025-05-19T07:56:58.995Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://tsnext-tw.thcl.dev/motor/insurance/basic-detail</loc><lastmod>2025-05-19T07:56:58.995Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://tsnext-tw.thcl.dev/motor/insurance/plan</loc><lastmod>2025-05-19T07:56:58.995Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://tsnext-tw.thcl.dev/motor/review-info-detail</loc><lastmod>2025-05-19T07:56:58.995Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://tsnext-tw.thcl.dev/motor/insurance/add-on</loc><lastmod>2025-05-19T07:56:58.995Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://tsnext-tw.thcl.dev/motor/insurance/complete-purchase</loc><lastmod>2025-05-19T07:56:58.995Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
 </urlset>

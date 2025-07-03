@@ -2,10 +2,10 @@
 
 import SvgIcon, { SvgIconProps } from '@/components/SvgIcon';
 
-import DeleteIconSvg from '@/assets/icons/add-on/delete.svg';
+import Delete from '@/assets/icons/delete.svg';
 
 const DeleteIcon = (props: Omit<SvgIconProps, 'svg'>) => {
-  return <SvgIcon svg={DeleteIconSvg} {...props} />;
+  return <SvgIcon svg={Delete} {...props} />;
 };
 
 export default DeleteIcon;

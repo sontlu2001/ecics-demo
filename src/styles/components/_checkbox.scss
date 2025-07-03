@@ -2,8 +2,8 @@
   background-color: white !important;
   border: 2px solid #007aff !important;
   border-radius: 0 !important;
-  width: 16px;
-  height: 16px;
+  width: 12px !important;
+  height: 12px !important;
 }
 
 .custom-checkbox .ant-checkbox-checked .ant-checkbox-inner {
@@ -15,10 +15,10 @@
   border: solid #007aff !important;
   border-width: 0 2px 2px 0 !important;
   transform: rotate(45deg) scale(1) translate(-50%, -50%);
-  top: 40%;
-  left: 25%;
+  top: 45%;
+  left: 18%;
   width: 6px;
-  height: 10px;
+  height: 8px;
   content: '';
   position: absolute;
 }

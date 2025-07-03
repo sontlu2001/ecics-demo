@@ -1,10 +1,19 @@
 'use client';
 
-import ArrowDownIconSvg from '@/assets/icons/review/arrow-down.svg';
 import SvgIcon, { SvgIconProps } from '@/components/SvgIcon';
 
+import ArrowDownIconSvg from '@/assets/icons/review/arrow-down.svg';
+
 const ArrowDownIcon = (props: Omit<SvgIconProps, 'svg'>) => {
-  return <SvgIcon svg={ArrowDownIconSvg} {...props} />;
+  const { className, ...rest } = props;
+
+  return (
+    <SvgIcon
+      svg={ArrowDownIconSvg}
+      className={`arrow-down-icon ${className}`}
+      {...rest}
+    />
+  );
 };
 
 export default ArrowDownIcon;

@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
-import { requestHandler } from '@/app/api/middleware/requestHandler';
+
 import { successRes } from '@/app/api/core/success.response';
+import { requestHandler } from '@/app/api/middleware/requestHandler';
+
 import { savePersonalInfoDTOSchema } from './personal-info.dto';
 import { savePersonalInfo } from './personal-info.service';
 

@@ -1,15 +1,22 @@
-import { PrismaClient } from '@prisma/client';
 import { saveQuoteDTO } from './quote.dto';
 import logger from '@/app/api/libs/logger';
 import { generateQuoteEmail } from '@/app/api/libs/mailer/templates';
 import { sendMail } from '@/app/api/libs/mailer';
-
-const prisma = new PrismaClient();
+import { capitalizeFirstLetter } from '@/app/api/utils/text.helpers';
+import { prisma } from '@/app/api/libs/prisma';
 
 export async function saveQuote(data: saveQuoteDTO) {
   const existingQuote = await prisma.quote.findFirst({
     where: {
       key: data.key,
+    },
+    include: {
+      product_type: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
 
@@ -20,41 +27,48 @@ export async function saveQuote(data: saveQuoteDTO) {
     const updatedQuote = await prisma.quote.update({
       where: { id: existingQuote.id },
       data: {
-        quoteNo: data.quoteNo,
-        policyId: data.policyId,
-        phone: data.phone,
-        email: data.email,
-        name: data.name,
-        data: data.data,
-        partnerCode: data.partnerCode,
-        isFinalized: data.isFinalized ?? false,
-        isPaid: data.isPaid ?? false,
-        expirationDate: data.expirationDate
-          ? new Date(data.expirationDate)
+        quote_id: data.quote_id || existingQuote.quote_id,
+        quote_no: data.quote_no || existingQuote.quote_no,
+        policy_id: data.policy_id || existingQuote.policy_id,
+        product_id: data.product_id || existingQuote.product_id,
+        proposal_id: data.proposal_id || existingQuote.proposal_id,
+        is_sending_email: data.is_sending_email ?? false,
+        phone: data?.data?.personal_info?.phone || existingQuote.phone,
+        email: data?.data?.personal_info?.email || existingQuote.email,
+        name: data?.data?.personal_info?.name || existingQuote.name,
+        data: {
+          ...(typeof existingQuote.data === 'object' &&
+          existingQuote.data !== null
+            ? existingQuote.data
+            : {}),
+          ...data.data,
+        },
+        partner_code: data.partner_code || existingQuote.partner_code,
+        is_finalized: data.is_finalized ?? false,
+        is_paid: data.is_paid ?? false,
+        expiration_date: data.expiration_date
+          ? new Date(data.expiration_date)
           : undefined,
         key: data.key,
-        ipAddress: data.ipAddress,
-        country: data.country,
-        city: data.city,
-        personalInfoId: data.personalInfoId,
-        companyId: data.companyId,
-        paymentResultId: data.paymentResultId,
-        countryNationalityId: data.countryNationalityId,
-        productTypeId: data.productTypeId,
-        promoCodeId: data.promoCodeId,
-        updatedAt: new Date(),
+        company_id: data.company_id || existingQuote.company_id,
+        payment_result_id:
+          data.payment_result_id || existingQuote.payment_result_id,
+        country_nationality_id:
+          data.country_nationality_id || existingQuote.country_nationality_id,
+        product_type_id: data?.product_type_id || existingQuote.product_type_id,
+        promo_code_id: data.promo_code_id || existingQuote.promo_code_id,
       },
       include: {
-        promoCode: {
+        promo_code: {
           select: {
             code: true,
             discount: true,
-            startTime: true,
-            endTime: true,
+            start_time: true,
+            end_time: true,
             description: true,
             products: true,
-            isPublic: true,
-            isShowCountdown: true,
+            is_public: true,
+            is_show_count_down: true,
           },
         },
         company: {
@@ -63,37 +77,36 @@ export async function saveQuote(data: saveQuoteDTO) {
             name: true,
           },
         },
-        personalInfo: {
-          select: {
-            id: true,
-            phone: true,
-            email: true,
-            name: true,
-            gender: true,
-            nric: true,
-            maritalStatus: true,
-            dateOfBirth: true,
-            address: true,
-            vehicleMake: true,
-            vehicleModel: true,
-            yearOfRegistration: true,
-            vehicles: true,
-          },
-        },
-        countryNationality: {
+        country_nationality: {
           select: {
             id: true,
             name: true,
           },
         },
-        productType: {
+        product_type: {
           select: {
             id: true,
             name: true,
           },
         },
       },
+      omit: {
+        quote_res_from_ISP: true,
+        quote_finalize_from_ISP: true,
+      },
     });
+
+    if (!existingQuote.is_sending_email && data.is_sending_email) {
+      const retrieveQuoteHTML = generateQuoteEmail({
+        quote_key: updatedQuote.key ?? '',
+        product_name: existingQuote?.product_type?.name ?? '',
+      });
+      sendMail({
+        to: updatedQuote.email ?? '',
+        subject: `ECICS Limited | Your ${capitalizeFirstLetter(existingQuote?.product_type?.name ?? '')} Insurance Purchase Journey`,
+        html: retrieveQuoteHTML,
+      });
+    }
 
     return {
       message: 'Quote updated successfully.',
@@ -105,40 +118,63 @@ export async function saveQuote(data: saveQuoteDTO) {
   logger.info(
     `Quote not found. Creating a new quote with data: ${JSON.stringify(data)}`,
   );
-  const newQuote = await prisma.quote.create({
-    data: {
-      quoteId: data.quoteId,
-      quoteNo: data.quoteNo,
-      policyId: data.policyId,
-      phone: data.phone,
-      email: data.email,
-      name: data.name,
-      data: data.data,
-      partnerCode: data.partnerCode,
-      isFinalized: data.isFinalized ?? false,
-      isPaid: data.isPaid ?? false,
-      expirationDate: data.expirationDate
-        ? new Date(data.expirationDate)
-        : undefined,
-      key: data.key,
-      personalInfoId: data.personalInfoId,
-      companyId: data.companyId,
-      paymentResultId: data.paymentResultId,
-      countryNationalityId: data.countryNationalityId,
-      productTypeId: data.productTypeId,
-      promoCodeId: data.promoCodeId,
+
+  const productType = await prisma.productType.findFirst({
+    where: {
+      name: data?.product_name || '',
     },
   });
 
-  const retrieveQuoteHTML = generateQuoteEmail({
-    quote_key: newQuote.key ?? '',
-    name: newQuote.name ?? '',
+  logger.info(`Product type: ${productType}`);
+
+  if (!productType) {
+    return {
+      message: 'Product type not found.',
+      data: null,
+    };
+  }
+
+  const newQuote = await prisma.quote.create({
+    data: {
+      quote_id: data.quote_id,
+      quote_no: data.quote_no,
+      policy_id: data.policy_id,
+      product_id: data.product_id,
+      proposal_id: data.proposal_id,
+      phone: data.data.personal_info.phone,
+      email: data.data.personal_info.email,
+      name: data?.data?.personal_info?.name || '',
+      data: data.data,
+      partner_code: data.partner_code,
+      is_finalized: data.is_finalized ?? false,
+      is_paid: data.is_paid ?? false,
+      expiration_date: data.expiration_date
+        ? new Date(data.expiration_date)
+        : undefined,
+      key: data.key,
+      company_id: data.company_id,
+      payment_result_id: data.payment_result_id,
+      country_nationality_id: data.country_nationality_id,
+      product_type_id: productType?.id,
+      promo_code_id: data.promo_code_id,
+    },
+    omit: {
+      quote_res_from_ISP: true,
+      quote_finalize_from_ISP: true,
+    },
   });
-  sendMail({
-    to: newQuote.email ?? '',
-    subject: `ECICS Limited | Your Car Insurance Quotation <${newQuote.quoteNo}>`,
-    html: retrieveQuoteHTML,
-  });
+
+  if (data.is_sending_email) {
+    const retrieveQuoteHTML = generateQuoteEmail({
+      quote_key: newQuote.key ?? '',
+      product_name: productType?.name ?? '',
+    });
+    sendMail({
+      to: newQuote.email ?? '',
+      subject: `ECICS Limited | Your ${capitalizeFirstLetter(productType?.name ?? '')} Insurance Purchase Journey`,
+      html: retrieveQuoteHTML,
+    });
+  }
 
   return {
     message: 'Quote created successfully.',

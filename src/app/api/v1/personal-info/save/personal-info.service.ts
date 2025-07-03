@@ -3,6 +3,8 @@ import { savePersonalInfoDTO } from './personal-info.dto';
 import logger from '@/app/api/libs/logger';
 import { sendMail } from '@/app/api/libs/mailer';
 import { generateQuoteEmail } from '@/app/api/libs/mailer/templates';
+import { ErrBadRequest } from '@/app/api/core/error.response';
+import { capitalizeFirstLetter } from '@/app/api/utils/text.helpers';
 
 export async function savePersonalInfo(data: savePersonalInfoDTO) {
   try {
@@ -20,49 +22,83 @@ export async function savePersonalInfo(data: savePersonalInfoDTO) {
       };
     }
 
-    const newPersonalInfo = await prisma.personalInfo.create({
+    const newQuoteInfo: any = {
+      key: data.key,
       data: {
-        email: data.email,
-        phone: data.phone,
-        name: data.name,
-        nric: data.nric,
-        gender: data.gender,
-        maritalStatus: data.maritalStatus,
-        dateOfBirth: data.dateOfBirth,
-        address: data.address,
-        vehicleMake: data.vehicleMake,
-        vehicleModel: data.vehicleModel,
-        yearOfRegistration: data.yearOfRegistration,
-        vehicles: data.vehicles ?? [],
+        personal_info: data.personal_info,
+        vehicle_info_selected: data?.vehicle_info_selected || null,
+        vehicles: data?.vehicles || null,
+        data_from_singpass: data.data_from_singpass,
+        current_step: 0,
       },
-    });
-    logger.info(
-      `Creating a new personal info: ${JSON.stringify(newPersonalInfo)}`,
-    );
+      is_sending_email: data.is_sending_email ? true : false,
+      partner_code: data.partner_code || '',
+    };
+
+    const [product_type, promoCodeInfo] = await Promise.all([
+      prisma.productType.findFirst({
+        where: { name: data.product_type },
+      }),
+      prisma.promocode.findFirst({
+        where: {
+          code: data?.promo_code || '',
+          products: {
+            has: data.product_type,
+          },
+        },
+      }),
+    ]);
 
     const newQuote = await prisma.quote.create({
       data: {
         key: data.key,
-        personalInfoId: newPersonalInfo.id,
+        phone: data.personal_info.phone,
+        email: data.personal_info.email,
+        name: data.personal_info?.name || '',
+        data: {
+          personal_info: data.personal_info,
+          vehicle_info_selected: data?.vehicle_info_selected,
+          vehicles: data?.vehicles,
+          data_from_singpass: data.data_from_singpass,
+          current_step: 0,
+        },
+        is_sending_email: data.is_sending_email ? true : false,
+        partner_code: data.partner_code || '',
+        promo_code: promoCodeInfo
+          ? {
+              connect: { id: promoCodeInfo.id },
+            }
+          : undefined,
+        product_type: product_type
+          ? {
+              connect: { id: product_type.id },
+            }
+          : undefined,
+      },
+      include: {
+        promo_code: true,
+        product_type: true,
       },
     });
     logger.info(`Creating a new quote info: ${JSON.stringify(newQuote)}`);
 
-    const retrieveQuoteHTML = generateQuoteEmail({
-      name: newPersonalInfo.name ?? '',
-      quote_key: newQuote.key ?? '',
-    });
+    if (data.is_sending_email) {
+      const retrieveQuoteHTML = generateQuoteEmail({
+        quote_key: newQuote.key ?? '',
+        product_name: newQuote?.product_type?.name ?? '',
+      });
 
-    sendMail({
-      to: newPersonalInfo.email ?? '',
-      subject: `ECICS Limited |`,
-      html: retrieveQuoteHTML,
-    });
+      sendMail({
+        to: data.personal_info.email ?? '',
+        subject: `ECICS Limited | Your ${capitalizeFirstLetter(newQuote?.product_type?.name || '')} Insurance Purchase Journey`,
+        html: retrieveQuoteHTML,
+      });
+    }
 
     return {
-      message: 'Personal info created successfully.',
+      message: 'Personal info saved successfully.',
       data: {
-        ...newPersonalInfo,
+        ...data,
         key: newQuote.key,
       },
     };

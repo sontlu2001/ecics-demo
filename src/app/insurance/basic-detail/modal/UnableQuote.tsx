@@ -1,7 +1,10 @@
 import { Drawer, Modal } from 'antd';
 import React from 'react';
+
+import MailIcon from '@/components/icons/MailIcon';
+import PhoneIcon from '@/components/icons/PhoneIcon';
 import { PrimaryButton } from '@/components/ui/buttons';
-import { PhoneOutlined, MailOutlined } from '@ant-design/icons';
+
 import { useDeviceDetection } from '@/hook/useDeviceDetection';
 
 interface UnableQuoteModalProps {
@@ -21,14 +24,21 @@ export const UnableQuote = ({ onClick, visible }: UnableQuoteModalProps) => {
         <div className='mb-6 break-words text-base leading-none'>
           Please contact us for assistance
         </div>
-        <div className='mb-6 flex items-center justify-center break-words text-base font-semibold leading-none underline'>
-          <PhoneOutlined className='relative top-[1px] mr-1 text-2xl text-brand-blue' />
+        <a
+          href='tel:+6562065588'
+          className='mb-6 flex items-center justify-center break-words text-base leading-none text-black underline'
+        >
+          <PhoneIcon className='relative top-[1px] mr-1 text-brand-blue' />
           +65 6206 5588
-        </div>
-        <div className='mb-9 flex items-center justify-center break-words text-base font-semibold leading-none underline'>
-          <MailOutlined className='relative top-[1px] mr-1 text-2xl text-brand-blue' />
+        </a>
+
+        <a
+          href='mailto:customerservice@ecics.com.sg'
+          className='mb-9 flex items-center justify-center break-words text-base leading-none text-black underline'
+        >
+          <MailIcon className='relative top-[1px] mr-1 text-brand-blue' />
           customerservice@ecics.com.sg
-        </div>
+        </a>
       </div>
 
       <PrimaryButton onClick={onClick} className='w-full'>
@@ -59,7 +69,7 @@ export const UnableQuote = ({ onClick, visible }: UnableQuoteModalProps) => {
       open={visible}
       onOk={onClick}
       onCancel={onClick}
-      closable={true}
+      closable={false}
       maskClosable={true}
       keyboard={true}
       footer={null}

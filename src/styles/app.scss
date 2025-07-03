@@ -2,8 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+@import 'components/input';
 @import 'components/steps';
 @import 'components/forms';
+@import 'components/modal';
 @import 'components/checkbox';
 @import 'components/datepicker';
 @import 'components/dropdown';
@@ -127,4 +129,16 @@
       0 2px,
       100% 2px;
   }
+}
+
+.no-scroll-mobile {
+  overscroll-behavior: contain;
+  touch-action: none;
+  -webkit-overflow-scrolling: auto !important;
+  overflow: hidden !important;
+}
+
+html {
+  overflow: hidden;
+  height: 100%;
 }

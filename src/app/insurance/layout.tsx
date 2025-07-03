@@ -1,30 +1,37 @@
 'use client';
-import ProcessBar from '@/components/ProcessBar';
-import BusinessPartnerBar from './components/BusinessPartnerBar';
 import { useState } from 'react';
-import { StepProcessBar } from '@/enums/processBarEnums';
-import { usePathname, useRouter } from 'next/navigation';
-import { useDeviceDetection } from '@/hook/useDeviceDetection';
-import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
-import ArrowBackIcon from '@/components/icons/ArrowBackIcon';
 
-const mapStepToPath = {
-  [StepProcessBar.POLICY_DETAILS]: 'basic-detail',
-  [StepProcessBar.SELECT_PLAN]: 'plan',
-  [StepProcessBar.SELECT_ADD_ON]: 'add-on',
-  [StepProcessBar.COMPLETE_PURCHASE]: 'complete-purchase',
+import { StepProcessBar } from '@/libs/enums/processBarEnums';
+
+import ArrowBackIcon from '@/components/icons/ArrowBackIcon';
+import ProcessBar from '@/components/ProcessBar';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/buttons';
+
+import { ROUTES } from '@/constants/routes';
+import { useDeviceDetection } from '@/hook/useDeviceDetection';
+
+import { useRouterWithQuery } from '@/hook/useRouterWithQuery';
+import BusinessPartnerBar from './components/BusinessPartnerBar';
+
+const stepToRoute: Record<StepProcessBar, string> = {
+  [StepProcessBar.POLICY_DETAILS]: ROUTES.INSURANCE.BASIC_DETAIL,
+  [StepProcessBar.SELECT_PLAN]: ROUTES.INSURANCE.PLAN,
+  [StepProcessBar.SELECT_ADD_ON]: ROUTES.INSURANCE.ADD_ON,
+  [StepProcessBar.COMPLETE_PURCHASE]: ROUTES.INSURANCE.COMPLETE_PURCHASE,
 };
 
 function InsuranceLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
+  const router = useRouterWithQuery();
   const { isMobile } = useDeviceDetection();
   const [currentStep, setCurrentStep] = useState(StepProcessBar.POLICY_DETAILS);
   const handleChangeStep = (step: StepProcessBar) => {
     if (step === currentStep) return;
-    const path = mapStepToPath[step];
+    const path = stepToRoute[step];
+    if (!path) return;
     setCurrentStep(step);
-    router.push(`/insurance/${path}`);
+    router.push(path);
   };
+
   return (
     <>
       <div className='sticky top-0 z-10 w-full bg-white'>
@@ -49,7 +56,7 @@ function InsuranceLayout({ children }: { children: React.ReactNode }) {
           </PrimaryButton>
         </div>
       </div>
-      <div className='w-full'>{children}</div>
+      <div className='mx-auto w-full max-w-[1280px]'>{children}</div>
     </>
   );
 }

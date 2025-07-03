@@ -1,29 +1,52 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { Form } from 'antd';
-import { FormProps } from 'antd/es/form';
-import dayjs from 'dayjs';
-import { adjustDateInDayjs, dateToDayjs } from '@/libs/utils/date';
 import { DatePickerField } from '@/components/ui//form/datepicker';
-import { MOTOR_QUOTE } from '@/libs/constants';
 import {
   DropdownField,
   DropdownOption,
 } from '@/components/ui//form/dropdownfield';
-import { InputField } from '@/components/ui/form/inputfield';
 import RadioField from '@/components/ui//form/radiofield';
-import { PromoCodeField, PromoCodeModel } from '../components/PromoCode';
 import { PrimaryButton } from '@/components/ui/buttons';
-import { z } from 'zod';
-import { useForm, FormProvider } from 'react-hook-form';
+import { InputField } from '@/components/ui/form/inputfield';
+import { MOTOR_QUOTE } from '@/constants';
+import { emailRegex, phoneRegex } from '@/constants/validation.constant';
+import {
+  useGetVehicleMakes,
+  useGetVehicleModels,
+} from '@/hook/insurance/common';
+import {
+  adjustDateInDate,
+  adjustDateInDayjs,
+  dateToDayjs,
+} from '@/libs/utils/date-utils';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, Spin } from 'antd';
+import { FormProps } from 'antd/es/form';
+import dayjs from 'dayjs';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { PromoCodeField } from '../components/PromoCode';
 import { UnableQuote } from './modal/UnableQuote';
+import {
+  CLAIM_AMOUNT_OPTIONS,
+  DRV_EXP_OPTIONS,
+  NCD_OPTIONS,
+  NO_CLAIM_OPTIONS,
+  REG_YEAR_OPTIONS,
+} from './options';
 
 const sryMsg = 'Sorry, we cannot provide you a quotation online';
 
+const defaultValues = {
+  [MOTOR_QUOTE.quick_proposal_start_date]: new Date(),
+  [MOTOR_QUOTE.quick_proposal_end_date]: adjustDateInDate(new Date(), 1, 0, -1),
+  [MOTOR_QUOTE.quick_quote_owner_ncd]: 40,
+};
+
 const singpassFlowFields = {
-  [MOTOR_QUOTE.quick_proposal_hire_purchase]: z.string({
+  [MOTOR_QUOTE.quick_proposal_hire_purchase]: z.number({
     required_error: 'This field is required',
   }),
   [MOTOR_QUOTE.quick_proposal_other_hire_purchase]: z.string().optional(),
@@ -33,11 +56,9 @@ const singpassFlowFields = {
   [MOTOR_QUOTE.quick_proposal_end_date]: z.date({
     required_error: 'This field is required',
   }),
-  [MOTOR_QUOTE.quick_quote_owner_ncd]: z
-    .string({
-      required_error: 'This field is required',
-    })
-    .nonempty('This field is required'),
+  [MOTOR_QUOTE.quick_quote_owner_ncd]: z.number({
+    required_error: 'This field is required',
+  }),
   [MOTOR_QUOTE.quick_quote_owner_no_of_claims]: z
     .number({
       required_error: 'This field is required',
@@ -55,23 +76,32 @@ const nonSingpassFlowFields = {
     .string({
       required_error: 'This field is required',
     })
-    .email('Invalid email format'),
+    .regex(emailRegex, 'Please enter a valid email address.'),
   [MOTOR_QUOTE.quick_quote_mobile]: z
     .string({
       required_error: 'This field is required',
     })
-    .min(8, 'Invalid phone number'),
+    .length(8, "Please enter an 8-digit number starting with '8' or '9'.")
+    .regex(
+      phoneRegex,
+      "Please enter an 8-digit number starting with '8' or '9'.",
+    ),
   [MOTOR_QUOTE.quick_quote_owner_dob]: z.date({
     required_error: 'This field is required',
   }),
   [MOTOR_QUOTE.quick_quote_owner_drv_exp]: z
-    .string({
+    .number({
       required_error: 'This field is required',
     })
     .refine((val) => !isNaN(Number(val)) && Number(val) >= 2, {
       message: sryMsg,
     }),
-  [MOTOR_QUOTE.quick_quote_make_and_model]: z
+  [MOTOR_QUOTE.quick_quote_make]: z
+    .string({
+      required_error: 'This field is required',
+    })
+    .nonempty('This field is required'),
+  [MOTOR_QUOTE.quick_quote_model]: z
     .string({
       required_error: 'This field is required',
     })
@@ -101,10 +131,10 @@ const createSchema = (isSingpassFlow: boolean) => {
     )
     .refine(
       (data) => {
-        if (data[MOTOR_QUOTE.quick_quote_owner_claim_amount] === '>=20000') {
-          return true;
+        if (data[MOTOR_QUOTE.quick_quote_owner_claim_amount] === '>20000') {
+          return false;
         }
-        return false;
+        return true;
       },
       {
         message: sryMsg,
@@ -114,8 +144,7 @@ const createSchema = (isSingpassFlow: boolean) => {
     .refine(
       (data) => {
         return !(
-          data[MOTOR_QUOTE.quick_proposal_hire_purchase] ===
-            '-- Others (Not Available in this list) --' &&
+          data[MOTOR_QUOTE.quick_proposal_hire_purchase] === 0 &&
           !data[MOTOR_QUOTE.quick_proposal_other_hire_purchase]
         );
       },
@@ -134,37 +163,34 @@ type FormData = NonSingpassFlowFields | SingpassFlowFields;
 
 interface PolicyDetailProps extends FormProps {
   onSubmit: (value: any) => void;
-  hire_purchase_list: string[];
-  veh_make_model_list: DropdownOption[];
+  hirePurchaseOptions: DropdownOption[];
   isSingpassFlow: boolean;
-  handleInputChange: (name: string, value: any) => void;
-  handleRemovePromoCode: () => void;
-  defaultPromoCode?: PromoCodeModel | null;
-  appliedPromoCode?: PromoCodeModel | null;
 }
 
 const PolicyDetailForm = ({
   onSubmit,
-  veh_make_model_list,
-  hire_purchase_list,
+  hirePurchaseOptions,
   isSingpassFlow = false,
-  handleInputChange,
-  handleRemovePromoCode,
-  defaultPromoCode,
-  appliedPromoCode,
   initialValues,
   ...props
 }: PolicyDetailProps) => {
   const [form] = Form.useForm();
+  const searchParams = useSearchParams();
+  const promoDefault =
+    searchParams.get('promo_code')?.toUpperCase().trim() || '';
+  const key = searchParams.get('key') || '';
+
   const schema = useMemo(() => createSchema(isSingpassFlow), [isSingpassFlow]);
-  const [showCSModal, setCSModal] = useState(false);
+  const [showCSModal, setShowCSModal] = useState(false);
+  const [applyPromoCode, setApplyPromoCode] = useState(promoDefault);
 
   const methods = useForm<FormData>({
     resolver: zodResolver(schema),
     mode: 'onTouched',
     reValidateMode: 'onChange',
     criteriaMode: 'all',
-    defaultValues: initialValues,
+    defaultValues: defaultValues,
+    values: initialValues,
   });
 
   const {
@@ -175,80 +201,61 @@ const PolicyDetailForm = ({
   // input field change
   const start_date = watch(MOTOR_QUOTE.quick_proposal_start_date) as Date;
   const hire_purchase = watch(MOTOR_QUOTE.quick_proposal_hire_purchase);
-  const no_claim = watch(MOTOR_QUOTE.quick_quote_owner_no_of_claims);
+  const no_claim = watch(MOTOR_QUOTE.quick_quote_owner_no_of_claims) as number;
+  const claimAmount = watch(MOTOR_QUOTE.quick_quote_owner_claim_amount);
+  const drvExp = watch(MOTOR_QUOTE.quick_quote_owner_drv_exp) as number;
+  const make = watch(MOTOR_QUOTE.quick_quote_make) as string;
+
+  const { data: makeOptions } = useGetVehicleMakes();
+  const { data: modelOptions, isLoading: isLoadingModelOptions } =
+    useGetVehicleModels(make);
+
+  const makeOptionsFormatted: DropdownOption[] = useMemo(() => {
+    if (!makeOptions) return [];
+    return makeOptions?.map((item: any) => ({
+      text: item.name,
+      value: item.id.toString(),
+    }));
+  }, [makeOptions]);
+
+  const modelOptionsFormatted: DropdownOption[] = useMemo(() => {
+    if (!modelOptions) return [];
+    return modelOptions?.map((item: any) => ({
+      text: item.name,
+      value: item.id.toString(),
+    }));
+  }, [modelOptions]);
+
+  //update model options when make changes
+  useEffect(() => {
+    methods.setValue(MOTOR_QUOTE.quick_quote_model, undefined);
+  }, [make]);
+
+  // to open Customer Service Modal - Unable to provide quote online
+  useEffect(() => {
+    if (drvExp < 2) {
+      setShowCSModal(true);
+    }
+  }, [drvExp]);
 
   useEffect(() => {
-    // Check if any critical fields have errors
-    const criticalFields = [
-      MOTOR_QUOTE.quick_quote_owner_no_of_claims,
-      MOTOR_QUOTE.quick_quote_owner_drv_exp,
-      MOTOR_QUOTE.quick_quote_owner_claim_amount,
-    ];
+    if (no_claim >= 2) {
+      setShowCSModal(true);
+    }
+  }, [no_claim]);
 
-    const hasCriticalError = criticalFields.some(
-      (field) => errors[field]?.message === sryMsg,
-    );
+  useEffect(() => {
+    if (claimAmount === '>20000') {
+      setShowCSModal(true);
+    }
+  }, [claimAmount]);
 
-    setCSModal(hasCriticalError);
-
-    // Optional: Log all errors (remove in production)
+  // Error logging
+  useEffect(() => {
     if (Object.keys(errors).length) {
       console.error('Current errors:', errors);
     }
   }, [errors]);
-
-  // Options for Dropdown
-  const drvExpOptions: DropdownOption[] = [
-    { value: '0', text: 'Less than 2 years' },
-    { value: '2', text: '2 years' },
-    { value: '3', text: '3 years' },
-    { value: '4', text: '4 years' },
-    { value: '5', text: '5 years' },
-    { value: '6', text: '6 years and above' },
-  ];
-
-  const generateYearOptions = (): DropdownOption[] => {
-    const currentYear = new Date().getFullYear();
-    const years: DropdownOption[] = [];
-
-    for (let year = currentYear; year >= currentYear - 20; year--) {
-      years.push({
-        value: year.toString(),
-        text: year.toString(),
-      });
-    }
-
-    return years;
-  };
-
-  const regYearOptions: DropdownOption[] = generateYearOptions();
-
-  const ncdOptions: DropdownOption[] = [
-    { value: '0%', text: '0%' },
-    { value: '10%', text: '10%' },
-    { value: '20%', text: '20%' },
-    { value: '30%', text: '30%' },
-    { value: '40%', text: '40%' },
-    { value: '50%', text: '50%' },
-  ];
-
-  const noClaimOptions: DropdownOption[] = [
-    { value: 0, text: '0' },
-    { value: 1, text: '1' },
-    { value: 2, text: '2 and above' },
-  ];
-
-  const claimsAmountOption: DropdownOption[] = [
-    { value: '>=20000', text: 'less than SGD 20K' },
-    { value: '<20000', text: 'more than SGD 20K' },
-  ];
-
-  const hirePurchaseOptions: DropdownOption[] = hire_purchase_list.map(
-    (item) => ({
-      value: item,
-      text: item,
-    }),
-  );
 
   const hire_purchase_section = (
     <div>
@@ -265,10 +272,10 @@ const PolicyDetailForm = ({
           placeholder='Select name of finance company'
           options={hirePurchaseOptions}
           showSearch
-        ></DropdownField>
+        />
       </Form.Item>
 
-      {hire_purchase === '-- Others (Not Available in this list) --' ? (
+      {hire_purchase === 0 ? (
         <Form.Item
           name={MOTOR_QUOTE.quick_proposal_other_hire_purchase}
           validateStatus={
@@ -286,36 +293,61 @@ const PolicyDetailForm = ({
     </div>
   );
 
-  const closeCSModal = () => {
-    setCSModal(false);
-    console.log('to false');
-  };
-
   const handleSubmit = (value: FormData) => {
-    try {
-      console.log('in pd click');
-      console.log(value);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const showCSModal = error.issues.some(
-          (issue) =>
-            (issue.message === sryMsg &&
-              issue.path.includes(MOTOR_QUOTE.quick_quote_owner_drv_exp)) ||
-            issue.path.includes(MOTOR_QUOTE.quick_quote_owner_no_of_claims) ||
-            issue.path.includes(MOTOR_QUOTE.quick_quote_owner_claim_amount),
-        );
+    let vehicle_info_selected;
+    let personal_info;
 
-        if (showCSModal) {
-          setCSModal(true);
-        }
-      }
+    if (!isSingpassFlow) {
+      const makeName =
+        makeOptionsFormatted.find(
+          (item) => item.value === value[MOTOR_QUOTE.quick_quote_make],
+        )?.text ?? '';
+      const modelName =
+        modelOptionsFormatted.find(
+          (item) => item.value === value[MOTOR_QUOTE.quick_quote_model],
+        )?.text ?? '';
+      vehicle_info_selected = {
+        vehicle_make: makeName,
+        vehicle_model: modelName,
+        first_registered_year: value[
+          MOTOR_QUOTE.quick_quote_reg_yyyy
+        ] as string,
+        chasis_number: 'SBA123A', // to chg
+      };
+
+      personal_info = {
+        date_of_birth: dayjs(
+          value[MOTOR_QUOTE.quick_quote_owner_dob] as Date,
+        ).format('DD/MM/YYYY'),
+        driving_experience: value[MOTOR_QUOTE.quick_quote_owner_drv_exp],
+        phone: value[MOTOR_QUOTE.quick_quote_mobile],
+        email: value[MOTOR_QUOTE.quick_quote_email],
+      };
     }
+
+    const payload = {
+      key: key,
+      partner_code: '',
+      promo_code: applyPromoCode,
+      company_id: value[MOTOR_QUOTE.quick_proposal_hire_purchase],
+      personal_info: personal_info,
+      vehicle_info_selected: vehicle_info_selected,
+      insurance_additional_info: {
+        no_claim_discount: value[MOTOR_QUOTE.quick_quote_owner_ncd],
+        no_of_claim: value[MOTOR_QUOTE.quick_quote_owner_no_of_claims],
+        start_date: dayjs(
+          value[MOTOR_QUOTE.quick_proposal_start_date] as Date,
+        ).format('DD/MM/YYYY'),
+        end_date: dayjs(
+          value[MOTOR_QUOTE.quick_proposal_end_date] as Date,
+        ).format('DD/MM/YYYY'),
+        last_claim_amount: value[MOTOR_QUOTE.quick_quote_owner_claim_amount],
+      },
+    };
+    onSubmit(payload);
   };
 
-  const handleSubmitPromoCode = (promoCode: string) => {
-    console.log('promocode parent', promoCode);
-  };
-
+  const isDisablePromoCode = no_claim > 0;
   return (
     <>
       <FormProvider {...methods}>
@@ -330,14 +362,14 @@ const PolicyDetailForm = ({
           {...props}
         >
           {/* Manual Flow detail */}
-          {!isSingpassFlow ? (
+          {!isSingpassFlow && (
             <>
               <div className='text-xl font-bold'>Enter Your Policy Details</div>
               <div className='w-full sm:rounded-lg sm:border sm:border-blue-400 sm:bg-gray-100/50 sm:p-4 sm:backdrop-blur-sm'>
                 <div className='my-3 text-lg font-bold'>
                   Personal Information
                 </div>
-                <div className='space-y-4 sm:grid sm:grid-cols-3 sm:gap-x-6 sm:space-y-0'>
+                <div className='grid gap-y-4 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-4'>
                   <Form.Item
                     name={MOTOR_QUOTE.quick_quote_email}
                     validateStatus={
@@ -390,25 +422,42 @@ const PolicyDetailForm = ({
                       name={MOTOR_QUOTE.quick_quote_owner_drv_exp}
                       label='Years of Driving Experience'
                       placeholder="Select your driver's experience (Years)"
-                      options={drvExpOptions}
-                    ></DropdownField>
+                      options={DRV_EXP_OPTIONS}
+                    />
                   </Form.Item>
                 </div>
               </div>
 
               <div className='my-6 w-full sm:rounded-lg sm:border sm:border-blue-400 sm:bg-gray-100/50 sm:p-4 sm:backdrop-blur-sm'>
-                <div className='my-3 text-lg font-semibold'>
+                <div className='my-3 text-lg font-bold'>
                   Vehicle Information
                 </div>
-                <div className='space-y-4 sm:grid sm:grid-cols-3 sm:gap-x-6 sm:space-y-0'>
-                  <Form.Item name={MOTOR_QUOTE.quick_quote_make_and_model}>
+                <div className='grid gap-y-4 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-4'>
+                  <Form.Item name={MOTOR_QUOTE.quick_quote_make}>
                     <DropdownField
-                      name={MOTOR_QUOTE.quick_quote_make_and_model}
-                      label='Vehicle Make & Model'
-                      placeholder='Select vehicle make and model'
-                      options={veh_make_model_list}
+                      name={MOTOR_QUOTE.quick_quote_make}
+                      label='Vehicle Make'
+                      placeholder='Select vehicle make'
+                      options={makeOptionsFormatted}
                       showSearch
-                    ></DropdownField>
+                    />
+                  </Form.Item>
+
+                  <Form.Item name={MOTOR_QUOTE.quick_quote_model}>
+                    <DropdownField
+                      name={MOTOR_QUOTE.quick_quote_model}
+                      label='Vehicle Model'
+                      placeholder='Select vehicle model'
+                      options={modelOptionsFormatted}
+                      notFoundContent={
+                        isLoadingModelOptions ? (
+                          <Spin size='small' />
+                        ) : (
+                          'No results found'
+                        )
+                      }
+                      showSearch
+                    />
                   </Form.Item>
 
                   <Form.Item name={MOTOR_QUOTE.quick_quote_reg_yyyy}>
@@ -416,21 +465,21 @@ const PolicyDetailForm = ({
                       name={MOTOR_QUOTE.quick_quote_reg_yyyy}
                       label="Vehicle's Year of Registration"
                       placeholder='Select registration year'
-                      options={regYearOptions}
-                    ></DropdownField>
+                      options={REG_YEAR_OPTIONS}
+                    />
                   </Form.Item>
 
                   {!isSingpassFlow ? hire_purchase_section : null}
                 </div>
               </div>
             </>
-          ) : null}
+          )}
 
           <div className='w-full sm:rounded-lg sm:border sm:border-blue-400 sm:bg-gray-100/50 sm:p-4 sm:backdrop-blur-sm'>
             <div className='my-3 text-lg font-bold'>
               Confirm Your Policy Details
             </div>
-            <div className='sm:grid sm:grid-cols-3 sm:gap-x-6 sm:space-y-0'>
+            <div className='grid gap-y-4 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-4'>
               <Form.Item
                 name={MOTOR_QUOTE.quick_proposal_start_date}
                 validateStatus={
@@ -474,7 +523,7 @@ const PolicyDetailForm = ({
                   name={MOTOR_QUOTE.quick_quote_owner_ncd}
                   label='No Claim Discount'
                   placeholder='Select your current NCD'
-                  options={ncdOptions}
+                  options={NCD_OPTIONS}
                 ></DropdownField>
               </Form.Item>
 
@@ -490,11 +539,11 @@ const PolicyDetailForm = ({
                   name={MOTOR_QUOTE.quick_quote_owner_no_of_claims}
                   label='Number of claims in the past 3 years'
                   placeholder='Select number of claims'
-                  options={noClaimOptions}
-                ></DropdownField>
+                  options={NO_CLAIM_OPTIONS}
+                />
               </Form.Item>
 
-              {no_claim == '1' ? (
+              {no_claim === 1 ? (
                 <Form.Item
                   name={MOTOR_QUOTE.quick_quote_owner_claim_amount}
                   validateStatus={
@@ -506,7 +555,7 @@ const PolicyDetailForm = ({
                   <RadioField
                     name={MOTOR_QUOTE.quick_quote_owner_claim_amount}
                     label='Last Claim Amount?'
-                    options={claimsAmountOption}
+                    options={CLAIM_AMOUNT_OPTIONS}
                   ></RadioField>
                 </Form.Item>
               ) : null}
@@ -518,12 +567,10 @@ const PolicyDetailForm = ({
           <div className='mt-6 w-full justify-items-center'>
             <div className='-mx-3 sm:col-span-1 sm:col-start-2'>
               <PromoCodeField
-                fieldKey={MOTOR_QUOTE.quick_proposal_promo_code}
                 placeholder='Enter promo code'
-                onCancel={handleRemovePromoCode}
-                onSubmitPromoCode={handleSubmitPromoCode}
-                appliedPromoCode={appliedPromoCode}
-                defaultPromoCode={defaultPromoCode}
+                applyPromoCode={applyPromoCode}
+                setApplyPromoCode={setApplyPromoCode}
+                isDisablePromoCode={isDisablePromoCode}
               />
             </div>
           </div>
@@ -544,7 +591,10 @@ const PolicyDetailForm = ({
           </div>
         </Form>
       </FormProvider>
-      <UnableQuote onClick={closeCSModal} visible={showCSModal} />
+      <UnableQuote
+        onClick={() => setShowCSModal(false)}
+        visible={showCSModal}
+      />
     </>
   );
 };

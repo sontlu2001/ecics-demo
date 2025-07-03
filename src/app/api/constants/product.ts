@@ -1,7 +1,7 @@
 export const PRODUCT_NAME = {
   CAR: 'car',
-};
+  MAID: 'maid',
+  MOTOR: 'motor',
+} as const;
 
-export const PRODUCT_ID = {
-  CAR: 'M000000000088',
-};
+export type ProductTypeWeb = (typeof PRODUCT_NAME)[keyof typeof PRODUCT_NAME];

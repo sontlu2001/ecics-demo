@@ -4,6 +4,7 @@ import { useDeviceDetection } from '@/hook/useDeviceDetection';
 
 import ConfirmInfoCompletedModal from './ConfirmInfoCompletedModal';
 import ConfirmInfoModal from './ConfirmInfoModal';
+import ConfirmInfoFailedModal from '@/app/(auth)/review-info-detail/modal/ConfirmInfoFailedModal';
 
 interface ConfirmInfoModalWrapperProps {
   showConfirmModal: boolean;
@@ -13,10 +14,13 @@ interface ConfirmInfoModalWrapperProps {
 const ConfirmInfoModalWrapper = (props: ConfirmInfoModalWrapperProps) => {
   const { showConfirmModal, setShowConfirmModal } = props;
   const [isSaved, setIsSaved] = useState(false);
+  const [isFailed, setIsFailed] = useState(false);
+
   const { isMobile } = useDeviceDetection();
 
   const handleClose = () => {
     setShowConfirmModal(false);
+    setIsSaved(false);
   };
 
   return (
@@ -29,10 +33,13 @@ const ConfirmInfoModalWrapper = (props: ConfirmInfoModalWrapperProps) => {
         >
           {isSaved ? (
             <ConfirmInfoCompletedModal />
+          ) : isFailed ? (
+            <ConfirmInfoFailedModal />
           ) : (
             <ConfirmInfoModal
               onSave={() => setIsSaved(true)}
               onClose={handleClose}
+              onFail={() => setIsFailed(true)}
             />
           )}
         </div>

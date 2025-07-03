@@ -1,8 +1,9 @@
-import { PRODUCT_NAME } from '@/app/api/constants/product';
 import { NextRequest, NextResponse } from 'next/server';
-import { getQuoteForCar } from './get-quote.service';
+
+import { PRODUCT_NAME } from '@/app/api/constants/product';
 import logger from '@/app/api/libs/logger';
-import { successRes } from '@/app/api/core/success.response';
+
+import { getQuoteForCar, getQuouteForMaid } from './get-quote.service';
 
 export async function POST(
   req: NextRequest,
@@ -17,6 +18,8 @@ export async function POST(
   switch (productName) {
     case PRODUCT_NAME.CAR:
       return getQuoteForCar(body);
+    case PRODUCT_NAME.MAID:
+      return getQuouteForMaid(body);
     default:
       return NextResponse.json(
         { error: 'Unsupported product' },

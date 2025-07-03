@@ -1,9 +1,13 @@
-import type { Metadata } from 'next';
-import { Open_Sans } from 'next/font/google';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
+import type { Metadata, Viewport } from 'next';
+import { Open_Sans } from 'next/font/google';
+import { Suspense } from 'react';
+
 import '@/styles/app.scss';
-import { ReduxProvider } from '@/providers/redux';
+
+import { NavigationConfirmProvider } from '@/providers/NavigationConfirmProvider';
 import { ReactQueryProvider } from '@/providers/react-query';
+import { ReduxProvider } from '@/providers/redux';
 
 const openSans = Open_Sans({
   subsets: ['latin'],
@@ -18,6 +22,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -25,14 +36,30 @@ export default function RootLayout({
 }) {
   return (
     <html lang='en'>
+      <head>
+        <title>ECICS Insurance</title>
+        <script
+          type='text/javascript'
+          dangerouslySetInnerHTML={{
+            __html: `(function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "rntrxo7r12");`,
+          }}
+        />
+      </head>
       <body className={openSans.className}>
-        <ReduxProvider>
-          <ReactQueryProvider>
-            <AntdRegistry>
-              <div className='mx-auto max-w-[1280px]'>{children}</div>
-            </AntdRegistry>
-          </ReactQueryProvider>
-        </ReduxProvider>
+        <Suspense fallback={null}>
+          <ReduxProvider>
+            <ReactQueryProvider>
+              <AntdRegistry>
+                <NavigationConfirmProvider />
+                {children}
+              </AntdRegistry>
+            </ReactQueryProvider>
+          </ReduxProvider>
+        </Suspense>
       </body>
     </html>
   );

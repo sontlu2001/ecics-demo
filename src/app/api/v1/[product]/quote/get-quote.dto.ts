@@ -1,15 +1,19 @@
-import { REGEX_VALUES } from '@/app/api/utils/regex';
 import { z } from 'zod';
+
+import { REGEX_VALUES } from '@/app/api/utils/regex';
 
 export const generateQuoteSchema = z.object({
   key: z.string().min(5, 'Key must be at least 5 characters long'),
   partner_code: z.string().optional(),
   promo_code: z.string().optional(),
   company_id: z.number().optional(),
+  company_name_other: z.string().optional(),
   personal_info: z.object({
     name: z.string().optional(),
     gender: z.enum(['Male', 'Female', 'Other']).optional(),
-    maritalStatus: z.enum(['Single', 'Married', 'Divorced', 'Widowed']).optional(),
+    marital_status: z
+      .enum(['Single', 'Married', 'Divorced', 'Widowed'])
+      .optional(),
     nric: z.string().optional(),
     address: z.string().optional(),
     date_of_birth: z
@@ -19,17 +23,11 @@ export const generateQuoteSchema = z.object({
         'Date of birth must be in the format dd-mm-yyyy',
       ),
     driving_experience: z.number(),
-    phone_number: z
-      .string()
-      .regex(REGEX_VALUES.PHONE_NUMBER, 'Phone number invalid'),
+    phone: z.string().regex(REGEX_VALUES.PHONE_NUMBER, 'Phone number invalid'),
     email: z.string().regex(REGEX_VALUES.PHONE_NUMBER, 'Phone number invalid'),
+    post_code: z.string().optional(),
   }),
-  vehicle_basic_details: z.object({
-    make: z.string().min(1, 'Make is required'),
-    model: z.string().min(1, 'Model is required'),
-    first_registered_year: z.string(),
-    chasis_number: z.string(),
-  }),
+  vehicle_info_selected: z.any().optional(),
   insurance_additional_info: z.object({
     no_claim_discount: z.number(),
     no_of_claim: z.number(),
@@ -50,3 +48,19 @@ export const generateQuoteSchema = z.object({
 });
 
 export type generateQuoteDTO = z.infer<typeof generateQuoteSchema>;
+
+export const generateQuoteForMaidSchema = z.object({
+  key: z.string().min(5, 'Key must be at least 5 characters long'),
+  maid_type: z.string(),
+  plan_period: z.string(),
+  start_date: z.string().regex(REGEX_VALUES.DATE_OF_BIRTH),
+  end_date: z.string().regex(REGEX_VALUES.DATE_OF_BIRTH),
+  promo_code: z.string().optional(),
+  partner_code: z.string().optional(),
+  personal_info: z.any().optional(),
+  maid_info: z.any().optional(),
+});
+
+export type generateQuoteForMaidDTO = z.infer<
+  typeof generateQuoteForMaidSchema
+>;
