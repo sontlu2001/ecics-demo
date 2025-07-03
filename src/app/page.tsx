@@ -45,6 +45,7 @@ export default function Home() {
     return (
       <div className='flex h-96 w-full items-center justify-center'>
         <Spin size='large' />
+        <h2>Test</h2>
       </div>
     );
   }
